@@ -1,2 +1,0 @@
-DELETE FROM clientes;
-ALTER TABLE clientes AUTO_INCREMENT=1;
