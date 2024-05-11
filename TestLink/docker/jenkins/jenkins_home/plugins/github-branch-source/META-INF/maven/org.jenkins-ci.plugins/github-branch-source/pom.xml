@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>github-branch-source</artifactId>
-  <version>1787.v8b_8cd49a_f8f1</version>
+  <version>1771.v59b_6a_fa_1b_89e</version>
   <packaging>hpi</packaging>
   <name>GitHub Branch Source Plugin</name>
   <description>Multibranch projects and organization folders from GitHub. Maintained by CloudBees, Inc.</description>
@@ -19,7 +19,7 @@
   <scm>
     <connection>scm:git:https://github.com/jenkinsci/github-branch-source-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/github-branch-source-plugin.git</developerConnection>
-    <tag>8b8cd49af8f14290d702f38ec0a749b61b053963</tag>
+    <tag>59b6afa1b89e296e097fbfa4657b6aca0821863d</tag>
     <url>https://github.com/jenkinsci/github-branch-source-plugin</url>
   </scm>
   <distributionManagement>
@@ -47,12 +47,6 @@
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
-      <artifactId>ionicons-api</artifactId>
-      <version>56.v1b_1c8c49374e</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.jenkins.plugins</groupId>
       <artifactId>jjwt-api</artifactId>
       <version>0.11.5-77.v646c772fddb_0</version>
       <scope>compile</scope>
@@ -66,13 +60,13 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>1311.vcf0a_900b_37c2</version>
+      <version>1307.v3757c78f17c3</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>github-api</artifactId>
-      <version>1.318-461.v7a_c09c9fa_d63</version>
+      <version>1.316-451.v15738eef3414</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -87,7 +81,7 @@
       <plugin>
         <groupId>org.jenkins-ci.tools</groupId>
         <artifactId>maven-hpi-plugin</artifactId>
-        <version>3.53</version>
+        <version>3.51</version>
         <extensions>true</extensions>
       </plugin>
     </plugins>

@@ -27,7 +27,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkins-ci.plugins.workflow</groupId>
   <artifactId>workflow-basic-steps</artifactId>
-  <version>1049.v257a_e6b_30fb_d</version>
+  <version>1058.vcb_fc1e3a_21a_9</version>
   <packaging>hpi</packaging>
   <name>Pipeline: Basic Steps</name>
   <description>The Jenkins Plugins Parent POM Project</description>
@@ -42,7 +42,7 @@
   <scm>
     <connection>scm:git:https://github.com/jenkinsci/workflow-basic-steps-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/workflow-basic-steps-plugin.git</developerConnection>
-    <tag>257ae6b30fbd0bbbc59a2d30f87f9f6fd5e5db91</tag>
+    <tag>cbfc1e3a21a989db5a1c6537638c6a052dd04d82</tag>
     <url>https://github.com/jenkinsci/workflow-basic-steps-plugin</url>
   </scm>
   <distributionManagement>
@@ -104,7 +104,7 @@
       <plugin>
         <groupId>org.jenkins-ci.tools</groupId>
         <artifactId>maven-hpi-plugin</artifactId>
-        <version>3.51</version>
+        <version>3.53</version>
         <extensions>true</extensions>
       </plugin>
     </plugins>

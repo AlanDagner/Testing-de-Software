@@ -96,36 +96,41 @@ Behaviour.specify(
 addButtonAction = function (e, template, table, tableHighlighter, tableId) {
   let dataReference = e.target;
   let tbody = table.tBodies[0];
+  let name = prompt(dataReference.getAttribute('data-prompt'));
+  if (name == null) {
+    return;
+  }
+  name = name.trim();
+  if (name == "") {
+    alert("Please enter a template name");
+    return;
+  }
+  if (findElementsBySelector(tbody,"TR").find(function(n){return n.getAttribute("name")=='['+name+']';})!=null) {
+    alert("Entry for '"+name+"' already exists");
+    return;
+  }
 
-  dialog.prompt(dataReference.getAttribute('data-prompt')).then((name) => {
-    name = name.trim();
-    if (findElementsBySelector(tbody,"TR").find(function(n){return n.getAttribute("name")=='['+name+']';})!=null) {
-      dialog.alert("Entry for '"+name+"' already exists");
-      return;
+  let copy = document.importNode(template,true);
+  let child = copy.childNodes[1];
+  child.textContent = escapeHTML(name);
+
+  let children = copy.getElementsByClassName("permissionInput");
+  for (let child of children) {
+    if (child.hasAttribute('data-tooltip-template')) {
+      child.setAttribute("data-tooltip-template", child.getAttribute("data-tooltip-template").replace(/{{TEMPLATE}}/g, doubleEscapeHTML(name)));
     }
+  }
 
-    let copy = document.importNode(template,true);
-    let child = copy.childNodes[1];
-    child.textContent = escapeHTML(name);
+  if (tableId !== "permissionTemplates") {
+    spanElement = copy.childNodes[2].childNodes[0].childNodes[1];
+  }
 
-    let children = copy.getElementsByClassName("permissionInput");
-    for (let child of children) {
-      if (child.hasAttribute('data-tooltip-template')) {
-        child.setAttribute("data-tooltip-template", child.getAttribute("data-tooltip-template").replace(/{{TEMPLATE}}/g, doubleEscapeHTML(name)));
-      }
-    }
-
-    if (tableId !== "permissionTemplates") {
-      spanElement = copy.childNodes[2].childNodes[0].childNodes[1];
-    }
-
-    copy.setAttribute("name",'['+name+']');
-    tbody.appendChild(copy);
-    if (tableHighlighter != null) {
-      tableHighlighter.scan(copy);
-    }
-    Behaviour.applySubtree(copy.closest("TABLE"), true);
-  })
+  copy.setAttribute("name",'['+name+']');
+  tbody.appendChild(copy);
+  if (tableHighlighter != null) {
+    tableHighlighter.scan(copy); 
+  }
+  Behaviour.applySubtree(findAncestor(copy,"TABLE"), true);
 }
 
 
@@ -136,9 +141,9 @@ Behaviour.specify(".global-matrix-authorization-strategy-table .rsp-remove", 'Ro
       console.log("Not confirmed");
       return;
     }
-    let table = this.closest("TABLE");
+    let table = findAncestor(this,"TABLE");
     let tableId = table.getAttribute("id");
-    let tr = this.closest("TR");
+    let tr = findAncestor(this,"TR");
     parent = tr.parentNode;
     parent.removeChild(tr);
     if (parent.children.length < filterLimit) {
@@ -161,16 +166,16 @@ Behaviour.specify(".global-matrix-authorization-strategy-table .rsp-remove", 'Ro
 });
 
 Behaviour.specify(".global-matrix-authorization-strategy-table td.permissionInput input", 'RoleBasedAuthorizationStrategy', 0, function(e) {
-  let table = e.closest("TABLE");
+  let table = findAncestor(e, "TABLE");
   if (table.hasClassName('read-only')) {
     // if this is a read-only UI (ExtendedRead / SystemRead), do not enable checkboxes
     return;
   }
-  let row = e.closest("TR");
-  let td = e.closest("TD");
+  let row = findAncestor(e,"TR");
+  let td = findAncestor(e,"TD");
   updateTooltip(row, td);
   e.onchange = function() {
-    Behaviour.applySubtree(row.closest("TABLE"),true);
+    Behaviour.applySubtree(findAncestor(row,"TABLE"),true);
     return true;
   };
 });

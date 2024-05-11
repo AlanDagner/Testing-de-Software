@@ -1,14 +1,269 @@
 (self["webpackChunkjenkins_ui"] = self["webpackChunkjenkins_ui"] || []).push([[216],{
 
-/***/ 2643:
+/***/ 3581:
+/***/ (function(module) {
+
+"use strict";
+
+
+var stylesInDOM = [];
+function getIndexByIdentifier(identifier) {
+  var result = -1;
+  for (var i = 0; i < stylesInDOM.length; i++) {
+    if (stylesInDOM[i].identifier === identifier) {
+      result = i;
+      break;
+    }
+  }
+  return result;
+}
+function modulesToDom(list, options) {
+  var idCountMap = {};
+  var identifiers = [];
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i];
+    var id = options.base ? item[0] + options.base : item[0];
+    var count = idCountMap[id] || 0;
+    var identifier = "".concat(id, " ").concat(count);
+    idCountMap[id] = count + 1;
+    var indexByIdentifier = getIndexByIdentifier(identifier);
+    var obj = {
+      css: item[1],
+      media: item[2],
+      sourceMap: item[3],
+      supports: item[4],
+      layer: item[5]
+    };
+    if (indexByIdentifier !== -1) {
+      stylesInDOM[indexByIdentifier].references++;
+      stylesInDOM[indexByIdentifier].updater(obj);
+    } else {
+      var updater = addElementStyle(obj, options);
+      options.byIndex = i;
+      stylesInDOM.splice(i, 0, {
+        identifier: identifier,
+        updater: updater,
+        references: 1
+      });
+    }
+    identifiers.push(identifier);
+  }
+  return identifiers;
+}
+function addElementStyle(obj, options) {
+  var api = options.domAPI(options);
+  api.update(obj);
+  var updater = function updater(newObj) {
+    if (newObj) {
+      if (newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap && newObj.supports === obj.supports && newObj.layer === obj.layer) {
+        return;
+      }
+      api.update(obj = newObj);
+    } else {
+      api.remove();
+    }
+  };
+  return updater;
+}
+module.exports = function (list, options) {
+  options = options || {};
+  list = list || [];
+  var lastIdentifiers = modulesToDom(list, options);
+  return function update(newList) {
+    newList = newList || [];
+    for (var i = 0; i < lastIdentifiers.length; i++) {
+      var identifier = lastIdentifiers[i];
+      var index = getIndexByIdentifier(identifier);
+      stylesInDOM[index].references--;
+    }
+    var newLastIdentifiers = modulesToDom(newList, options);
+    for (var _i = 0; _i < lastIdentifiers.length; _i++) {
+      var _identifier = lastIdentifiers[_i];
+      var _index = getIndexByIdentifier(_identifier);
+      if (stylesInDOM[_index].references === 0) {
+        stylesInDOM[_index].updater();
+        stylesInDOM.splice(_index, 1);
+      }
+    }
+    lastIdentifiers = newLastIdentifiers;
+  };
+};
+
+/***/ }),
+
+/***/ 7049:
+/***/ (function(module) {
+
+"use strict";
+
+
+var memo = {};
+
+/* istanbul ignore next  */
+function getTarget(target) {
+  if (typeof memo[target] === "undefined") {
+    var styleTarget = document.querySelector(target);
+
+    // Special case to return head of iframe instead of iframe itself
+    if (window.HTMLIFrameElement && styleTarget instanceof window.HTMLIFrameElement) {
+      try {
+        // This will throw an exception if access to iframe is blocked
+        // due to cross-origin restrictions
+        styleTarget = styleTarget.contentDocument.head;
+      } catch (e) {
+        // istanbul ignore next
+        styleTarget = null;
+      }
+    }
+    memo[target] = styleTarget;
+  }
+  return memo[target];
+}
+
+/* istanbul ignore next  */
+function insertBySelector(insert, style) {
+  var target = getTarget(insert);
+  if (!target) {
+    throw new Error("Couldn't find a style target. This probably means that the value for the 'insert' parameter is invalid.");
+  }
+  target.appendChild(style);
+}
+module.exports = insertBySelector;
+
+/***/ }),
+
+/***/ 2157:
+/***/ (function(module) {
+
+"use strict";
+
+
+/* istanbul ignore next  */
+function insertStyleElement(options) {
+  var element = document.createElement("style");
+  options.setAttributes(element, options.attributes);
+  options.insert(element, options.options);
+  return element;
+}
+module.exports = insertStyleElement;
+
+/***/ }),
+
+/***/ 5069:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+
+/* istanbul ignore next  */
+function setAttributesWithoutAttributes(styleElement) {
+  var nonce =  true ? __webpack_require__.nc : 0;
+  if (nonce) {
+    styleElement.setAttribute("nonce", nonce);
+  }
+}
+module.exports = setAttributesWithoutAttributes;
+
+/***/ }),
+
+/***/ 3817:
+/***/ (function(module) {
+
+"use strict";
+
+
+/* istanbul ignore next  */
+function apply(styleElement, options, obj) {
+  var css = "";
+  if (obj.supports) {
+    css += "@supports (".concat(obj.supports, ") {");
+  }
+  if (obj.media) {
+    css += "@media ".concat(obj.media, " {");
+  }
+  var needLayer = typeof obj.layer !== "undefined";
+  if (needLayer) {
+    css += "@layer".concat(obj.layer.length > 0 ? " ".concat(obj.layer) : "", " {");
+  }
+  css += obj.css;
+  if (needLayer) {
+    css += "}";
+  }
+  if (obj.media) {
+    css += "}";
+  }
+  if (obj.supports) {
+    css += "}";
+  }
+  var sourceMap = obj.sourceMap;
+  if (sourceMap && typeof btoa !== "undefined") {
+    css += "\n/*# sourceMappingURL=data:application/json;base64,".concat(btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))), " */");
+  }
+
+  // For old IE
+  /* istanbul ignore if  */
+  options.styleTagTransform(css, styleElement, options.options);
+}
+function removeStyleElement(styleElement) {
+  // istanbul ignore if
+  if (styleElement.parentNode === null) {
+    return false;
+  }
+  styleElement.parentNode.removeChild(styleElement);
+}
+
+/* istanbul ignore next  */
+function domAPI(options) {
+  if (typeof document === "undefined") {
+    return {
+      update: function update() {},
+      remove: function remove() {}
+    };
+  }
+  var styleElement = options.insertStyleElement(options);
+  return {
+    update: function update(obj) {
+      apply(styleElement, options, obj);
+    },
+    remove: function remove() {
+      removeStyleElement(styleElement);
+    }
+  };
+}
+module.exports = domAPI;
+
+/***/ }),
+
+/***/ 3027:
+/***/ (function(module) {
+
+"use strict";
+
+
+/* istanbul ignore next  */
+function styleTagTransform(css, styleElement) {
+  if (styleElement.styleSheet) {
+    styleElement.styleSheet.cssText = css;
+  } else {
+    while (styleElement.firstChild) {
+      styleElement.removeChild(styleElement.firstChild);
+    }
+    styleElement.appendChild(document.createTextNode(css));
+  }
+}
+module.exports = styleTagTransform;
+
+/***/ }),
+
+/***/ 8558:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ contains; }
+/* harmony export */   "Z": function() { return /* binding */ contains; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2201);
 }
 
 function contains(parent, child) {
@@ -36,24 +291,24 @@ function contains(parent, child) {
 
 /***/ }),
 
-/***/ 998:
+/***/ 7780:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getBoundingClientRect; }
+/* harmony export */   "Z": function() { return /* binding */ getBoundingClientRect; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2201);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5486);
+	/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(318);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2507);
+	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7509);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _isLayoutViewport_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2644);
+	/* harmony import */ var _isLayoutViewport_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6441);
 }
 
 
@@ -99,54 +354,54 @@ function getBoundingClientRect(element, includeScale, isFixedStrategy) {
 
 /***/ }),
 
-/***/ 8262:
+/***/ 5484:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getClippingRect; }
+/* harmony export */   "Z": function() { return /* binding */ getClippingRect; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3256);
+	/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5986);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getViewportRect_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1557);
+	/* harmony import */ var _getViewportRect_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3232);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getDocumentRect_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2605);
+	/* harmony import */ var _getDocumentRect_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3502);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _listScrollParents_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(3259);
+	/* harmony import */ var _listScrollParents_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(6422);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getOffsetParent_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(1617);
+	/* harmony import */ var _getOffsetParent_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(9017);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5082);
+	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3871);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(6255);
+	/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(8868);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2201);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(998);
+	/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7780);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(9136);
+	/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(438);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _contains_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(2643);
+	/* harmony import */ var _contains_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(8558);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(4298);
+	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(558);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _utils_rectToClientRect_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3581);
+	/* harmony import */ var _utils_rectToClientRect_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9086);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(5486);
+	/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(318);
 }
 
 
@@ -221,36 +476,36 @@ function getClippingRect(element, boundary, rootBoundary, strategy) {
 
 /***/ }),
 
-/***/ 2843:
+/***/ 2687:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getCompositeRect; }
+/* harmony export */   "Z": function() { return /* binding */ getCompositeRect; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(998);
+	/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7780);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getNodeScroll_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(8030);
+	/* harmony import */ var _getNodeScroll_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(6340);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(4298);
+	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(558);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2201);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9358);
+	/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(2627);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5082);
+	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3871);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2366);
+	/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(6699);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5486);
+	/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(318);
 }
 
 
@@ -313,15 +568,15 @@ function getCompositeRect(elementOrVirtualElement, offsetParent, isFixed) {
 
 /***/ }),
 
-/***/ 6255:
+/***/ 8868:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getComputedStyle; }
+/* harmony export */   "Z": function() { return /* binding */ getComputedStyle; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2507);
+	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7509);
 }
 
 function getComputedStyle(element) {
@@ -330,15 +585,15 @@ function getComputedStyle(element) {
 
 /***/ }),
 
-/***/ 5082:
+/***/ 3871:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getDocumentElement; }
+/* harmony export */   "Z": function() { return /* binding */ getDocumentElement; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2201);
 }
 
 function getDocumentElement(element) {
@@ -349,27 +604,27 @@ function getDocumentElement(element) {
 
 /***/ }),
 
-/***/ 2605:
+/***/ 3502:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getDocumentRect; }
+/* harmony export */   "Z": function() { return /* binding */ getDocumentRect; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5082);
+	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3871);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6255);
+	/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8868);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9358);
+	/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2627);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5548);
+	/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6196);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5486);
+	/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(318);
 }
 
 
@@ -403,12 +658,12 @@ function getDocumentRect(element) {
 
 /***/ }),
 
-/***/ 1500:
+/***/ 4076:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getHTMLElementScroll; }
+/* harmony export */   "Z": function() { return /* binding */ getHTMLElementScroll; }
 /* harmony export */ });
 function getHTMLElementScroll(element) {
   return {
@@ -419,15 +674,15 @@ function getHTMLElementScroll(element) {
 
 /***/ }),
 
-/***/ 6389:
+/***/ 4283:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getLayoutRect; }
+/* harmony export */   "Z": function() { return /* binding */ getLayoutRect; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(998);
+	/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7780);
 }
  // Returns the layout rect of an element relative to its offsetParent. Layout
 // means it doesn't take into account transforms.
@@ -457,12 +712,12 @@ function getLayoutRect(element) {
 
 /***/ }),
 
-/***/ 4298:
+/***/ 558:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getNodeName; }
+/* harmony export */   "Z": function() { return /* binding */ getNodeName; }
 /* harmony export */ });
 function getNodeName(element) {
   return element ? (element.nodeName || '').toLowerCase() : null;
@@ -470,24 +725,24 @@ function getNodeName(element) {
 
 /***/ }),
 
-/***/ 8030:
+/***/ 6340:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getNodeScroll; }
+/* harmony export */   "Z": function() { return /* binding */ getNodeScroll; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5548);
+	/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6196);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2507);
+	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7509);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2201);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getHTMLElementScroll_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1500);
+	/* harmony import */ var _getHTMLElementScroll_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4076);
 }
 
 
@@ -503,33 +758,33 @@ function getNodeScroll(node) {
 
 /***/ }),
 
-/***/ 1617:
+/***/ 9017:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getOffsetParent; }
+/* harmony export */   "Z": function() { return /* binding */ getOffsetParent; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2507);
+	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(7509);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(4298);
+	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(558);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6255);
+	/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8868);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2201);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _isTableElement_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(8903);
+	/* harmony import */ var _isTableElement_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(7206);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9136);
+	/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(438);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _utils_userAgent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1485);
+	/* harmony import */ var _utils_userAgent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8029);
 }
 
 
@@ -603,21 +858,21 @@ function getOffsetParent(element) {
 
 /***/ }),
 
-/***/ 9136:
+/***/ 438:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getParentNode; }
+/* harmony export */   "Z": function() { return /* binding */ getParentNode; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4298);
+	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(558);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5082);
+	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3871);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2201);
 }
 
 
@@ -641,24 +896,24 @@ function getParentNode(element) {
 
 /***/ }),
 
-/***/ 3751:
+/***/ 9672:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getScrollParent; }
+/* harmony export */   "Z": function() { return /* binding */ getScrollParent; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9136);
+	/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(438);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2366);
+	/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6699);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4298);
+	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(558);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2903);
+	/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2201);
 }
 
 
@@ -679,24 +934,24 @@ function getScrollParent(node) {
 
 /***/ }),
 
-/***/ 1557:
+/***/ 3232:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getViewportRect; }
+/* harmony export */   "Z": function() { return /* binding */ getViewportRect; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2507);
+	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7509);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5082);
+	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3871);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9358);
+	/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2627);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _isLayoutViewport_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2644);
+	/* harmony import */ var _isLayoutViewport_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6441);
 }
 
 
@@ -732,12 +987,12 @@ function getViewportRect(element, strategy) {
 
 /***/ }),
 
-/***/ 2507:
+/***/ 7509:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getWindow; }
+/* harmony export */   "Z": function() { return /* binding */ getWindow; }
 /* harmony export */ });
 function getWindow(node) {
   if (node == null) {
@@ -754,15 +1009,15 @@ function getWindow(node) {
 
 /***/ }),
 
-/***/ 5548:
+/***/ 6196:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getWindowScroll; }
+/* harmony export */   "Z": function() { return /* binding */ getWindowScroll; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2507);
+	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7509);
 }
 
 function getWindowScroll(node) {
@@ -777,21 +1032,21 @@ function getWindowScroll(node) {
 
 /***/ }),
 
-/***/ 9358:
+/***/ 2627:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getWindowScrollBarX; }
+/* harmony export */   "Z": function() { return /* binding */ getWindowScrollBarX; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(998);
+	/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7780);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5082);
+	/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3871);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5548);
+	/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6196);
 }
 
 
@@ -809,17 +1064,17 @@ function getWindowScrollBarX(element) {
 
 /***/ }),
 
-/***/ 2903:
+/***/ 2201:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Re: function() { return /* binding */ isHTMLElement; },
-/* harmony export */   Zq: function() { return /* binding */ isShadowRoot; },
-/* harmony export */   kK: function() { return /* binding */ isElement; }
+/* harmony export */   "Re": function() { return /* binding */ isHTMLElement; },
+/* harmony export */   "Zq": function() { return /* binding */ isShadowRoot; },
+/* harmony export */   "kK": function() { return /* binding */ isElement; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2507);
+	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7509);
 }
 
 
@@ -847,15 +1102,15 @@ function isShadowRoot(node) {
 
 /***/ }),
 
-/***/ 2644:
+/***/ 6441:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ isLayoutViewport; }
+/* harmony export */   "Z": function() { return /* binding */ isLayoutViewport; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _utils_userAgent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1485);
+	/* harmony import */ var _utils_userAgent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8029);
 }
 
 function isLayoutViewport() {
@@ -864,15 +1119,15 @@ function isLayoutViewport() {
 
 /***/ }),
 
-/***/ 2366:
+/***/ 6699:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ isScrollParent; }
+/* harmony export */   "Z": function() { return /* binding */ isScrollParent; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6255);
+	/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8868);
 }
 
 function isScrollParent(element) {
@@ -887,15 +1142,15 @@ function isScrollParent(element) {
 
 /***/ }),
 
-/***/ 8903:
+/***/ 7206:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ isTableElement; }
+/* harmony export */   "Z": function() { return /* binding */ isTableElement; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4298);
+	/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(558);
 }
 
 function isTableElement(element) {
@@ -904,24 +1159,24 @@ function isTableElement(element) {
 
 /***/ }),
 
-/***/ 3259:
+/***/ 6422:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ listScrollParents; }
+/* harmony export */   "Z": function() { return /* binding */ listScrollParents; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getScrollParent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3751);
+	/* harmony import */ var _getScrollParent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9672);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9136);
+	/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(438);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2507);
+	/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7509);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2366);
+	/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6699);
 }
 
 
@@ -952,26 +1207,26 @@ function listScrollParents(element, list) {
 
 /***/ }),
 
-/***/ 3256:
+/***/ 5986:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BL: function() { return /* binding */ start; },
-/* harmony export */   Ct: function() { return /* binding */ placements; },
-/* harmony export */   F2: function() { return /* binding */ right; },
-/* harmony export */   I: function() { return /* binding */ bottom; },
-/* harmony export */   Pj: function() { return /* binding */ viewport; },
-/* harmony export */   YP: function() { return /* binding */ reference; },
-/* harmony export */   bw: function() { return /* binding */ variationPlacements; },
-/* harmony export */   d7: function() { return /* binding */ auto; },
-/* harmony export */   k5: function() { return /* binding */ popper; },
-/* harmony export */   mv: function() { return /* binding */ basePlacements; },
-/* harmony export */   t$: function() { return /* binding */ left; },
-/* harmony export */   ut: function() { return /* binding */ end; },
-/* harmony export */   we: function() { return /* binding */ top; },
-/* harmony export */   xs: function() { return /* binding */ modifierPhases; },
-/* harmony export */   zV: function() { return /* binding */ clippingParents; }
+/* harmony export */   "BL": function() { return /* binding */ start; },
+/* harmony export */   "Ct": function() { return /* binding */ placements; },
+/* harmony export */   "F2": function() { return /* binding */ right; },
+/* harmony export */   "I": function() { return /* binding */ bottom; },
+/* harmony export */   "Pj": function() { return /* binding */ viewport; },
+/* harmony export */   "YP": function() { return /* binding */ reference; },
+/* harmony export */   "bw": function() { return /* binding */ variationPlacements; },
+/* harmony export */   "d7": function() { return /* binding */ auto; },
+/* harmony export */   "k5": function() { return /* binding */ popper; },
+/* harmony export */   "mv": function() { return /* binding */ basePlacements; },
+/* harmony export */   "t$": function() { return /* binding */ left; },
+/* harmony export */   "ut": function() { return /* binding */ end; },
+/* harmony export */   "we": function() { return /* binding */ top; },
+/* harmony export */   "xs": function() { return /* binding */ modifierPhases; },
+/* harmony export */   "zV": function() { return /* binding */ clippingParents; }
 /* harmony export */ });
 /* unused harmony exports beforeRead, read, afterRead, beforeMain, main, afterMain, beforeWrite, write, afterWrite */
 var top = 'top';
@@ -1008,24 +1263,24 @@ var modifierPhases = [beforeRead, read, afterRead, beforeMain, main, afterMain, 
 
 /***/ }),
 
-/***/ 9011:
+/***/ 6454:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ computeOffsets; }
+/* harmony export */   "Z": function() { return /* binding */ computeOffsets; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getBasePlacement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7565);
+	/* harmony import */ var _getBasePlacement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8785);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getVariation_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6374);
+	/* harmony import */ var _getVariation_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3616);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getMainAxisFromPlacement_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6640);
+	/* harmony import */ var _getMainAxisFromPlacement_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3798);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3256);
+	/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5986);
 }
 
 
@@ -1100,12 +1355,12 @@ function computeOffsets(_ref) {
 
 /***/ }),
 
-/***/ 8296:
+/***/ 8763:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ debounce; }
+/* harmony export */   "Z": function() { return /* binding */ debounce; }
 /* harmony export */ });
 function debounce(fn) {
   var pending;
@@ -1125,39 +1380,39 @@ function debounce(fn) {
 
 /***/ }),
 
-/***/ 7591:
+/***/ 5448:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ detectOverflow; }
+/* harmony export */   "Z": function() { return /* binding */ detectOverflow; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _dom_utils_getClippingRect_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8262);
+	/* harmony import */ var _dom_utils_getClippingRect_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5484);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _dom_utils_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(5082);
+	/* harmony import */ var _dom_utils_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3871);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _dom_utils_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(998);
+	/* harmony import */ var _dom_utils_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(7780);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _computeOffsets_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9011);
+	/* harmony import */ var _computeOffsets_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(6454);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _rectToClientRect_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(3581);
+	/* harmony import */ var _rectToClientRect_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(9086);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3256);
+	/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5986);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2903);
+	/* harmony import */ var _dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2201);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _mergePaddingObject_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8270);
+	/* harmony import */ var _mergePaddingObject_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1440);
 }
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _expandToHashMap_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1056);
+	/* harmony import */ var _expandToHashMap_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7525);
 }
 
 
@@ -1227,12 +1482,12 @@ function detectOverflow(state, options) {
 
 /***/ }),
 
-/***/ 1056:
+/***/ 7525:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ expandToHashMap; }
+/* harmony export */   "Z": function() { return /* binding */ expandToHashMap; }
 /* harmony export */ });
 function expandToHashMap(value, keys) {
   return keys.reduce(function (hashMap, key) {
@@ -1243,12 +1498,12 @@ function expandToHashMap(value, keys) {
 
 /***/ }),
 
-/***/ 7565:
+/***/ 8785:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getBasePlacement; }
+/* harmony export */   "Z": function() { return /* binding */ getBasePlacement; }
 /* harmony export */ });
 
 function getBasePlacement(placement) {
@@ -1257,12 +1512,12 @@ function getBasePlacement(placement) {
 
 /***/ }),
 
-/***/ 4623:
+/***/ 3038:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getFreshSideObject; }
+/* harmony export */   "Z": function() { return /* binding */ getFreshSideObject; }
 /* harmony export */ });
 function getFreshSideObject() {
   return {
@@ -1275,12 +1530,12 @@ function getFreshSideObject() {
 
 /***/ }),
 
-/***/ 6640:
+/***/ 3798:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getMainAxisFromPlacement; }
+/* harmony export */   "Z": function() { return /* binding */ getMainAxisFromPlacement; }
 /* harmony export */ });
 function getMainAxisFromPlacement(placement) {
   return ['top', 'bottom'].indexOf(placement) >= 0 ? 'x' : 'y';
@@ -1288,12 +1543,12 @@ function getMainAxisFromPlacement(placement) {
 
 /***/ }),
 
-/***/ 6374:
+/***/ 3616:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getVariation; }
+/* harmony export */   "Z": function() { return /* binding */ getVariation; }
 /* harmony export */ });
 function getVariation(placement) {
   return placement.split('-')[1];
@@ -1301,14 +1556,14 @@ function getVariation(placement) {
 
 /***/ }),
 
-/***/ 5486:
+/***/ 318:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Fp: function() { return /* binding */ max; },
-/* harmony export */   NM: function() { return /* binding */ round; },
-/* harmony export */   VV: function() { return /* binding */ min; }
+/* harmony export */   "Fp": function() { return /* binding */ max; },
+/* harmony export */   "NM": function() { return /* binding */ round; },
+/* harmony export */   "VV": function() { return /* binding */ min; }
 /* harmony export */ });
 var max = Math.max;
 var min = Math.min;
@@ -1316,12 +1571,12 @@ var round = Math.round;
 
 /***/ }),
 
-/***/ 4605:
+/***/ 3946:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ mergeByName; }
+/* harmony export */   "Z": function() { return /* binding */ mergeByName; }
 /* harmony export */ });
 function mergeByName(modifiers) {
   var merged = modifiers.reduce(function (merged, current) {
@@ -1340,15 +1595,15 @@ function mergeByName(modifiers) {
 
 /***/ }),
 
-/***/ 8270:
+/***/ 1440:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ mergePaddingObject; }
+/* harmony export */   "Z": function() { return /* binding */ mergePaddingObject; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _getFreshSideObject_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4623);
+	/* harmony import */ var _getFreshSideObject_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3038);
 }
 
 function mergePaddingObject(paddingObject) {
@@ -1357,15 +1612,15 @@ function mergePaddingObject(paddingObject) {
 
 /***/ }),
 
-/***/ 1871:
+/***/ 1215:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ orderModifiers; }
+/* harmony export */   "Z": function() { return /* binding */ orderModifiers; }
 /* harmony export */ });
 if (143 == __webpack_require__.j) {
-	/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3256);
+	/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5986);
 }
  // source: https://stackoverflow.com/questions/49875255
 
@@ -1405,7 +1660,7 @@ function orderModifiers(modifiers) {
   // order based on dependencies
   var orderedModifiers = order(modifiers); // order based on phase
 
-  return _enums_js__WEBPACK_IMPORTED_MODULE_0__/* .modifierPhases */ .xs.reduce(function (acc, phase) {
+  return _enums_js__WEBPACK_IMPORTED_MODULE_0__/* .modifierPhases.reduce */ .xs.reduce(function (acc, phase) {
     return acc.concat(orderedModifiers.filter(function (modifier) {
       return modifier.phase === phase;
     }));
@@ -1414,12 +1669,12 @@ function orderModifiers(modifiers) {
 
 /***/ }),
 
-/***/ 3581:
+/***/ 9086:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ rectToClientRect; }
+/* harmony export */   "Z": function() { return /* binding */ rectToClientRect; }
 /* harmony export */ });
 function rectToClientRect(rect) {
   return Object.assign({}, rect, {
@@ -1432,12 +1687,12 @@ function rectToClientRect(rect) {
 
 /***/ }),
 
-/***/ 1485:
+/***/ 8029:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ getUAString; }
+/* harmony export */   "Z": function() { return /* binding */ getUAString; }
 /* harmony export */ });
 function getUAString() {
   var uaData = navigator.userAgentData;
@@ -1453,7 +1708,7 @@ function getUAString() {
 
 /***/ }),
 
-/***/ 2549:
+/***/ 9856:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1468,30 +1723,30 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var _handlebarsBase = __webpack_require__(7866);
+var _handlebarsBase = __webpack_require__(3153);
 
 var base = _interopRequireWildcard(_handlebarsBase);
 
 // Each of these augment the Handlebars object. No need to setup here.
 // (This is done to easily share code between commonjs and browse envs)
 
-var _handlebarsSafeString = __webpack_require__(5956);
+var _handlebarsSafeString = __webpack_require__(1072);
 
 var _handlebarsSafeString2 = _interopRequireDefault(_handlebarsSafeString);
 
-var _handlebarsException = __webpack_require__(1799);
+var _handlebarsException = __webpack_require__(200);
 
 var _handlebarsException2 = _interopRequireDefault(_handlebarsException);
 
-var _handlebarsUtils = __webpack_require__(6692);
+var _handlebarsUtils = __webpack_require__(8773);
 
 var Utils = _interopRequireWildcard(_handlebarsUtils);
 
-var _handlebarsRuntime = __webpack_require__(7889);
+var _handlebarsRuntime = __webpack_require__(8923);
 
 var runtime = _interopRequireWildcard(_handlebarsRuntime);
 
-var _handlebarsNoConflict = __webpack_require__(5451);
+var _handlebarsNoConflict = __webpack_require__(3213);
 
 var _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
 
@@ -1527,7 +1782,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 7866:
+/***/ 3153:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -1539,23 +1794,23 @@ exports.HandlebarsEnvironment = HandlebarsEnvironment;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
-var _exception = __webpack_require__(1799);
+var _exception = __webpack_require__(200);
 
 var _exception2 = _interopRequireDefault(_exception);
 
-var _helpers = __webpack_require__(3776);
+var _helpers = __webpack_require__(2980);
 
-var _decorators = __webpack_require__(8234);
+var _decorators = __webpack_require__(9357);
 
-var _logger = __webpack_require__(7890);
+var _logger = __webpack_require__(9064);
 
 var _logger2 = _interopRequireDefault(_logger);
 
-var _internalProtoAccess = __webpack_require__(9725);
+var _internalProtoAccess = __webpack_require__(9870);
 
-var VERSION = '4.7.8';
+var VERSION = '4.7.7';
 exports.VERSION = VERSION;
 var COMPILER_REVISION = 8;
 exports.COMPILER_REVISION = COMPILER_REVISION;
@@ -1646,12 +1901,12 @@ var log = _logger2['default'].log;
 exports.log = log;
 exports.createFrame = _utils.createFrame;
 exports.logger = _logger2['default'];
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL2Jhc2UuanMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7cUJBQThDLFNBQVM7O3lCQUNqQyxhQUFhOzs7O3VCQUNJLFdBQVc7OzBCQUNSLGNBQWM7O3NCQUNyQyxVQUFVOzs7O21DQUNTLHlCQUF5Qjs7QUFFeEQsSUFBTSxPQUFPLEdBQUcsT0FBTyxDQUFDOztBQUN4QixJQUFNLGlCQUFpQixHQUFHLENBQUMsQ0FBQzs7QUFDNUIsSUFBTSxpQ0FBaUMsR0FBRyxDQUFDLENBQUM7OztBQUU1QyxJQUFNLGdCQUFnQixHQUFHO0FBQzlCLEdBQUMsRUFBRSxhQUFhO0FBQ2hCLEdBQUMsRUFBRSxlQUFlO0FBQ2xCLEdBQUMsRUFBRSxlQUFlO0FBQ2xCLEdBQUMsRUFBRSxVQUFVO0FBQ2IsR0FBQyxFQUFFLGtCQUFrQjtBQUNyQixHQUFDLEVBQUUsaUJBQWlCO0FBQ3BCLEdBQUMsRUFBRSxpQkFBaUI7QUFDcEIsR0FBQyxFQUFFLFVBQVU7Q0FDZCxDQUFDOzs7QUFFRixJQUFNLFVBQVUsR0FBRyxpQkFBaUIsQ0FBQzs7QUFFOUIsU0FBUyxxQkFBcUIsQ0FBQyxPQUFPLEVBQUUsUUFBUSxFQUFFLFVBQVUsRUFBRTtBQUNuRSxNQUFJLENBQUMsT0FBTyxHQUFHLE9BQU8sSUFBSSxFQUFFLENBQUM7QUFDN0IsTUFBSSxDQUFDLFFBQVEsR0FBRyxRQUFRLElBQUksRUFBRSxDQUFDO0FBQy9CLE1BQUksQ0FBQyxVQUFVLEdBQUcsVUFBVSxJQUFJLEVBQUUsQ0FBQzs7QUFFbkMsa0NBQXVCLElBQUksQ0FBQyxDQUFDO0FBQzdCLHdDQUEwQixJQUFJLENBQUMsQ0FBQztDQUNqQzs7QUFFRCxxQkFBcUIsQ0FBQyxTQUFTLEdBQUc7QUFDaEMsYUFBVyxFQUFFLHFCQUFxQjs7QUFFbEMsUUFBTSxxQkFBUTtBQUNkLEtBQUcsRUFBRSxvQkFBTyxHQUFHOztBQUVmLGdCQUFjLEVBQUUsd0JBQVMsSUFBSSxFQUFFLEVBQUUsRUFBRTtBQUNqQyxRQUFJLGdCQUFTLElBQUksQ0FBQyxJQUFJLENBQUMsS0FBSyxVQUFVLEVBQUU7QUFDdEMsVUFBSSxFQUFFLEVBQUU7QUFDTixjQUFNLDJCQUFjLHlDQUF5QyxDQUFDLENBQUM7T0FDaEU7QUFDRCxvQkFBTyxJQUFJLENBQUMsT0FBTyxFQUFFLElBQUksQ0FBQyxDQUFDO0tBQzVCLE1BQU07QUFDTCxVQUFJLENBQUMsT0FBTyxDQUFDLElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQztLQUN6QjtHQUNGO0FBQ0Qsa0JBQWdCLEVBQUUsMEJBQVMsSUFBSSxFQUFFO0FBQy9CLFdBQU8sSUFBSSxDQUFDLE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQztHQUMzQjs7QUFFRCxpQkFBZSxFQUFFLHlCQUFTLElBQUksRUFBRSxPQUFPLEVBQUU7QUFDdkMsUUFBSSxnQkFBUyxJQUFJLENBQUMsSUFBSSxDQUFDLEtBQUssVUFBVSxFQUFFO0FBQ3RDLG9CQUFPLElBQUksQ0FBQyxRQUFRLEVBQUUsSUFBSSxDQUFDLENBQUM7S0FDN0IsTUFBTTtBQUNMLFVBQUksT0FBTyxPQUFPLEtBQUssV0FBVyxFQUFFO0FBQ2xDLGNBQU0seUVBQ3dDLElBQUksb0JBQ2pELENBQUM7T0FDSDtBQUNELFVBQUksQ0FBQyxRQUFRLENBQUMsSUFBSSxDQUFDLEdBQUcsT0FBTyxDQUFDO0tBQy9CO0dBQ0Y7QUFDRCxtQkFBaUIsRUFBRSwyQkFBUyxJQUFJLEVBQUU7QUFDaEMsV0FBTyxJQUFJLENBQUMsUUFBUSxDQUFDLElBQUksQ0FBQyxDQUFDO0dBQzVCOztBQUVELG1CQUFpQixFQUFFLDJCQUFTLElBQUksRUFBRSxFQUFFLEVBQUU7QUFDcEMsUUFBSSxnQkFBUyxJQUFJLENBQUMsSUFBSSxDQUFDLEtBQUssVUFBVSxFQUFFO0FBQ3RDLFVBQUksRUFBRSxFQUFFO0FBQ04sY0FBTSwyQkFBYyw0Q0FBNEMsQ0FBQyxDQUFDO09BQ25FO0FBQ0Qsb0JBQU8sSUFBSSxDQUFDLFVBQVUsRUFBRSxJQUFJLENBQUMsQ0FBQztLQUMvQixNQUFNO0FBQ0wsVUFBSSxDQUFDLFVBQVUsQ0FBQyxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUM7S0FDNUI7R0FDRjtBQUNELHFCQUFtQixFQUFFLDZCQUFTLElBQUksRUFBRTtBQUNsQyxXQUFPLElBQUksQ0FBQyxVQUFVLENBQUMsSUFBSSxDQUFDLENBQUM7R0FDOUI7Ozs7O0FBS0QsNkJBQTJCLEVBQUEsdUNBQUc7QUFDNUIsZ0RBQXVCLENBQUM7R0FDekI7Q0FDRixDQUFDOztBQUVLLElBQUksR0FBRyxHQUFHLG9CQUFPLEdBQUcsQ0FBQzs7O1FBRW5CLFdBQVc7UUFBRSxNQUFNIiwiZmlsZSI6ImJhc2UuanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBjcmVhdGVGcmFtZSwgZXh0ZW5kLCB0b1N0cmluZyB9IGZyb20gJy4vdXRpbHMnO1xuaW1wb3J0IEV4Y2VwdGlvbiBmcm9tICcuL2V4Y2VwdGlvbic7XG5pbXBvcnQgeyByZWdpc3RlckRlZmF1bHRIZWxwZXJzIH0gZnJvbSAnLi9oZWxwZXJzJztcbmltcG9ydCB7IHJlZ2lzdGVyRGVmYXVsdERlY29yYXRvcnMgfSBmcm9tICcuL2RlY29yYXRvcnMnO1xuaW1wb3J0IGxvZ2dlciBmcm9tICcuL2xvZ2dlcic7XG5pbXBvcnQgeyByZXNldExvZ2dlZFByb3BlcnRpZXMgfSBmcm9tICcuL2ludGVybmFsL3Byb3RvLWFjY2Vzcyc7XG5cbmV4cG9ydCBjb25zdCBWRVJTSU9OID0gJzQuNy44JztcbmV4cG9ydCBjb25zdCBDT01QSUxFUl9SRVZJU0lPTiA9IDg7XG5leHBvcnQgY29uc3QgTEFTVF9DT01QQVRJQkxFX0NPTVBJTEVSX1JFVklTSU9OID0gNztcblxuZXhwb3J0IGNvbnN0IFJFVklTSU9OX0NIQU5HRVMgPSB7XG4gIDE6ICc8PSAxLjAucmMuMicsIC8vIDEuMC5yYy4yIGlzIGFjdHVhbGx5IHJldjIgYnV0IGRvZXNuJ3QgcmVwb3J0IGl0XG4gIDI6ICc9PSAxLjAuMC1yYy4zJyxcbiAgMzogJz09IDEuMC4wLXJjLjQnLFxuICA0OiAnPT0gMS54LngnLFxuICA1OiAnPT0gMi4wLjAtYWxwaGEueCcsXG4gIDY6ICc+PSAyLjAuMC1iZXRhLjEnLFxuICA3OiAnPj0gNC4wLjAgPDQuMy4wJyxcbiAgODogJz49IDQuMy4wJ1xufTtcblxuY29uc3Qgb2JqZWN0VHlwZSA9ICdbb2JqZWN0IE9iamVjdF0nO1xuXG5leHBvcnQgZnVuY3Rpb24gSGFuZGxlYmFyc0Vudmlyb25tZW50KGhlbHBlcnMsIHBhcnRpYWxzLCBkZWNvcmF0b3JzKSB7XG4gIHRoaXMuaGVscGVycyA9IGhlbHBlcnMgfHwge307XG4gIHRoaXMucGFydGlhbHMgPSBwYXJ0aWFscyB8fCB7fTtcbiAgdGhpcy5kZWNvcmF0b3JzID0gZGVjb3JhdG9ycyB8fCB7fTtcblxuICByZWdpc3RlckRlZmF1bHRIZWxwZXJzKHRoaXMpO1xuICByZWdpc3RlckRlZmF1bHREZWNvcmF0b3JzKHRoaXMpO1xufVxuXG5IYW5kbGViYXJzRW52aXJvbm1lbnQucHJvdG90eXBlID0ge1xuICBjb25zdHJ1Y3RvcjogSGFuZGxlYmFyc0Vudmlyb25tZW50LFxuXG4gIGxvZ2dlcjogbG9nZ2VyLFxuICBsb2c6IGxvZ2dlci5sb2csXG5cbiAgcmVnaXN0ZXJIZWxwZXI6IGZ1bmN0aW9uKG5hbWUsIGZuKSB7XG4gICAgaWYgKHRvU3RyaW5nLmNhbGwobmFtZSkgPT09IG9iamVjdFR5cGUpIHtcbiAgICAgIGlmIChmbikge1xuICAgICAgICB0aHJvdyBuZXcgRXhjZXB0aW9uKCdBcmcgbm90IHN1cHBvcnRlZCB3aXRoIG11bHRpcGxlIGhlbHBlcnMnKTtcbiAgICAgIH1cbiAgICAgIGV4dGVuZCh0aGlzLmhlbHBlcnMsIG5hbWUpO1xuICAgIH0gZWxzZSB7XG4gICAgICB0aGlzLmhlbHBlcnNbbmFtZV0gPSBmbjtcbiAgICB9XG4gIH0sXG4gIHVucmVnaXN0ZXJIZWxwZXI6IGZ1bmN0aW9uKG5hbWUpIHtcbiAgICBkZWxldGUgdGhpcy5oZWxwZXJzW25hbWVdO1xuICB9LFxuXG4gIHJlZ2lzdGVyUGFydGlhbDogZnVuY3Rpb24obmFtZSwgcGFydGlhbCkge1xuICAgIGlmICh0b1N0cmluZy5jYWxsKG5hbWUpID09PSBvYmplY3RUeXBlKSB7XG4gICAgICBleHRlbmQodGhpcy5wYXJ0aWFscywgbmFtZSk7XG4gICAgfSBlbHNlIHtcbiAgICAgIGlmICh0eXBlb2YgcGFydGlhbCA9PT0gJ3VuZGVmaW5lZCcpIHtcbiAgICAgICAgdGhyb3cgbmV3IEV4Y2VwdGlvbihcbiAgICAgICAgICBgQXR0ZW1wdGluZyB0byByZWdpc3RlciBhIHBhcnRpYWwgY2FsbGVkIFwiJHtuYW1lfVwiIGFzIHVuZGVmaW5lZGBcbiAgICAgICAgKTtcbiAgICAgIH1cbiAgICAgIHRoaXMucGFydGlhbHNbbmFtZV0gPSBwYXJ0aWFsO1xuICAgIH1cbiAgfSxcbiAgdW5yZWdpc3RlclBhcnRpYWw6IGZ1bmN0aW9uKG5hbWUpIHtcbiAgICBkZWxldGUgdGhpcy5wYXJ0aWFsc1tuYW1lXTtcbiAgfSxcblxuICByZWdpc3RlckRlY29yYXRvcjogZnVuY3Rpb24obmFtZSwgZm4pIHtcbiAgICBpZiAodG9TdHJpbmcuY2FsbChuYW1lKSA9PT0gb2JqZWN0VHlwZSkge1xuICAgICAgaWYgKGZuKSB7XG4gICAgICAgIHRocm93IG5ldyBFeGNlcHRpb24oJ0FyZyBub3Qgc3VwcG9ydGVkIHdpdGggbXVsdGlwbGUgZGVjb3JhdG9ycycpO1xuICAgICAgfVxuICAgICAgZXh0ZW5kKHRoaXMuZGVjb3JhdG9ycywgbmFtZSk7XG4gICAgfSBlbHNlIHtcbiAgICAgIHRoaXMuZGVjb3JhdG9yc1tuYW1lXSA9IGZuO1xuICAgIH1cbiAgfSxcbiAgdW5yZWdpc3RlckRlY29yYXRvcjogZnVuY3Rpb24obmFtZSkge1xuICAgIGRlbGV0ZSB0aGlzLmRlY29yYXRvcnNbbmFtZV07XG4gIH0sXG4gIC8qKlxuICAgKiBSZXNldCB0aGUgbWVtb3J5IG9mIGlsbGVnYWwgcHJvcGVydHkgYWNjZXNzZXMgdGhhdCBoYXZlIGFscmVhZHkgYmVlbiBsb2dnZWQuXG4gICAqIEBkZXByZWNhdGVkIHNob3VsZCBvbmx5IGJlIHVzZWQgaW4gaGFuZGxlYmFycyB0ZXN0LWNhc2VzXG4gICAqL1xuICByZXNldExvZ2dlZFByb3BlcnR5QWNjZXNzZXMoKSB7XG4gICAgcmVzZXRMb2dnZWRQcm9wZXJ0aWVzKCk7XG4gIH1cbn07XG5cbmV4cG9ydCBsZXQgbG9nID0gbG9nZ2VyLmxvZztcblxuZXhwb3J0IHsgY3JlYXRlRnJhbWUsIGxvZ2dlciB9O1xuIl19
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL2Jhc2UuanMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7cUJBQThDLFNBQVM7O3lCQUNqQyxhQUFhOzs7O3VCQUNJLFdBQVc7OzBCQUNSLGNBQWM7O3NCQUNyQyxVQUFVOzs7O21DQUNTLHlCQUF5Qjs7QUFFeEQsSUFBTSxPQUFPLEdBQUcsT0FBTyxDQUFDOztBQUN4QixJQUFNLGlCQUFpQixHQUFHLENBQUMsQ0FBQzs7QUFDNUIsSUFBTSxpQ0FBaUMsR0FBRyxDQUFDLENBQUM7OztBQUU1QyxJQUFNLGdCQUFnQixHQUFHO0FBQzlCLEdBQUMsRUFBRSxhQUFhO0FBQ2hCLEdBQUMsRUFBRSxlQUFlO0FBQ2xCLEdBQUMsRUFBRSxlQUFlO0FBQ2xCLEdBQUMsRUFBRSxVQUFVO0FBQ2IsR0FBQyxFQUFFLGtCQUFrQjtBQUNyQixHQUFDLEVBQUUsaUJBQWlCO0FBQ3BCLEdBQUMsRUFBRSxpQkFBaUI7QUFDcEIsR0FBQyxFQUFFLFVBQVU7Q0FDZCxDQUFDOzs7QUFFRixJQUFNLFVBQVUsR0FBRyxpQkFBaUIsQ0FBQzs7QUFFOUIsU0FBUyxxQkFBcUIsQ0FBQyxPQUFPLEVBQUUsUUFBUSxFQUFFLFVBQVUsRUFBRTtBQUNuRSxNQUFJLENBQUMsT0FBTyxHQUFHLE9BQU8sSUFBSSxFQUFFLENBQUM7QUFDN0IsTUFBSSxDQUFDLFFBQVEsR0FBRyxRQUFRLElBQUksRUFBRSxDQUFDO0FBQy9CLE1BQUksQ0FBQyxVQUFVLEdBQUcsVUFBVSxJQUFJLEVBQUUsQ0FBQzs7QUFFbkMsa0NBQXVCLElBQUksQ0FBQyxDQUFDO0FBQzdCLHdDQUEwQixJQUFJLENBQUMsQ0FBQztDQUNqQzs7QUFFRCxxQkFBcUIsQ0FBQyxTQUFTLEdBQUc7QUFDaEMsYUFBVyxFQUFFLHFCQUFxQjs7QUFFbEMsUUFBTSxxQkFBUTtBQUNkLEtBQUcsRUFBRSxvQkFBTyxHQUFHOztBQUVmLGdCQUFjLEVBQUUsd0JBQVMsSUFBSSxFQUFFLEVBQUUsRUFBRTtBQUNqQyxRQUFJLGdCQUFTLElBQUksQ0FBQyxJQUFJLENBQUMsS0FBSyxVQUFVLEVBQUU7QUFDdEMsVUFBSSxFQUFFLEVBQUU7QUFDTixjQUFNLDJCQUFjLHlDQUF5QyxDQUFDLENBQUM7T0FDaEU7QUFDRCxvQkFBTyxJQUFJLENBQUMsT0FBTyxFQUFFLElBQUksQ0FBQyxDQUFDO0tBQzVCLE1BQU07QUFDTCxVQUFJLENBQUMsT0FBTyxDQUFDLElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQztLQUN6QjtHQUNGO0FBQ0Qsa0JBQWdCLEVBQUUsMEJBQVMsSUFBSSxFQUFFO0FBQy9CLFdBQU8sSUFBSSxDQUFDLE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQztHQUMzQjs7QUFFRCxpQkFBZSxFQUFFLHlCQUFTLElBQUksRUFBRSxPQUFPLEVBQUU7QUFDdkMsUUFBSSxnQkFBUyxJQUFJLENBQUMsSUFBSSxDQUFDLEtBQUssVUFBVSxFQUFFO0FBQ3RDLG9CQUFPLElBQUksQ0FBQyxRQUFRLEVBQUUsSUFBSSxDQUFDLENBQUM7S0FDN0IsTUFBTTtBQUNMLFVBQUksT0FBTyxPQUFPLEtBQUssV0FBVyxFQUFFO0FBQ2xDLGNBQU0seUVBQ3dDLElBQUksb0JBQ2pELENBQUM7T0FDSDtBQUNELFVBQUksQ0FBQyxRQUFRLENBQUMsSUFBSSxDQUFDLEdBQUcsT0FBTyxDQUFDO0tBQy9CO0dBQ0Y7QUFDRCxtQkFBaUIsRUFBRSwyQkFBUyxJQUFJLEVBQUU7QUFDaEMsV0FBTyxJQUFJLENBQUMsUUFBUSxDQUFDLElBQUksQ0FBQyxDQUFDO0dBQzVCOztBQUVELG1CQUFpQixFQUFFLDJCQUFTLElBQUksRUFBRSxFQUFFLEVBQUU7QUFDcEMsUUFBSSxnQkFBUyxJQUFJLENBQUMsSUFBSSxDQUFDLEtBQUssVUFBVSxFQUFFO0FBQ3RDLFVBQUksRUFBRSxFQUFFO0FBQ04sY0FBTSwyQkFBYyw0Q0FBNEMsQ0FBQyxDQUFDO09BQ25FO0FBQ0Qsb0JBQU8sSUFBSSxDQUFDLFVBQVUsRUFBRSxJQUFJLENBQUMsQ0FBQztLQUMvQixNQUFNO0FBQ0wsVUFBSSxDQUFDLFVBQVUsQ0FBQyxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUM7S0FDNUI7R0FDRjtBQUNELHFCQUFtQixFQUFFLDZCQUFTLElBQUksRUFBRTtBQUNsQyxXQUFPLElBQUksQ0FBQyxVQUFVLENBQUMsSUFBSSxDQUFDLENBQUM7R0FDOUI7Ozs7O0FBS0QsNkJBQTJCLEVBQUEsdUNBQUc7QUFDNUIsZ0RBQXVCLENBQUM7R0FDekI7Q0FDRixDQUFDOztBQUVLLElBQUksR0FBRyxHQUFHLG9CQUFPLEdBQUcsQ0FBQzs7O1FBRW5CLFdBQVc7UUFBRSxNQUFNIiwiZmlsZSI6ImJhc2UuanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBjcmVhdGVGcmFtZSwgZXh0ZW5kLCB0b1N0cmluZyB9IGZyb20gJy4vdXRpbHMnO1xuaW1wb3J0IEV4Y2VwdGlvbiBmcm9tICcuL2V4Y2VwdGlvbic7XG5pbXBvcnQgeyByZWdpc3RlckRlZmF1bHRIZWxwZXJzIH0gZnJvbSAnLi9oZWxwZXJzJztcbmltcG9ydCB7IHJlZ2lzdGVyRGVmYXVsdERlY29yYXRvcnMgfSBmcm9tICcuL2RlY29yYXRvcnMnO1xuaW1wb3J0IGxvZ2dlciBmcm9tICcuL2xvZ2dlcic7XG5pbXBvcnQgeyByZXNldExvZ2dlZFByb3BlcnRpZXMgfSBmcm9tICcuL2ludGVybmFsL3Byb3RvLWFjY2Vzcyc7XG5cbmV4cG9ydCBjb25zdCBWRVJTSU9OID0gJzQuNy43JztcbmV4cG9ydCBjb25zdCBDT01QSUxFUl9SRVZJU0lPTiA9IDg7XG5leHBvcnQgY29uc3QgTEFTVF9DT01QQVRJQkxFX0NPTVBJTEVSX1JFVklTSU9OID0gNztcblxuZXhwb3J0IGNvbnN0IFJFVklTSU9OX0NIQU5HRVMgPSB7XG4gIDE6ICc8PSAxLjAucmMuMicsIC8vIDEuMC5yYy4yIGlzIGFjdHVhbGx5IHJldjIgYnV0IGRvZXNuJ3QgcmVwb3J0IGl0XG4gIDI6ICc9PSAxLjAuMC1yYy4zJyxcbiAgMzogJz09IDEuMC4wLXJjLjQnLFxuICA0OiAnPT0gMS54LngnLFxuICA1OiAnPT0gMi4wLjAtYWxwaGEueCcsXG4gIDY6ICc+PSAyLjAuMC1iZXRhLjEnLFxuICA3OiAnPj0gNC4wLjAgPDQuMy4wJyxcbiAgODogJz49IDQuMy4wJ1xufTtcblxuY29uc3Qgb2JqZWN0VHlwZSA9ICdbb2JqZWN0IE9iamVjdF0nO1xuXG5leHBvcnQgZnVuY3Rpb24gSGFuZGxlYmFyc0Vudmlyb25tZW50KGhlbHBlcnMsIHBhcnRpYWxzLCBkZWNvcmF0b3JzKSB7XG4gIHRoaXMuaGVscGVycyA9IGhlbHBlcnMgfHwge307XG4gIHRoaXMucGFydGlhbHMgPSBwYXJ0aWFscyB8fCB7fTtcbiAgdGhpcy5kZWNvcmF0b3JzID0gZGVjb3JhdG9ycyB8fCB7fTtcblxuICByZWdpc3RlckRlZmF1bHRIZWxwZXJzKHRoaXMpO1xuICByZWdpc3RlckRlZmF1bHREZWNvcmF0b3JzKHRoaXMpO1xufVxuXG5IYW5kbGViYXJzRW52aXJvbm1lbnQucHJvdG90eXBlID0ge1xuICBjb25zdHJ1Y3RvcjogSGFuZGxlYmFyc0Vudmlyb25tZW50LFxuXG4gIGxvZ2dlcjogbG9nZ2VyLFxuICBsb2c6IGxvZ2dlci5sb2csXG5cbiAgcmVnaXN0ZXJIZWxwZXI6IGZ1bmN0aW9uKG5hbWUsIGZuKSB7XG4gICAgaWYgKHRvU3RyaW5nLmNhbGwobmFtZSkgPT09IG9iamVjdFR5cGUpIHtcbiAgICAgIGlmIChmbikge1xuICAgICAgICB0aHJvdyBuZXcgRXhjZXB0aW9uKCdBcmcgbm90IHN1cHBvcnRlZCB3aXRoIG11bHRpcGxlIGhlbHBlcnMnKTtcbiAgICAgIH1cbiAgICAgIGV4dGVuZCh0aGlzLmhlbHBlcnMsIG5hbWUpO1xuICAgIH0gZWxzZSB7XG4gICAgICB0aGlzLmhlbHBlcnNbbmFtZV0gPSBmbjtcbiAgICB9XG4gIH0sXG4gIHVucmVnaXN0ZXJIZWxwZXI6IGZ1bmN0aW9uKG5hbWUpIHtcbiAgICBkZWxldGUgdGhpcy5oZWxwZXJzW25hbWVdO1xuICB9LFxuXG4gIHJlZ2lzdGVyUGFydGlhbDogZnVuY3Rpb24obmFtZSwgcGFydGlhbCkge1xuICAgIGlmICh0b1N0cmluZy5jYWxsKG5hbWUpID09PSBvYmplY3RUeXBlKSB7XG4gICAgICBleHRlbmQodGhpcy5wYXJ0aWFscywgbmFtZSk7XG4gICAgfSBlbHNlIHtcbiAgICAgIGlmICh0eXBlb2YgcGFydGlhbCA9PT0gJ3VuZGVmaW5lZCcpIHtcbiAgICAgICAgdGhyb3cgbmV3IEV4Y2VwdGlvbihcbiAgICAgICAgICBgQXR0ZW1wdGluZyB0byByZWdpc3RlciBhIHBhcnRpYWwgY2FsbGVkIFwiJHtuYW1lfVwiIGFzIHVuZGVmaW5lZGBcbiAgICAgICAgKTtcbiAgICAgIH1cbiAgICAgIHRoaXMucGFydGlhbHNbbmFtZV0gPSBwYXJ0aWFsO1xuICAgIH1cbiAgfSxcbiAgdW5yZWdpc3RlclBhcnRpYWw6IGZ1bmN0aW9uKG5hbWUpIHtcbiAgICBkZWxldGUgdGhpcy5wYXJ0aWFsc1tuYW1lXTtcbiAgfSxcblxuICByZWdpc3RlckRlY29yYXRvcjogZnVuY3Rpb24obmFtZSwgZm4pIHtcbiAgICBpZiAodG9TdHJpbmcuY2FsbChuYW1lKSA9PT0gb2JqZWN0VHlwZSkge1xuICAgICAgaWYgKGZuKSB7XG4gICAgICAgIHRocm93IG5ldyBFeGNlcHRpb24oJ0FyZyBub3Qgc3VwcG9ydGVkIHdpdGggbXVsdGlwbGUgZGVjb3JhdG9ycycpO1xuICAgICAgfVxuICAgICAgZXh0ZW5kKHRoaXMuZGVjb3JhdG9ycywgbmFtZSk7XG4gICAgfSBlbHNlIHtcbiAgICAgIHRoaXMuZGVjb3JhdG9yc1tuYW1lXSA9IGZuO1xuICAgIH1cbiAgfSxcbiAgdW5yZWdpc3RlckRlY29yYXRvcjogZnVuY3Rpb24obmFtZSkge1xuICAgIGRlbGV0ZSB0aGlzLmRlY29yYXRvcnNbbmFtZV07XG4gIH0sXG4gIC8qKlxuICAgKiBSZXNldCB0aGUgbWVtb3J5IG9mIGlsbGVnYWwgcHJvcGVydHkgYWNjZXNzZXMgdGhhdCBoYXZlIGFscmVhZHkgYmVlbiBsb2dnZWQuXG4gICAqIEBkZXByZWNhdGVkIHNob3VsZCBvbmx5IGJlIHVzZWQgaW4gaGFuZGxlYmFycyB0ZXN0LWNhc2VzXG4gICAqL1xuICByZXNldExvZ2dlZFByb3BlcnR5QWNjZXNzZXMoKSB7XG4gICAgcmVzZXRMb2dnZWRQcm9wZXJ0aWVzKCk7XG4gIH1cbn07XG5cbmV4cG9ydCBsZXQgbG9nID0gbG9nZ2VyLmxvZztcblxuZXhwb3J0IHsgY3JlYXRlRnJhbWUsIGxvZ2dlciB9O1xuIl19
 
 
 /***/ }),
 
-/***/ 8234:
+/***/ 9357:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -1663,7 +1918,7 @@ exports.registerDefaultDecorators = registerDefaultDecorators;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _decoratorsInline = __webpack_require__(2403);
+var _decoratorsInline = __webpack_require__(5592);
 
 var _decoratorsInline2 = _interopRequireDefault(_decoratorsInline);
 
@@ -1675,7 +1930,7 @@ function registerDefaultDecorators(instance) {
 
 /***/ }),
 
-/***/ 2403:
+/***/ 5592:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1683,7 +1938,7 @@ function registerDefaultDecorators(instance) {
 
 exports.__esModule = true;
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
 exports["default"] = function (instance) {
   instance.registerDecorator('inline', function (fn, props, container, options) {
@@ -1712,7 +1967,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 1799:
+/***/ 200:
 /***/ (function(module, exports) {
 
 "use strict";
@@ -1784,7 +2039,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 3776:
+/***/ 2980:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -1797,31 +2052,31 @@ exports.moveHelperToHooks = moveHelperToHooks;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _helpersBlockHelperMissing = __webpack_require__(2312);
+var _helpersBlockHelperMissing = __webpack_require__(4437);
 
 var _helpersBlockHelperMissing2 = _interopRequireDefault(_helpersBlockHelperMissing);
 
-var _helpersEach = __webpack_require__(961);
+var _helpersEach = __webpack_require__(2610);
 
 var _helpersEach2 = _interopRequireDefault(_helpersEach);
 
-var _helpersHelperMissing = __webpack_require__(3547);
+var _helpersHelperMissing = __webpack_require__(9462);
 
 var _helpersHelperMissing2 = _interopRequireDefault(_helpersHelperMissing);
 
-var _helpersIf = __webpack_require__(899);
+var _helpersIf = __webpack_require__(1430);
 
 var _helpersIf2 = _interopRequireDefault(_helpersIf);
 
-var _helpersLog = __webpack_require__(1382);
+var _helpersLog = __webpack_require__(5829);
 
 var _helpersLog2 = _interopRequireDefault(_helpersLog);
 
-var _helpersLookup = __webpack_require__(287);
+var _helpersLookup = __webpack_require__(3139);
 
 var _helpersLookup2 = _interopRequireDefault(_helpersLookup);
 
-var _helpersWith = __webpack_require__(2539);
+var _helpersWith = __webpack_require__(1170);
 
 var _helpersWith2 = _interopRequireDefault(_helpersWith);
 
@@ -1848,7 +2103,7 @@ function moveHelperToHooks(instance, helperName, keepHelper) {
 
 /***/ }),
 
-/***/ 2312:
+/***/ 4437:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1856,7 +2111,7 @@ function moveHelperToHooks(instance, helperName, keepHelper) {
 
 exports.__esModule = true;
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
 exports["default"] = function (instance) {
   instance.registerHelper('blockHelperMissing', function (context, options) {
@@ -1895,7 +2150,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 961:
+/***/ 2610:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1906,9 +2161,9 @@ exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
-var _exception = __webpack_require__(1799);
+var _exception = __webpack_require__(200);
 
 var _exception2 = _interopRequireDefault(_exception);
 
@@ -1962,9 +2217,9 @@ exports["default"] = function (instance) {
             execIteration(i, i, i === context.length - 1);
           }
         }
-      } else if (typeof Symbol === 'function' && context[Symbol.iterator]) {
+      } else if (__webpack_require__.g.Symbol && context[__webpack_require__.g.Symbol.iterator]) {
         var newContext = [];
-        var iterator = context[Symbol.iterator]();
+        var iterator = context[__webpack_require__.g.Symbol.iterator]();
         for (var it = iterator.next(); !it.done; it = iterator.next()) {
           newContext.push(it.value);
         }
@@ -2002,12 +2257,12 @@ exports["default"] = function (instance) {
 };
 
 module.exports = exports['default'];
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL2hlbHBlcnMvZWFjaC5qcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7O3FCQU1PLFVBQVU7O3lCQUNLLGNBQWM7Ozs7cUJBRXJCLFVBQVMsUUFBUSxFQUFFO0FBQ2hDLFVBQVEsQ0FBQyxjQUFjLENBQUMsTUFBTSxFQUFFLFVBQVMsT0FBTyxFQUFFLE9BQU8sRUFBRTtBQUN6RCxRQUFJLENBQUMsT0FBTyxFQUFFO0FBQ1osWUFBTSwyQkFBYyw2QkFBNkIsQ0FBQyxDQUFDO0tBQ3BEOztBQUVELFFBQUksRUFBRSxHQUFHLE9BQU8sQ0FBQyxFQUFFO1FBQ2pCLE9BQU8sR0FBRyxPQUFPLENBQUMsT0FBTztRQUN6QixDQUFDLEdBQUcsQ0FBQztRQUNMLEdBQUcsR0FBRyxFQUFFO1FBQ1IsSUFBSSxZQUFBO1FBQ0osV0FBVyxZQUFBLENBQUM7O0FBRWQsUUFBSSxPQUFPLENBQUMsSUFBSSxJQUFJLE9BQU8sQ0FBQyxHQUFHLEVBQUU7QUFDL0IsaUJBQVcsR0FDVCx5QkFBa0IsT0FBTyxDQUFDLElBQUksQ0FBQyxXQUFXLEVBQUUsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQyxHQUFHLEdBQUcsQ0FBQztLQUNyRTs7QUFFRCxRQUFJLGtCQUFXLE9BQU8sQ0FBQyxFQUFFO0FBQ3ZCLGFBQU8sR0FBRyxPQUFPLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxDQUFDO0tBQzlCOztBQUVELFFBQUksT0FBTyxDQUFDLElBQUksRUFBRTtBQUNoQixVQUFJLEdBQUcsbUJBQVksT0FBTyxDQUFDLElBQUksQ0FBQyxDQUFDO0tBQ2xDOztBQUVELGFBQVMsYUFBYSxDQUFDLEtBQUssRUFBRSxLQUFLLEVBQUUsSUFBSSxFQUFFO0FBQ3pDLFVBQUksSUFBSSxFQUFFO0FBQ1IsWUFBSSxDQUFDLEdBQUcsR0FBRyxLQUFLLENBQUM7QUFDakIsWUFBSSxDQUFDLEtBQUssR0FBRyxLQUFLLENBQUM7QUFDbkIsWUFBSSxDQUFDLEtBQUssR0FBRyxLQUFLLEtBQUssQ0FBQyxDQUFDO0FBQ3pCLFlBQUksQ0FBQyxJQUFJLEdBQUcsQ0FBQyxDQUFDLElBQUksQ0FBQzs7QUFFbkIsWUFBSSxXQUFXLEVBQUU7QUFDZixjQUFJLENBQUMsV0FBVyxHQUFHLFdBQVcsR0FBRyxLQUFLLENBQUM7U0FDeEM7T0FDRjs7QUFFRCxTQUFHLEdBQ0QsR0FBRyxHQUNILEVBQUUsQ0FBQyxPQUFPLENBQUMsS0FBSyxDQUFDLEVBQUU7QUFDakIsWUFBSSxFQUFFLElBQUk7QUFDVixtQkFBVyxFQUFFLG1CQUNYLENBQUMsT0FBTyxDQUFDLEtBQUssQ0FBQyxFQUFFLEtBQUssQ0FBQyxFQUN2QixDQUFDLFdBQVcsR0FBRyxLQUFLLEVBQUUsSUFBSSxDQUFDLENBQzVCO09BQ0YsQ0FBQyxDQUFDO0tBQ047O0FBRUQsUUFBSSxPQUFPLElBQUksT0FBTyxPQUFPLEtBQUssUUFBUSxFQUFFO0FBQzFDLFVBQUksZUFBUSxPQUFPLENBQUMsRUFBRTtBQUNwQixhQUFLLElBQUksQ0FBQyxHQUFHLE9BQU8sQ0FBQyxNQUFNLEVBQUUsQ0FBQyxHQUFHLENBQUMsRUFBRSxDQUFDLEVBQUUsRUFBRTtBQUN2QyxjQUFJLENBQUMsSUFBSSxPQUFPLEVBQUU7QUFDaEIseUJBQWEsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsS0FBSyxPQUFPLENBQUMsTUFBTSxHQUFHLENBQUMsQ0FBQyxDQUFDO1dBQy9DO1NBQ0Y7T0FDRixNQUFNLElBQUksT0FBTyxNQUFNLEtBQUssVUFBVSxJQUFJLE9BQU8sQ0FBQyxNQUFNLENBQUMsUUFBUSxDQUFDLEVBQUU7QUFDbkUsWUFBTSxVQUFVLEdBQUcsRUFBRSxDQUFDO0FBQ3RCLFlBQU0sUUFBUSxHQUFHLE9BQU8sQ0FBQyxNQUFNLENBQUMsUUFBUSxDQUFDLEVBQUUsQ0FBQztBQUM1QyxhQUFLLElBQUksRUFBRSxHQUFHLFFBQVEsQ0FBQyxJQUFJLEVBQUUsRUFBRSxDQUFDLEVBQUUsQ0FBQyxJQUFJLEVBQUUsRUFBRSxHQUFHLFFBQVEsQ0FBQyxJQUFJLEVBQUUsRUFBRTtBQUM3RCxvQkFBVSxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsS0FBSyxDQUFDLENBQUM7U0FDM0I7QUFDRCxlQUFPLEdBQUcsVUFBVSxDQUFDO0FBQ3JCLGFBQUssSUFBSSxDQUFDLEdBQUcsT0FBTyxDQUFDLE1BQU0sRUFBRSxDQUFDLEdBQUcsQ0FBQyxFQUFFLENBQUMsRUFBRSxFQUFFO0FBQ3ZDLHVCQUFhLENBQUMsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLEtBQUssT0FBTyxDQUFDLE1BQU0sR0FBRyxDQUFDLENBQUMsQ0FBQztTQUMvQztPQUNGLE1BQU07O0FBQ0wsY0FBSSxRQUFRLFlBQUEsQ0FBQzs7QUFFYixnQkFBTSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsQ0FBQyxPQUFPLENBQUMsVUFBQSxHQUFHLEVBQUk7Ozs7QUFJbEMsZ0JBQUksUUFBUSxLQUFLLFNBQVMsRUFBRTtBQUMxQiwyQkFBYSxDQUFDLFFBQVEsRUFBRSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUM7YUFDaEM7QUFDRCxvQkFBUSxHQUFHLEdBQUcsQ0FBQztBQUNmLGFBQUMsRUFBRSxDQUFDO1dBQ0wsQ0FBQyxDQUFDO0FBQ0gsY0FBSSxRQUFRLEtBQUssU0FBUyxFQUFFO0FBQzFCLHlCQUFhLENBQUMsUUFBUSxFQUFFLENBQUMsR0FBRyxDQUFDLEVBQUUsSUFBSSxDQUFDLENBQUM7V0FDdEM7O09BQ0Y7S0FDRjs7QUFFRCxRQUFJLENBQUMsS0FBSyxDQUFDLEVBQUU7QUFDWCxTQUFHLEdBQUcsT0FBTyxDQUFDLElBQUksQ0FBQyxDQUFDO0tBQ3JCOztBQUVELFdBQU8sR0FBRyxDQUFDO0dBQ1osQ0FBQyxDQUFDO0NBQ0oiLCJmaWxlIjoiZWFjaC5qcyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7XG4gIGFwcGVuZENvbnRleHRQYXRoLFxuICBibG9ja1BhcmFtcyxcbiAgY3JlYXRlRnJhbWUsXG4gIGlzQXJyYXksXG4gIGlzRnVuY3Rpb25cbn0gZnJvbSAnLi4vdXRpbHMnO1xuaW1wb3J0IEV4Y2VwdGlvbiBmcm9tICcuLi9leGNlcHRpb24nO1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbihpbnN0YW5jZSkge1xuICBpbnN0YW5jZS5yZWdpc3RlckhlbHBlcignZWFjaCcsIGZ1bmN0aW9uKGNvbnRleHQsIG9wdGlvbnMpIHtcbiAgICBpZiAoIW9wdGlvbnMpIHtcbiAgICAgIHRocm93IG5ldyBFeGNlcHRpb24oJ011c3QgcGFzcyBpdGVyYXRvciB0byAjZWFjaCcpO1xuICAgIH1cblxuICAgIGxldCBmbiA9IG9wdGlvbnMuZm4sXG4gICAgICBpbnZlcnNlID0gb3B0aW9ucy5pbnZlcnNlLFxuICAgICAgaSA9IDAsXG4gICAgICByZXQgPSAnJyxcbiAgICAgIGRhdGEsXG4gICAgICBjb250ZXh0UGF0aDtcblxuICAgIGlmIChvcHRpb25zLmRhdGEgJiYgb3B0aW9ucy5pZHMpIHtcbiAgICAgIGNvbnRleHRQYXRoID1cbiAgICAgICAgYXBwZW5kQ29udGV4dFBhdGgob3B0aW9ucy5kYXRhLmNvbnRleHRQYXRoLCBvcHRpb25zLmlkc1swXSkgKyAnLic7XG4gICAgfVxuXG4gICAgaWYgKGlzRnVuY3Rpb24oY29udGV4dCkpIHtcbiAgICAgIGNvbnRleHQgPSBjb250ZXh0LmNhbGwodGhpcyk7XG4gICAgfVxuXG4gICAgaWYgKG9wdGlvbnMuZGF0YSkge1xuICAgICAgZGF0YSA9IGNyZWF0ZUZyYW1lKG9wdGlvbnMuZGF0YSk7XG4gICAgfVxuXG4gICAgZnVuY3Rpb24gZXhlY0l0ZXJhdGlvbihmaWVsZCwgaW5kZXgsIGxhc3QpIHtcbiAgICAgIGlmIChkYXRhKSB7XG4gICAgICAgIGRhdGEua2V5ID0gZmllbGQ7XG4gICAgICAgIGRhdGEuaW5kZXggPSBpbmRleDtcbiAgICAgICAgZGF0YS5maXJzdCA9IGluZGV4ID09PSAwO1xuICAgICAgICBkYXRhLmxhc3QgPSAhIWxhc3Q7XG5cbiAgICAgICAgaWYgKGNvbnRleHRQYXRoKSB7XG4gICAgICAgICAgZGF0YS5jb250ZXh0UGF0aCA9IGNvbnRleHRQYXRoICsgZmllbGQ7XG4gICAgICAgIH1cbiAgICAgIH1cblxuICAgICAgcmV0ID1cbiAgICAgICAgcmV0ICtcbiAgICAgICAgZm4oY29udGV4dFtmaWVsZF0sIHtcbiAgICAgICAgICBkYXRhOiBkYXRhLFxuICAgICAgICAgIGJsb2NrUGFyYW1zOiBibG9ja1BhcmFtcyhcbiAgICAgICAgICAgIFtjb250ZXh0W2ZpZWxkXSwgZmllbGRdLFxuICAgICAgICAgICAgW2NvbnRleHRQYXRoICsgZmllbGQsIG51bGxdXG4gICAgICAgICAgKVxuICAgICAgICB9KTtcbiAgICB9XG5cbiAgICBpZiAoY29udGV4dCAmJiB0eXBlb2YgY29udGV4dCA9PT0gJ29iamVjdCcpIHtcbiAgICAgIGlmIChpc0FycmF5KGNvbnRleHQpKSB7XG4gICAgICAgIGZvciAobGV0IGogPSBjb250ZXh0Lmxlbmd0aDsgaSA8IGo7IGkrKykge1xuICAgICAgICAgIGlmIChpIGluIGNvbnRleHQpIHtcbiAgICAgICAgICAgIGV4ZWNJdGVyYXRpb24oaSwgaSwgaSA9PT0gY29udGV4dC5sZW5ndGggLSAxKTtcbiAgICAgICAgICB9XG4gICAgICAgIH1cbiAgICAgIH0gZWxzZSBpZiAodHlwZW9mIFN5bWJvbCA9PT0gJ2Z1bmN0aW9uJyAmJiBjb250ZXh0W1N5bWJvbC5pdGVyYXRvcl0pIHtcbiAgICAgICAgY29uc3QgbmV3Q29udGV4dCA9IFtdO1xuICAgICAgICBjb25zdCBpdGVyYXRvciA9IGNvbnRleHRbU3ltYm9sLml0ZXJhdG9yXSgpO1xuICAgICAgICBmb3IgKGxldCBpdCA9IGl0ZXJhdG9yLm5leHQoKTsgIWl0LmRvbmU7IGl0ID0gaXRlcmF0b3IubmV4dCgpKSB7XG4gICAgICAgICAgbmV3Q29udGV4dC5wdXNoKGl0LnZhbHVlKTtcbiAgICAgICAgfVxuICAgICAgICBjb250ZXh0ID0gbmV3Q29udGV4dDtcbiAgICAgICAgZm9yIChsZXQgaiA9IGNvbnRleHQubGVuZ3RoOyBpIDwgajsgaSsrKSB7XG4gICAgICAgICAgZXhlY0l0ZXJhdGlvbihpLCBpLCBpID09PSBjb250ZXh0Lmxlbmd0aCAtIDEpO1xuICAgICAgICB9XG4gICAgICB9IGVsc2Uge1xuICAgICAgICBsZXQgcHJpb3JLZXk7XG5cbiAgICAgICAgT2JqZWN0LmtleXMoY29udGV4dCkuZm9yRWFjaChrZXkgPT4ge1xuICAgICAgICAgIC8vIFdlJ3JlIHJ1bm5pbmcgdGhlIGl0ZXJhdGlvbnMgb25lIHN0ZXAgb3V0IG9mIHN5bmMgc28gd2UgY2FuIGRldGVjdFxuICAgICAgICAgIC8vIHRoZSBsYXN0IGl0ZXJhdGlvbiB3aXRob3V0IGhhdmUgdG8gc2NhbiB0aGUgb2JqZWN0IHR3aWNlIGFuZCBjcmVhdGVcbiAgICAgICAgICAvLyBhbiBpdGVybWVkaWF0ZSBrZXlzIGFycmF5LlxuICAgICAgICAgIGlmIChwcmlvcktleSAhPT0gdW5kZWZpbmVkKSB7XG4gICAgICAgICAgICBleGVjSXRlcmF0aW9uKHByaW9yS2V5LCBpIC0gMSk7XG4gICAgICAgICAgfVxuICAgICAgICAgIHByaW9yS2V5ID0ga2V5O1xuICAgICAgICAgIGkrKztcbiAgICAgICAgfSk7XG4gICAgICAgIGlmIChwcmlvcktleSAhPT0gdW5kZWZpbmVkKSB7XG4gICAgICAgICAgZXhlY0l0ZXJhdGlvbihwcmlvcktleSwgaSAtIDEsIHRydWUpO1xuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuXG4gICAgaWYgKGkgPT09IDApIHtcbiAgICAgIHJldCA9IGludmVyc2UodGhpcyk7XG4gICAgfVxuXG4gICAgcmV0dXJuIHJldDtcbiAgfSk7XG59XG4iXX0=
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL2hlbHBlcnMvZWFjaC5qcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7O3FCQU1PLFVBQVU7O3lCQUNLLGNBQWM7Ozs7cUJBRXJCLFVBQVMsUUFBUSxFQUFFO0FBQ2hDLFVBQVEsQ0FBQyxjQUFjLENBQUMsTUFBTSxFQUFFLFVBQVMsT0FBTyxFQUFFLE9BQU8sRUFBRTtBQUN6RCxRQUFJLENBQUMsT0FBTyxFQUFFO0FBQ1osWUFBTSwyQkFBYyw2QkFBNkIsQ0FBQyxDQUFDO0tBQ3BEOztBQUVELFFBQUksRUFBRSxHQUFHLE9BQU8sQ0FBQyxFQUFFO1FBQ2pCLE9BQU8sR0FBRyxPQUFPLENBQUMsT0FBTztRQUN6QixDQUFDLEdBQUcsQ0FBQztRQUNMLEdBQUcsR0FBRyxFQUFFO1FBQ1IsSUFBSSxZQUFBO1FBQ0osV0FBVyxZQUFBLENBQUM7O0FBRWQsUUFBSSxPQUFPLENBQUMsSUFBSSxJQUFJLE9BQU8sQ0FBQyxHQUFHLEVBQUU7QUFDL0IsaUJBQVcsR0FDVCx5QkFBa0IsT0FBTyxDQUFDLElBQUksQ0FBQyxXQUFXLEVBQUUsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQyxHQUFHLEdBQUcsQ0FBQztLQUNyRTs7QUFFRCxRQUFJLGtCQUFXLE9BQU8sQ0FBQyxFQUFFO0FBQ3ZCLGFBQU8sR0FBRyxPQUFPLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxDQUFDO0tBQzlCOztBQUVELFFBQUksT0FBTyxDQUFDLElBQUksRUFBRTtBQUNoQixVQUFJLEdBQUcsbUJBQVksT0FBTyxDQUFDLElBQUksQ0FBQyxDQUFDO0tBQ2xDOztBQUVELGFBQVMsYUFBYSxDQUFDLEtBQUssRUFBRSxLQUFLLEVBQUUsSUFBSSxFQUFFO0FBQ3pDLFVBQUksSUFBSSxFQUFFO0FBQ1IsWUFBSSxDQUFDLEdBQUcsR0FBRyxLQUFLLENBQUM7QUFDakIsWUFBSSxDQUFDLEtBQUssR0FBRyxLQUFLLENBQUM7QUFDbkIsWUFBSSxDQUFDLEtBQUssR0FBRyxLQUFLLEtBQUssQ0FBQyxDQUFDO0FBQ3pCLFlBQUksQ0FBQyxJQUFJLEdBQUcsQ0FBQyxDQUFDLElBQUksQ0FBQzs7QUFFbkIsWUFBSSxXQUFXLEVBQUU7QUFDZixjQUFJLENBQUMsV0FBVyxHQUFHLFdBQVcsR0FBRyxLQUFLLENBQUM7U0FDeEM7T0FDRjs7QUFFRCxTQUFHLEdBQ0QsR0FBRyxHQUNILEVBQUUsQ0FBQyxPQUFPLENBQUMsS0FBSyxDQUFDLEVBQUU7QUFDakIsWUFBSSxFQUFFLElBQUk7QUFDVixtQkFBVyxFQUFFLG1CQUNYLENBQUMsT0FBTyxDQUFDLEtBQUssQ0FBQyxFQUFFLEtBQUssQ0FBQyxFQUN2QixDQUFDLFdBQVcsR0FBRyxLQUFLLEVBQUUsSUFBSSxDQUFDLENBQzVCO09BQ0YsQ0FBQyxDQUFDO0tBQ047O0FBRUQsUUFBSSxPQUFPLElBQUksT0FBTyxPQUFPLEtBQUssUUFBUSxFQUFFO0FBQzFDLFVBQUksZUFBUSxPQUFPLENBQUMsRUFBRTtBQUNwQixhQUFLLElBQUksQ0FBQyxHQUFHLE9BQU8sQ0FBQyxNQUFNLEVBQUUsQ0FBQyxHQUFHLENBQUMsRUFBRSxDQUFDLEVBQUUsRUFBRTtBQUN2QyxjQUFJLENBQUMsSUFBSSxPQUFPLEVBQUU7QUFDaEIseUJBQWEsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsS0FBSyxPQUFPLENBQUMsTUFBTSxHQUFHLENBQUMsQ0FBQyxDQUFDO1dBQy9DO1NBQ0Y7T0FDRixNQUFNLElBQUksTUFBTSxDQUFDLE1BQU0sSUFBSSxPQUFPLENBQUMsTUFBTSxDQUFDLE1BQU0sQ0FBQyxRQUFRLENBQUMsRUFBRTtBQUMzRCxZQUFNLFVBQVUsR0FBRyxFQUFFLENBQUM7QUFDdEIsWUFBTSxRQUFRLEdBQUcsT0FBTyxDQUFDLE1BQU0sQ0FBQyxNQUFNLENBQUMsUUFBUSxDQUFDLEVBQUUsQ0FBQztBQUNuRCxhQUFLLElBQUksRUFBRSxHQUFHLFFBQVEsQ0FBQyxJQUFJLEVBQUUsRUFBRSxDQUFDLEVBQUUsQ0FBQyxJQUFJLEVBQUUsRUFBRSxHQUFHLFFBQVEsQ0FBQyxJQUFJLEVBQUUsRUFBRTtBQUM3RCxvQkFBVSxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsS0FBSyxDQUFDLENBQUM7U0FDM0I7QUFDRCxlQUFPLEdBQUcsVUFBVSxDQUFDO0FBQ3JCLGFBQUssSUFBSSxDQUFDLEdBQUcsT0FBTyxDQUFDLE1BQU0sRUFBRSxDQUFDLEdBQUcsQ0FBQyxFQUFFLENBQUMsRUFBRSxFQUFFO0FBQ3ZDLHVCQUFhLENBQUMsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLEtBQUssT0FBTyxDQUFDLE1BQU0sR0FBRyxDQUFDLENBQUMsQ0FBQztTQUMvQztPQUNGLE1BQU07O0FBQ0wsY0FBSSxRQUFRLFlBQUEsQ0FBQzs7QUFFYixnQkFBTSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsQ0FBQyxPQUFPLENBQUMsVUFBQSxHQUFHLEVBQUk7Ozs7QUFJbEMsZ0JBQUksUUFBUSxLQUFLLFNBQVMsRUFBRTtBQUMxQiwyQkFBYSxDQUFDLFFBQVEsRUFBRSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUM7YUFDaEM7QUFDRCxvQkFBUSxHQUFHLEdBQUcsQ0FBQztBQUNmLGFBQUMsRUFBRSxDQUFDO1dBQ0wsQ0FBQyxDQUFDO0FBQ0gsY0FBSSxRQUFRLEtBQUssU0FBUyxFQUFFO0FBQzFCLHlCQUFhLENBQUMsUUFBUSxFQUFFLENBQUMsR0FBRyxDQUFDLEVBQUUsSUFBSSxDQUFDLENBQUM7V0FDdEM7O09BQ0Y7S0FDRjs7QUFFRCxRQUFJLENBQUMsS0FBSyxDQUFDLEVBQUU7QUFDWCxTQUFHLEdBQUcsT0FBTyxDQUFDLElBQUksQ0FBQyxDQUFDO0tBQ3JCOztBQUVELFdBQU8sR0FBRyxDQUFDO0dBQ1osQ0FBQyxDQUFDO0NBQ0oiLCJmaWxlIjoiZWFjaC5qcyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7XG4gIGFwcGVuZENvbnRleHRQYXRoLFxuICBibG9ja1BhcmFtcyxcbiAgY3JlYXRlRnJhbWUsXG4gIGlzQXJyYXksXG4gIGlzRnVuY3Rpb25cbn0gZnJvbSAnLi4vdXRpbHMnO1xuaW1wb3J0IEV4Y2VwdGlvbiBmcm9tICcuLi9leGNlcHRpb24nO1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbihpbnN0YW5jZSkge1xuICBpbnN0YW5jZS5yZWdpc3RlckhlbHBlcignZWFjaCcsIGZ1bmN0aW9uKGNvbnRleHQsIG9wdGlvbnMpIHtcbiAgICBpZiAoIW9wdGlvbnMpIHtcbiAgICAgIHRocm93IG5ldyBFeGNlcHRpb24oJ011c3QgcGFzcyBpdGVyYXRvciB0byAjZWFjaCcpO1xuICAgIH1cblxuICAgIGxldCBmbiA9IG9wdGlvbnMuZm4sXG4gICAgICBpbnZlcnNlID0gb3B0aW9ucy5pbnZlcnNlLFxuICAgICAgaSA9IDAsXG4gICAgICByZXQgPSAnJyxcbiAgICAgIGRhdGEsXG4gICAgICBjb250ZXh0UGF0aDtcblxuICAgIGlmIChvcHRpb25zLmRhdGEgJiYgb3B0aW9ucy5pZHMpIHtcbiAgICAgIGNvbnRleHRQYXRoID1cbiAgICAgICAgYXBwZW5kQ29udGV4dFBhdGgob3B0aW9ucy5kYXRhLmNvbnRleHRQYXRoLCBvcHRpb25zLmlkc1swXSkgKyAnLic7XG4gICAgfVxuXG4gICAgaWYgKGlzRnVuY3Rpb24oY29udGV4dCkpIHtcbiAgICAgIGNvbnRleHQgPSBjb250ZXh0LmNhbGwodGhpcyk7XG4gICAgfVxuXG4gICAgaWYgKG9wdGlvbnMuZGF0YSkge1xuICAgICAgZGF0YSA9IGNyZWF0ZUZyYW1lKG9wdGlvbnMuZGF0YSk7XG4gICAgfVxuXG4gICAgZnVuY3Rpb24gZXhlY0l0ZXJhdGlvbihmaWVsZCwgaW5kZXgsIGxhc3QpIHtcbiAgICAgIGlmIChkYXRhKSB7XG4gICAgICAgIGRhdGEua2V5ID0gZmllbGQ7XG4gICAgICAgIGRhdGEuaW5kZXggPSBpbmRleDtcbiAgICAgICAgZGF0YS5maXJzdCA9IGluZGV4ID09PSAwO1xuICAgICAgICBkYXRhLmxhc3QgPSAhIWxhc3Q7XG5cbiAgICAgICAgaWYgKGNvbnRleHRQYXRoKSB7XG4gICAgICAgICAgZGF0YS5jb250ZXh0UGF0aCA9IGNvbnRleHRQYXRoICsgZmllbGQ7XG4gICAgICAgIH1cbiAgICAgIH1cblxuICAgICAgcmV0ID1cbiAgICAgICAgcmV0ICtcbiAgICAgICAgZm4oY29udGV4dFtmaWVsZF0sIHtcbiAgICAgICAgICBkYXRhOiBkYXRhLFxuICAgICAgICAgIGJsb2NrUGFyYW1zOiBibG9ja1BhcmFtcyhcbiAgICAgICAgICAgIFtjb250ZXh0W2ZpZWxkXSwgZmllbGRdLFxuICAgICAgICAgICAgW2NvbnRleHRQYXRoICsgZmllbGQsIG51bGxdXG4gICAgICAgICAgKVxuICAgICAgICB9KTtcbiAgICB9XG5cbiAgICBpZiAoY29udGV4dCAmJiB0eXBlb2YgY29udGV4dCA9PT0gJ29iamVjdCcpIHtcbiAgICAgIGlmIChpc0FycmF5KGNvbnRleHQpKSB7XG4gICAgICAgIGZvciAobGV0IGogPSBjb250ZXh0Lmxlbmd0aDsgaSA8IGo7IGkrKykge1xuICAgICAgICAgIGlmIChpIGluIGNvbnRleHQpIHtcbiAgICAgICAgICAgIGV4ZWNJdGVyYXRpb24oaSwgaSwgaSA9PT0gY29udGV4dC5sZW5ndGggLSAxKTtcbiAgICAgICAgICB9XG4gICAgICAgIH1cbiAgICAgIH0gZWxzZSBpZiAoZ2xvYmFsLlN5bWJvbCAmJiBjb250ZXh0W2dsb2JhbC5TeW1ib2wuaXRlcmF0b3JdKSB7XG4gICAgICAgIGNvbnN0IG5ld0NvbnRleHQgPSBbXTtcbiAgICAgICAgY29uc3QgaXRlcmF0b3IgPSBjb250ZXh0W2dsb2JhbC5TeW1ib2wuaXRlcmF0b3JdKCk7XG4gICAgICAgIGZvciAobGV0IGl0ID0gaXRlcmF0b3IubmV4dCgpOyAhaXQuZG9uZTsgaXQgPSBpdGVyYXRvci5uZXh0KCkpIHtcbiAgICAgICAgICBuZXdDb250ZXh0LnB1c2goaXQudmFsdWUpO1xuICAgICAgICB9XG4gICAgICAgIGNvbnRleHQgPSBuZXdDb250ZXh0O1xuICAgICAgICBmb3IgKGxldCBqID0gY29udGV4dC5sZW5ndGg7IGkgPCBqOyBpKyspIHtcbiAgICAgICAgICBleGVjSXRlcmF0aW9uKGksIGksIGkgPT09IGNvbnRleHQubGVuZ3RoIC0gMSk7XG4gICAgICAgIH1cbiAgICAgIH0gZWxzZSB7XG4gICAgICAgIGxldCBwcmlvcktleTtcblxuICAgICAgICBPYmplY3Qua2V5cyhjb250ZXh0KS5mb3JFYWNoKGtleSA9PiB7XG4gICAgICAgICAgLy8gV2UncmUgcnVubmluZyB0aGUgaXRlcmF0aW9ucyBvbmUgc3RlcCBvdXQgb2Ygc3luYyBzbyB3ZSBjYW4gZGV0ZWN0XG4gICAgICAgICAgLy8gdGhlIGxhc3QgaXRlcmF0aW9uIHdpdGhvdXQgaGF2ZSB0byBzY2FuIHRoZSBvYmplY3QgdHdpY2UgYW5kIGNyZWF0ZVxuICAgICAgICAgIC8vIGFuIGl0ZXJtZWRpYXRlIGtleXMgYXJyYXkuXG4gICAgICAgICAgaWYgKHByaW9yS2V5ICE9PSB1bmRlZmluZWQpIHtcbiAgICAgICAgICAgIGV4ZWNJdGVyYXRpb24ocHJpb3JLZXksIGkgLSAxKTtcbiAgICAgICAgICB9XG4gICAgICAgICAgcHJpb3JLZXkgPSBrZXk7XG4gICAgICAgICAgaSsrO1xuICAgICAgICB9KTtcbiAgICAgICAgaWYgKHByaW9yS2V5ICE9PSB1bmRlZmluZWQpIHtcbiAgICAgICAgICBleGVjSXRlcmF0aW9uKHByaW9yS2V5LCBpIC0gMSwgdHJ1ZSk7XG4gICAgICAgIH1cbiAgICAgIH1cbiAgICB9XG5cbiAgICBpZiAoaSA9PT0gMCkge1xuICAgICAgcmV0ID0gaW52ZXJzZSh0aGlzKTtcbiAgICB9XG5cbiAgICByZXR1cm4gcmV0O1xuICB9KTtcbn1cbiJdfQ==
 
 
 /***/ }),
 
-/***/ 3547:
+/***/ 9462:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2018,7 +2273,7 @@ exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _exception = __webpack_require__(1799);
+var _exception = __webpack_require__(200);
 
 var _exception2 = _interopRequireDefault(_exception);
 
@@ -2040,7 +2295,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 899:
+/***/ 1430:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2051,9 +2306,9 @@ exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
-var _exception = __webpack_require__(1799);
+var _exception = __webpack_require__(200);
 
 var _exception2 = _interopRequireDefault(_exception);
 
@@ -2094,7 +2349,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 1382:
+/***/ 5829:
 /***/ (function(module, exports) {
 
 "use strict";
@@ -2128,7 +2383,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 287:
+/***/ 3139:
 /***/ (function(module, exports) {
 
 "use strict";
@@ -2152,7 +2407,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 2539:
+/***/ 1170:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2163,9 +2418,9 @@ exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
-var _exception = __webpack_require__(1799);
+var _exception = __webpack_require__(200);
 
 var _exception2 = _interopRequireDefault(_exception);
 
@@ -2203,7 +2458,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 4239:
+/***/ 9886:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -2212,7 +2467,7 @@ module.exports = exports['default'];
 exports.__esModule = true;
 exports.createNewLookupObject = createNewLookupObject;
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
 /**
  * Create a new object with "null"-prototype to avoid truthy results on prototype properties.
@@ -2233,7 +2488,7 @@ function createNewLookupObject() {
 
 /***/ }),
 
-/***/ 9725:
+/***/ 9870:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -2245,13 +2500,13 @@ exports.resultIsAllowed = resultIsAllowed;
 exports.resetLoggedProperties = resetLoggedProperties;
 // istanbul ignore next
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var _createNewLookupObject = __webpack_require__(4239);
+var _createNewLookupObject = __webpack_require__(9886);
 
-var _logger = __webpack_require__(7890);
+var _logger = __webpack_require__(9064);
 
-var _logger2 = _interopRequireDefault(_logger);
+var logger = _interopRequireWildcard(_logger);
 
 var loggedProperties = Object.create(null);
 
@@ -2300,7 +2555,7 @@ function checkWhiteList(protoAccessControlForType, propertyName) {
 function logUnexpecedPropertyAccessOnce(propertyName) {
   if (loggedProperties[propertyName] !== true) {
     loggedProperties[propertyName] = true;
-    _logger2['default'].log('error', 'Handlebars: Access has been denied to resolve the property "' + propertyName + '" because it is not an "own property" of its parent.\n' + 'You can add a runtime option to disable the check or this warning:\n' + 'See https://handlebarsjs.com/api-reference/runtime-options.html#options-to-control-prototype-access for details');
+    logger.log('error', 'Handlebars: Access has been denied to resolve the property "' + propertyName + '" because it is not an "own property" of its parent.\n' + 'You can add a runtime option to disable the check or this warning:\n' + 'See https://handlebarsjs.com/api-reference/runtime-options.html#options-to-control-prototype-access for details');
   }
 }
 
@@ -2309,12 +2564,12 @@ function resetLoggedProperties() {
     delete loggedProperties[propertyName];
   });
 }
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL2ludGVybmFsL3Byb3RvLWFjY2Vzcy5qcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7O3FDQUFzQyw0QkFBNEI7O3NCQUMvQyxXQUFXOzs7O0FBRTlCLElBQU0sZ0JBQWdCLEdBQUcsTUFBTSxDQUFDLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQzs7QUFFdEMsU0FBUyx3QkFBd0IsQ0FBQyxjQUFjLEVBQUU7QUFDdkQsTUFBSSxzQkFBc0IsR0FBRyxNQUFNLENBQUMsTUFBTSxDQUFDLElBQUksQ0FBQyxDQUFDO0FBQ2pELHdCQUFzQixDQUFDLGFBQWEsQ0FBQyxHQUFHLEtBQUssQ0FBQztBQUM5Qyx3QkFBc0IsQ0FBQyxrQkFBa0IsQ0FBQyxHQUFHLEtBQUssQ0FBQztBQUNuRCx3QkFBc0IsQ0FBQyxrQkFBa0IsQ0FBQyxHQUFHLEtBQUssQ0FBQztBQUNuRCx3QkFBc0IsQ0FBQyxrQkFBa0IsQ0FBQyxHQUFHLEtBQUssQ0FBQzs7QUFFbkQsTUFBSSx3QkFBd0IsR0FBRyxNQUFNLENBQUMsTUFBTSxDQUFDLElBQUksQ0FBQyxDQUFDOztBQUVuRCwwQkFBd0IsQ0FBQyxXQUFXLENBQUMsR0FBRyxLQUFLLENBQUM7O0FBRTlDLFNBQU87QUFDTCxjQUFVLEVBQUU7QUFDVixlQUFTLEVBQUUsNkNBQ1Qsd0JBQXdCLEVBQ3hCLGNBQWMsQ0FBQyxzQkFBc0IsQ0FDdEM7QUFDRCxrQkFBWSxFQUFFLGNBQWMsQ0FBQyw2QkFBNkI7S0FDM0Q7QUFDRCxXQUFPLEVBQUU7QUFDUCxlQUFTLEVBQUUsNkNBQ1Qsc0JBQXNCLEVBQ3RCLGNBQWMsQ0FBQyxtQkFBbUIsQ0FDbkM7QUFDRCxrQkFBWSxFQUFFLGNBQWMsQ0FBQywwQkFBMEI7S0FDeEQ7R0FDRixDQUFDO0NBQ0g7O0FBRU0sU0FBUyxlQUFlLENBQUMsTUFBTSxFQUFFLGtCQUFrQixFQUFFLFlBQVksRUFBRTtBQUN4RSxNQUFJLE9BQU8sTUFBTSxLQUFLLFVBQVUsRUFBRTtBQUNoQyxXQUFPLGNBQWMsQ0FBQyxrQkFBa0IsQ0FBQyxPQUFPLEVBQUUsWUFBWSxDQUFDLENBQUM7R0FDakUsTUFBTTtBQUNMLFdBQU8sY0FBYyxDQUFDLGtCQUFrQixDQUFDLFVBQVUsRUFBRSxZQUFZLENBQUMsQ0FBQztHQUNwRTtDQUNGOztBQUVELFNBQVMsY0FBYyxDQUFDLHlCQUF5QixFQUFFLFlBQVksRUFBRTtBQUMvRCxNQUFJLHlCQUF5QixDQUFDLFNBQVMsQ0FBQyxZQUFZLENBQUMsS0FBSyxTQUFTLEVBQUU7QUFDbkUsV0FBTyx5QkFBeUIsQ0FBQyxTQUFTLENBQUMsWUFBWSxDQUFDLEtBQUssSUFBSSxDQUFDO0dBQ25FO0FBQ0QsTUFBSSx5QkFBeUIsQ0FBQyxZQUFZLEtBQUssU0FBUyxFQUFFO0FBQ3hELFdBQU8seUJBQXlCLENBQUMsWUFBWSxDQUFDO0dBQy9DO0FBQ0QsZ0NBQThCLENBQUMsWUFBWSxDQUFDLENBQUM7QUFDN0MsU0FBTyxLQUFLLENBQUM7Q0FDZDs7QUFFRCxTQUFTLDhCQUE4QixDQUFDLFlBQVksRUFBRTtBQUNwRCxNQUFJLGdCQUFnQixDQUFDLFlBQVksQ0FBQyxLQUFLLElBQUksRUFBRTtBQUMzQyxvQkFBZ0IsQ0FBQyxZQUFZLENBQUMsR0FBRyxJQUFJLENBQUM7QUFDdEMsd0JBQU8sR0FBRyxDQUNSLE9BQU8sRUFDUCxpRUFBK0QsWUFBWSxvSUFDSCxvSEFDMkMsQ0FDcEgsQ0FBQztHQUNIO0NBQ0Y7O0FBRU0sU0FBUyxxQkFBcUIsR0FBRztBQUN0QyxRQUFNLENBQUMsSUFBSSxDQUFDLGdCQUFnQixDQUFDLENBQUMsT0FBTyxDQUFDLFVBQUEsWUFBWSxFQUFJO0FBQ3BELFdBQU8sZ0JBQWdCLENBQUMsWUFBWSxDQUFDLENBQUM7R0FDdkMsQ0FBQyxDQUFDO0NBQ0oiLCJmaWxlIjoicHJvdG8tYWNjZXNzLmpzIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgY3JlYXRlTmV3TG9va3VwT2JqZWN0IH0gZnJvbSAnLi9jcmVhdGUtbmV3LWxvb2t1cC1vYmplY3QnO1xuaW1wb3J0IGxvZ2dlciBmcm9tICcuLi9sb2dnZXInO1xuXG5jb25zdCBsb2dnZWRQcm9wZXJ0aWVzID0gT2JqZWN0LmNyZWF0ZShudWxsKTtcblxuZXhwb3J0IGZ1bmN0aW9uIGNyZWF0ZVByb3RvQWNjZXNzQ29udHJvbChydW50aW1lT3B0aW9ucykge1xuICBsZXQgZGVmYXVsdE1ldGhvZFdoaXRlTGlzdCA9IE9iamVjdC5jcmVhdGUobnVsbCk7XG4gIGRlZmF1bHRNZXRob2RXaGl0ZUxpc3RbJ2NvbnN0cnVjdG9yJ10gPSBmYWxzZTtcbiAgZGVmYXVsdE1ldGhvZFdoaXRlTGlzdFsnX19kZWZpbmVHZXR0ZXJfXyddID0gZmFsc2U7XG4gIGRlZmF1bHRNZXRob2RXaGl0ZUxpc3RbJ19fZGVmaW5lU2V0dGVyX18nXSA9IGZhbHNlO1xuICBkZWZhdWx0TWV0aG9kV2hpdGVMaXN0WydfX2xvb2t1cEdldHRlcl9fJ10gPSBmYWxzZTtcblxuICBsZXQgZGVmYXVsdFByb3BlcnR5V2hpdGVMaXN0ID0gT2JqZWN0LmNyZWF0ZShudWxsKTtcbiAgLy8gZXNsaW50LWRpc2FibGUtbmV4dC1saW5lIG5vLXByb3RvXG4gIGRlZmF1bHRQcm9wZXJ0eVdoaXRlTGlzdFsnX19wcm90b19fJ10gPSBmYWxzZTtcblxuICByZXR1cm4ge1xuICAgIHByb3BlcnRpZXM6IHtcbiAgICAgIHdoaXRlbGlzdDogY3JlYXRlTmV3TG9va3VwT2JqZWN0KFxuICAgICAgICBkZWZhdWx0UHJvcGVydHlXaGl0ZUxpc3QsXG4gICAgICAgIHJ1bnRpbWVPcHRpb25zLmFsbG93ZWRQcm90b1Byb3BlcnRpZXNcbiAgICAgICksXG4gICAgICBkZWZhdWx0VmFsdWU6IHJ1bnRpbWVPcHRpb25zLmFsbG93UHJvdG9Qcm9wZXJ0aWVzQnlEZWZhdWx0XG4gICAgfSxcbiAgICBtZXRob2RzOiB7XG4gICAgICB3aGl0ZWxpc3Q6IGNyZWF0ZU5ld0xvb2t1cE9iamVjdChcbiAgICAgICAgZGVmYXVsdE1ldGhvZFdoaXRlTGlzdCxcbiAgICAgICAgcnVudGltZU9wdGlvbnMuYWxsb3dlZFByb3RvTWV0aG9kc1xuICAgICAgKSxcbiAgICAgIGRlZmF1bHRWYWx1ZTogcnVudGltZU9wdGlvbnMuYWxsb3dQcm90b01ldGhvZHNCeURlZmF1bHRcbiAgICB9XG4gIH07XG59XG5cbmV4cG9ydCBmdW5jdGlvbiByZXN1bHRJc0FsbG93ZWQocmVzdWx0LCBwcm90b0FjY2Vzc0NvbnRyb2wsIHByb3BlcnR5TmFtZSkge1xuICBpZiAodHlwZW9mIHJlc3VsdCA9PT0gJ2Z1bmN0aW9uJykge1xuICAgIHJldHVybiBjaGVja1doaXRlTGlzdChwcm90b0FjY2Vzc0NvbnRyb2wubWV0aG9kcywgcHJvcGVydHlOYW1lKTtcbiAgfSBlbHNlIHtcbiAgICByZXR1cm4gY2hlY2tXaGl0ZUxpc3QocHJvdG9BY2Nlc3NDb250cm9sLnByb3BlcnRpZXMsIHByb3BlcnR5TmFtZSk7XG4gIH1cbn1cblxuZnVuY3Rpb24gY2hlY2tXaGl0ZUxpc3QocHJvdG9BY2Nlc3NDb250cm9sRm9yVHlwZSwgcHJvcGVydHlOYW1lKSB7XG4gIGlmIChwcm90b0FjY2Vzc0NvbnRyb2xGb3JUeXBlLndoaXRlbGlzdFtwcm9wZXJ0eU5hbWVdICE9PSB1bmRlZmluZWQpIHtcbiAgICByZXR1cm4gcHJvdG9BY2Nlc3NDb250cm9sRm9yVHlwZS53aGl0ZWxpc3RbcHJvcGVydHlOYW1lXSA9PT0gdHJ1ZTtcbiAgfVxuICBpZiAocHJvdG9BY2Nlc3NDb250cm9sRm9yVHlwZS5kZWZhdWx0VmFsdWUgIT09IHVuZGVmaW5lZCkge1xuICAgIHJldHVybiBwcm90b0FjY2Vzc0NvbnRyb2xGb3JUeXBlLmRlZmF1bHRWYWx1ZTtcbiAgfVxuICBsb2dVbmV4cGVjZWRQcm9wZXJ0eUFjY2Vzc09uY2UocHJvcGVydHlOYW1lKTtcbiAgcmV0dXJuIGZhbHNlO1xufVxuXG5mdW5jdGlvbiBsb2dVbmV4cGVjZWRQcm9wZXJ0eUFjY2Vzc09uY2UocHJvcGVydHlOYW1lKSB7XG4gIGlmIChsb2dnZWRQcm9wZXJ0aWVzW3Byb3BlcnR5TmFtZV0gIT09IHRydWUpIHtcbiAgICBsb2dnZWRQcm9wZXJ0aWVzW3Byb3BlcnR5TmFtZV0gPSB0cnVlO1xuICAgIGxvZ2dlci5sb2coXG4gICAgICAnZXJyb3InLFxuICAgICAgYEhhbmRsZWJhcnM6IEFjY2VzcyBoYXMgYmVlbiBkZW5pZWQgdG8gcmVzb2x2ZSB0aGUgcHJvcGVydHkgXCIke3Byb3BlcnR5TmFtZX1cIiBiZWNhdXNlIGl0IGlzIG5vdCBhbiBcIm93biBwcm9wZXJ0eVwiIG9mIGl0cyBwYXJlbnQuXFxuYCArXG4gICAgICAgIGBZb3UgY2FuIGFkZCBhIHJ1bnRpbWUgb3B0aW9uIHRvIGRpc2FibGUgdGhlIGNoZWNrIG9yIHRoaXMgd2FybmluZzpcXG5gICtcbiAgICAgICAgYFNlZSBodHRwczovL2hhbmRsZWJhcnNqcy5jb20vYXBpLXJlZmVyZW5jZS9ydW50aW1lLW9wdGlvbnMuaHRtbCNvcHRpb25zLXRvLWNvbnRyb2wtcHJvdG90eXBlLWFjY2VzcyBmb3IgZGV0YWlsc2BcbiAgICApO1xuICB9XG59XG5cbmV4cG9ydCBmdW5jdGlvbiByZXNldExvZ2dlZFByb3BlcnRpZXMoKSB7XG4gIE9iamVjdC5rZXlzKGxvZ2dlZFByb3BlcnRpZXMpLmZvckVhY2gocHJvcGVydHlOYW1lID0+IHtcbiAgICBkZWxldGUgbG9nZ2VkUHJvcGVydGllc1twcm9wZXJ0eU5hbWVdO1xuICB9KTtcbn1cbiJdfQ==
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL2ludGVybmFsL3Byb3RvLWFjY2Vzcy5qcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7O3FDQUFzQyw0QkFBNEI7O3NCQUMxQyxXQUFXOztJQUF2QixNQUFNOztBQUVsQixJQUFNLGdCQUFnQixHQUFHLE1BQU0sQ0FBQyxNQUFNLENBQUMsSUFBSSxDQUFDLENBQUM7O0FBRXRDLFNBQVMsd0JBQXdCLENBQUMsY0FBYyxFQUFFO0FBQ3ZELE1BQUksc0JBQXNCLEdBQUcsTUFBTSxDQUFDLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQztBQUNqRCx3QkFBc0IsQ0FBQyxhQUFhLENBQUMsR0FBRyxLQUFLLENBQUM7QUFDOUMsd0JBQXNCLENBQUMsa0JBQWtCLENBQUMsR0FBRyxLQUFLLENBQUM7QUFDbkQsd0JBQXNCLENBQUMsa0JBQWtCLENBQUMsR0FBRyxLQUFLLENBQUM7QUFDbkQsd0JBQXNCLENBQUMsa0JBQWtCLENBQUMsR0FBRyxLQUFLLENBQUM7O0FBRW5ELE1BQUksd0JBQXdCLEdBQUcsTUFBTSxDQUFDLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQzs7QUFFbkQsMEJBQXdCLENBQUMsV0FBVyxDQUFDLEdBQUcsS0FBSyxDQUFDOztBQUU5QyxTQUFPO0FBQ0wsY0FBVSxFQUFFO0FBQ1YsZUFBUyxFQUFFLDZDQUNULHdCQUF3QixFQUN4QixjQUFjLENBQUMsc0JBQXNCLENBQ3RDO0FBQ0Qsa0JBQVksRUFBRSxjQUFjLENBQUMsNkJBQTZCO0tBQzNEO0FBQ0QsV0FBTyxFQUFFO0FBQ1AsZUFBUyxFQUFFLDZDQUNULHNCQUFzQixFQUN0QixjQUFjLENBQUMsbUJBQW1CLENBQ25DO0FBQ0Qsa0JBQVksRUFBRSxjQUFjLENBQUMsMEJBQTBCO0tBQ3hEO0dBQ0YsQ0FBQztDQUNIOztBQUVNLFNBQVMsZUFBZSxDQUFDLE1BQU0sRUFBRSxrQkFBa0IsRUFBRSxZQUFZLEVBQUU7QUFDeEUsTUFBSSxPQUFPLE1BQU0sS0FBSyxVQUFVLEVBQUU7QUFDaEMsV0FBTyxjQUFjLENBQUMsa0JBQWtCLENBQUMsT0FBTyxFQUFFLFlBQVksQ0FBQyxDQUFDO0dBQ2pFLE1BQU07QUFDTCxXQUFPLGNBQWMsQ0FBQyxrQkFBa0IsQ0FBQyxVQUFVLEVBQUUsWUFBWSxDQUFDLENBQUM7R0FDcEU7Q0FDRjs7QUFFRCxTQUFTLGNBQWMsQ0FBQyx5QkFBeUIsRUFBRSxZQUFZLEVBQUU7QUFDL0QsTUFBSSx5QkFBeUIsQ0FBQyxTQUFTLENBQUMsWUFBWSxDQUFDLEtBQUssU0FBUyxFQUFFO0FBQ25FLFdBQU8seUJBQXlCLENBQUMsU0FBUyxDQUFDLFlBQVksQ0FBQyxLQUFLLElBQUksQ0FBQztHQUNuRTtBQUNELE1BQUkseUJBQXlCLENBQUMsWUFBWSxLQUFLLFNBQVMsRUFBRTtBQUN4RCxXQUFPLHlCQUF5QixDQUFDLFlBQVksQ0FBQztHQUMvQztBQUNELGdDQUE4QixDQUFDLFlBQVksQ0FBQyxDQUFDO0FBQzdDLFNBQU8sS0FBSyxDQUFDO0NBQ2Q7O0FBRUQsU0FBUyw4QkFBOEIsQ0FBQyxZQUFZLEVBQUU7QUFDcEQsTUFBSSxnQkFBZ0IsQ0FBQyxZQUFZLENBQUMsS0FBSyxJQUFJLEVBQUU7QUFDM0Msb0JBQWdCLENBQUMsWUFBWSxDQUFDLEdBQUcsSUFBSSxDQUFDO0FBQ3RDLFVBQU0sQ0FBQyxHQUFHLENBQ1IsT0FBTyxFQUNQLGlFQUErRCxZQUFZLG9JQUNILG9IQUMyQyxDQUNwSCxDQUFDO0dBQ0g7Q0FDRjs7QUFFTSxTQUFTLHFCQUFxQixHQUFHO0FBQ3RDLFFBQU0sQ0FBQyxJQUFJLENBQUMsZ0JBQWdCLENBQUMsQ0FBQyxPQUFPLENBQUMsVUFBQSxZQUFZLEVBQUk7QUFDcEQsV0FBTyxnQkFBZ0IsQ0FBQyxZQUFZLENBQUMsQ0FBQztHQUN2QyxDQUFDLENBQUM7Q0FDSiIsImZpbGUiOiJwcm90by1hY2Nlc3MuanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBjcmVhdGVOZXdMb29rdXBPYmplY3QgfSBmcm9tICcuL2NyZWF0ZS1uZXctbG9va3VwLW9iamVjdCc7XG5pbXBvcnQgKiBhcyBsb2dnZXIgZnJvbSAnLi4vbG9nZ2VyJztcblxuY29uc3QgbG9nZ2VkUHJvcGVydGllcyA9IE9iamVjdC5jcmVhdGUobnVsbCk7XG5cbmV4cG9ydCBmdW5jdGlvbiBjcmVhdGVQcm90b0FjY2Vzc0NvbnRyb2wocnVudGltZU9wdGlvbnMpIHtcbiAgbGV0IGRlZmF1bHRNZXRob2RXaGl0ZUxpc3QgPSBPYmplY3QuY3JlYXRlKG51bGwpO1xuICBkZWZhdWx0TWV0aG9kV2hpdGVMaXN0Wydjb25zdHJ1Y3RvciddID0gZmFsc2U7XG4gIGRlZmF1bHRNZXRob2RXaGl0ZUxpc3RbJ19fZGVmaW5lR2V0dGVyX18nXSA9IGZhbHNlO1xuICBkZWZhdWx0TWV0aG9kV2hpdGVMaXN0WydfX2RlZmluZVNldHRlcl9fJ10gPSBmYWxzZTtcbiAgZGVmYXVsdE1ldGhvZFdoaXRlTGlzdFsnX19sb29rdXBHZXR0ZXJfXyddID0gZmFsc2U7XG5cbiAgbGV0IGRlZmF1bHRQcm9wZXJ0eVdoaXRlTGlzdCA9IE9iamVjdC5jcmVhdGUobnVsbCk7XG4gIC8vIGVzbGludC1kaXNhYmxlLW5leHQtbGluZSBuby1wcm90b1xuICBkZWZhdWx0UHJvcGVydHlXaGl0ZUxpc3RbJ19fcHJvdG9fXyddID0gZmFsc2U7XG5cbiAgcmV0dXJuIHtcbiAgICBwcm9wZXJ0aWVzOiB7XG4gICAgICB3aGl0ZWxpc3Q6IGNyZWF0ZU5ld0xvb2t1cE9iamVjdChcbiAgICAgICAgZGVmYXVsdFByb3BlcnR5V2hpdGVMaXN0LFxuICAgICAgICBydW50aW1lT3B0aW9ucy5hbGxvd2VkUHJvdG9Qcm9wZXJ0aWVzXG4gICAgICApLFxuICAgICAgZGVmYXVsdFZhbHVlOiBydW50aW1lT3B0aW9ucy5hbGxvd1Byb3RvUHJvcGVydGllc0J5RGVmYXVsdFxuICAgIH0sXG4gICAgbWV0aG9kczoge1xuICAgICAgd2hpdGVsaXN0OiBjcmVhdGVOZXdMb29rdXBPYmplY3QoXG4gICAgICAgIGRlZmF1bHRNZXRob2RXaGl0ZUxpc3QsXG4gICAgICAgIHJ1bnRpbWVPcHRpb25zLmFsbG93ZWRQcm90b01ldGhvZHNcbiAgICAgICksXG4gICAgICBkZWZhdWx0VmFsdWU6IHJ1bnRpbWVPcHRpb25zLmFsbG93UHJvdG9NZXRob2RzQnlEZWZhdWx0XG4gICAgfVxuICB9O1xufVxuXG5leHBvcnQgZnVuY3Rpb24gcmVzdWx0SXNBbGxvd2VkKHJlc3VsdCwgcHJvdG9BY2Nlc3NDb250cm9sLCBwcm9wZXJ0eU5hbWUpIHtcbiAgaWYgKHR5cGVvZiByZXN1bHQgPT09ICdmdW5jdGlvbicpIHtcbiAgICByZXR1cm4gY2hlY2tXaGl0ZUxpc3QocHJvdG9BY2Nlc3NDb250cm9sLm1ldGhvZHMsIHByb3BlcnR5TmFtZSk7XG4gIH0gZWxzZSB7XG4gICAgcmV0dXJuIGNoZWNrV2hpdGVMaXN0KHByb3RvQWNjZXNzQ29udHJvbC5wcm9wZXJ0aWVzLCBwcm9wZXJ0eU5hbWUpO1xuICB9XG59XG5cbmZ1bmN0aW9uIGNoZWNrV2hpdGVMaXN0KHByb3RvQWNjZXNzQ29udHJvbEZvclR5cGUsIHByb3BlcnR5TmFtZSkge1xuICBpZiAocHJvdG9BY2Nlc3NDb250cm9sRm9yVHlwZS53aGl0ZWxpc3RbcHJvcGVydHlOYW1lXSAhPT0gdW5kZWZpbmVkKSB7XG4gICAgcmV0dXJuIHByb3RvQWNjZXNzQ29udHJvbEZvclR5cGUud2hpdGVsaXN0W3Byb3BlcnR5TmFtZV0gPT09IHRydWU7XG4gIH1cbiAgaWYgKHByb3RvQWNjZXNzQ29udHJvbEZvclR5cGUuZGVmYXVsdFZhbHVlICE9PSB1bmRlZmluZWQpIHtcbiAgICByZXR1cm4gcHJvdG9BY2Nlc3NDb250cm9sRm9yVHlwZS5kZWZhdWx0VmFsdWU7XG4gIH1cbiAgbG9nVW5leHBlY2VkUHJvcGVydHlBY2Nlc3NPbmNlKHByb3BlcnR5TmFtZSk7XG4gIHJldHVybiBmYWxzZTtcbn1cblxuZnVuY3Rpb24gbG9nVW5leHBlY2VkUHJvcGVydHlBY2Nlc3NPbmNlKHByb3BlcnR5TmFtZSkge1xuICBpZiAobG9nZ2VkUHJvcGVydGllc1twcm9wZXJ0eU5hbWVdICE9PSB0cnVlKSB7XG4gICAgbG9nZ2VkUHJvcGVydGllc1twcm9wZXJ0eU5hbWVdID0gdHJ1ZTtcbiAgICBsb2dnZXIubG9nKFxuICAgICAgJ2Vycm9yJyxcbiAgICAgIGBIYW5kbGViYXJzOiBBY2Nlc3MgaGFzIGJlZW4gZGVuaWVkIHRvIHJlc29sdmUgdGhlIHByb3BlcnR5IFwiJHtwcm9wZXJ0eU5hbWV9XCIgYmVjYXVzZSBpdCBpcyBub3QgYW4gXCJvd24gcHJvcGVydHlcIiBvZiBpdHMgcGFyZW50LlxcbmAgK1xuICAgICAgICBgWW91IGNhbiBhZGQgYSBydW50aW1lIG9wdGlvbiB0byBkaXNhYmxlIHRoZSBjaGVjayBvciB0aGlzIHdhcm5pbmc6XFxuYCArXG4gICAgICAgIGBTZWUgaHR0cHM6Ly9oYW5kbGViYXJzanMuY29tL2FwaS1yZWZlcmVuY2UvcnVudGltZS1vcHRpb25zLmh0bWwjb3B0aW9ucy10by1jb250cm9sLXByb3RvdHlwZS1hY2Nlc3MgZm9yIGRldGFpbHNgXG4gICAgKTtcbiAgfVxufVxuXG5leHBvcnQgZnVuY3Rpb24gcmVzZXRMb2dnZWRQcm9wZXJ0aWVzKCkge1xuICBPYmplY3Qua2V5cyhsb2dnZWRQcm9wZXJ0aWVzKS5mb3JFYWNoKHByb3BlcnR5TmFtZSA9PiB7XG4gICAgZGVsZXRlIGxvZ2dlZFByb3BlcnRpZXNbcHJvcGVydHlOYW1lXTtcbiAgfSk7XG59XG4iXX0=
 
 
 /***/ }),
 
-/***/ 712:
+/***/ 5190:
 /***/ (function(__unused_webpack_module, exports) {
 
 "use strict";
@@ -2341,7 +2596,7 @@ function wrapHelper(helper, transformOptionsFn) {
 
 /***/ }),
 
-/***/ 7890:
+/***/ 9064:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2349,7 +2604,7 @@ function wrapHelper(helper, transformOptionsFn) {
 
 exports.__esModule = true;
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
 var logger = {
   methodMap: ['debug', 'info', 'warn', 'error'],
@@ -2396,45 +2651,34 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 5451:
-/***/ (function(module, exports) {
+/***/ 3213:
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* global globalThis */
 
 
 exports.__esModule = true;
 
 exports["default"] = function (Handlebars) {
   /* istanbul ignore next */
-  // https://mathiasbynens.be/notes/globalthis
-  (function () {
-    if (typeof globalThis === 'object') return;
-    Object.prototype.__defineGetter__('__magic__', function () {
-      return this;
-    });
-    __magic__.globalThis = __magic__; // eslint-disable-line no-undef
-    delete Object.prototype.__magic__;
-  })();
-
-  var $Handlebars = globalThis.Handlebars;
-
+  var root = typeof __webpack_require__.g !== 'undefined' ? __webpack_require__.g : window,
+      $Handlebars = root.Handlebars;
   /* istanbul ignore next */
   Handlebars.noConflict = function () {
-    if (globalThis.Handlebars === Handlebars) {
-      globalThis.Handlebars = $Handlebars;
+    if (root.Handlebars === Handlebars) {
+      root.Handlebars = $Handlebars;
     }
     return Handlebars;
   };
 };
 
 module.exports = exports['default'];
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL25vLWNvbmZsaWN0LmpzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7O3FCQUNlLFVBQVMsVUFBVSxFQUFFOzs7QUFHbEMsR0FBQyxZQUFXO0FBQ1YsUUFBSSxPQUFPLFVBQVUsS0FBSyxRQUFRLEVBQUUsT0FBTztBQUMzQyxVQUFNLENBQUMsU0FBUyxDQUFDLGdCQUFnQixDQUFDLFdBQVcsRUFBRSxZQUFXO0FBQ3hELGFBQU8sSUFBSSxDQUFDO0tBQ2IsQ0FBQyxDQUFDO0FBQ0gsYUFBUyxDQUFDLFVBQVUsR0FBRyxTQUFTLENBQUM7QUFDakMsV0FBTyxNQUFNLENBQUMsU0FBUyxDQUFDLFNBQVMsQ0FBQztHQUNuQyxDQUFBLEVBQUcsQ0FBQzs7QUFFTCxNQUFNLFdBQVcsR0FBRyxVQUFVLENBQUMsVUFBVSxDQUFDOzs7QUFHMUMsWUFBVSxDQUFDLFVBQVUsR0FBRyxZQUFXO0FBQ2pDLFFBQUksVUFBVSxDQUFDLFVBQVUsS0FBSyxVQUFVLEVBQUU7QUFDeEMsZ0JBQVUsQ0FBQyxVQUFVLEdBQUcsV0FBVyxDQUFDO0tBQ3JDO0FBQ0QsV0FBTyxVQUFVLENBQUM7R0FDbkIsQ0FBQztDQUNIIiwiZmlsZSI6Im5vLWNvbmZsaWN0LmpzIiwic291cmNlc0NvbnRlbnQiOlsiLyogZ2xvYmFsIGdsb2JhbFRoaXMgKi9cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uKEhhbmRsZWJhcnMpIHtcbiAgLyogaXN0YW5idWwgaWdub3JlIG5leHQgKi9cbiAgLy8gaHR0cHM6Ly9tYXRoaWFzYnluZW5zLmJlL25vdGVzL2dsb2JhbHRoaXNcbiAgKGZ1bmN0aW9uKCkge1xuICAgIGlmICh0eXBlb2YgZ2xvYmFsVGhpcyA9PT0gJ29iamVjdCcpIHJldHVybjtcbiAgICBPYmplY3QucHJvdG90eXBlLl9fZGVmaW5lR2V0dGVyX18oJ19fbWFnaWNfXycsIGZ1bmN0aW9uKCkge1xuICAgICAgcmV0dXJuIHRoaXM7XG4gICAgfSk7XG4gICAgX19tYWdpY19fLmdsb2JhbFRoaXMgPSBfX21hZ2ljX187IC8vIGVzbGludC1kaXNhYmxlLWxpbmUgbm8tdW5kZWZcbiAgICBkZWxldGUgT2JqZWN0LnByb3RvdHlwZS5fX21hZ2ljX187XG4gIH0pKCk7XG5cbiAgY29uc3QgJEhhbmRsZWJhcnMgPSBnbG9iYWxUaGlzLkhhbmRsZWJhcnM7XG5cbiAgLyogaXN0YW5idWwgaWdub3JlIG5leHQgKi9cbiAgSGFuZGxlYmFycy5ub0NvbmZsaWN0ID0gZnVuY3Rpb24oKSB7XG4gICAgaWYgKGdsb2JhbFRoaXMuSGFuZGxlYmFycyA9PT0gSGFuZGxlYmFycykge1xuICAgICAgZ2xvYmFsVGhpcy5IYW5kbGViYXJzID0gJEhhbmRsZWJhcnM7XG4gICAgfVxuICAgIHJldHVybiBIYW5kbGViYXJzO1xuICB9O1xufVxuIl19
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uLy4uL2xpYi9oYW5kbGViYXJzL25vLWNvbmZsaWN0LmpzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7cUJBQWUsVUFBUyxVQUFVLEVBQUU7O0FBRWxDLE1BQUksSUFBSSxHQUFHLE9BQU8sTUFBTSxLQUFLLFdBQVcsR0FBRyxNQUFNLEdBQUcsTUFBTTtNQUN4RCxXQUFXLEdBQUcsSUFBSSxDQUFDLFVBQVUsQ0FBQzs7QUFFaEMsWUFBVSxDQUFDLFVBQVUsR0FBRyxZQUFXO0FBQ2pDLFFBQUksSUFBSSxDQUFDLFVBQVUsS0FBSyxVQUFVLEVBQUU7QUFDbEMsVUFBSSxDQUFDLFVBQVUsR0FBRyxXQUFXLENBQUM7S0FDL0I7QUFDRCxXQUFPLFVBQVUsQ0FBQztHQUNuQixDQUFDO0NBQ0giLCJmaWxlIjoibm8tY29uZmxpY3QuanMiLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZGVmYXVsdCBmdW5jdGlvbihIYW5kbGViYXJzKSB7XG4gIC8qIGlzdGFuYnVsIGlnbm9yZSBuZXh0ICovXG4gIGxldCByb290ID0gdHlwZW9mIGdsb2JhbCAhPT0gJ3VuZGVmaW5lZCcgPyBnbG9iYWwgOiB3aW5kb3csXG4gICAgJEhhbmRsZWJhcnMgPSByb290LkhhbmRsZWJhcnM7XG4gIC8qIGlzdGFuYnVsIGlnbm9yZSBuZXh0ICovXG4gIEhhbmRsZWJhcnMubm9Db25mbGljdCA9IGZ1bmN0aW9uKCkge1xuICAgIGlmIChyb290LkhhbmRsZWJhcnMgPT09IEhhbmRsZWJhcnMpIHtcbiAgICAgIHJvb3QuSGFuZGxlYmFycyA9ICRIYW5kbGViYXJzO1xuICAgIH1cbiAgICByZXR1cm4gSGFuZGxlYmFycztcbiAgfTtcbn1cbiJdfQ==
 
 
 /***/ }),
 
-/***/ 7889:
+/***/ 8923:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -2455,21 +2699,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var _utils = __webpack_require__(6692);
+var _utils = __webpack_require__(8773);
 
 var Utils = _interopRequireWildcard(_utils);
 
-var _exception = __webpack_require__(1799);
+var _exception = __webpack_require__(200);
 
 var _exception2 = _interopRequireDefault(_exception);
 
-var _base = __webpack_require__(7866);
+var _base = __webpack_require__(3153);
 
-var _helpers = __webpack_require__(3776);
+var _helpers = __webpack_require__(2980);
 
-var _internalWrapHelper = __webpack_require__(712);
+var _internalWrapHelper = __webpack_require__(5190);
 
-var _internalProtoAccess = __webpack_require__(9725);
+var _internalProtoAccess = __webpack_require__(9870);
 
 function checkRevision(compilerInfo) {
   var compilerRevision = compilerInfo && compilerInfo[0] || 1,
@@ -2814,7 +3058,7 @@ function passLookupPropertyOption(helper, container) {
 
 /***/ }),
 
-/***/ 5956:
+/***/ 1072:
 /***/ (function(module, exports) {
 
 "use strict";
@@ -2837,7 +3081,7 @@ module.exports = exports['default'];
 
 /***/ }),
 
-/***/ 6692:
+/***/ 8773:
 /***/ (function(__unused_webpack_module, exports) {
 
 "use strict";
@@ -2969,35 +3213,34 @@ function appendContextPath(contextPath, id) {
 
 /***/ }),
 
-/***/ 7218:
+/***/ 2280:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
 // Create a simple path alias to allow browserify to resolve
 // the runtime on a supported path.
-module.exports = __webpack_require__(2549)["default"];
+module.exports = __webpack_require__(9856)["default"];
 
 
 /***/ }),
 
-/***/ 5423:
+/***/ 5252:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ hotkeys; }
+/* harmony export */   "Z": function() { return /* binding */ hotkeys; }
 /* harmony export */ });
 /**! 
- * hotkeys-js v3.12.2 
+ * hotkeys-js v3.10.2 
  * A simple micro-library for defining and dispatching keyboard shortcuts. It has no dependencies. 
  * 
  * Copyright (c) 2023 kenny wong <wowohoo@qq.com> 
- * https://jaywcjlove.github.io/hotkeys-js 
+ * http://jaywcjlove.github.io/hotkeys 
  * Licensed under the MIT license 
  */
 
-var isff = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase().indexOf('firefox') > 0 : false;
+var isff = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase().indexOf('firefox') > 0 : false; // 绑定事件
 
-// 绑定事件
 function addEvent(object, event, method, useCapture) {
   if (object.addEventListener) {
     object.addEventListener(event, method, useCapture);
@@ -3006,43 +3249,50 @@ function addEvent(object, event, method, useCapture) {
       method(window.event);
     });
   }
-}
+} // 修饰键转换成对应的键码
 
-// 修饰键转换成对应的键码
+
 function getMods(modifier, key) {
   var mods = key.slice(0, key.length - 1);
-  for (var i = 0; i < mods.length; i++) mods[i] = modifier[mods[i].toLowerCase()];
-  return mods;
-}
 
-// 处理传的key字符串转换成数组
+  for (var i = 0; i < mods.length; i++) {
+    mods[i] = modifier[mods[i].toLowerCase()];
+  }
+
+  return mods;
+} // 处理传的key字符串转换成数组
+
+
 function getKeys(key) {
   if (typeof key !== 'string') key = '';
   key = key.replace(/\s/g, ''); // 匹配任何空白字符,包括空格、制表符、换页符等等
-  var keys = key.split(','); // 同时设置多个快捷键，以','分割
-  var index = keys.lastIndexOf('');
 
-  // 快捷键可能包含','，需特殊处理
+  var keys = key.split(','); // 同时设置多个快捷键，以','分割
+
+  var index = keys.lastIndexOf(''); // 快捷键可能包含','，需特殊处理
+
   for (; index >= 0;) {
     keys[index - 1] += ',';
     keys.splice(index, 1);
     index = keys.lastIndexOf('');
   }
-  return keys;
-}
 
-// 比较修饰键的数组
+  return keys;
+} // 比较修饰键的数组
+
+
 function compareArray(a1, a2) {
   var arr1 = a1.length >= a2.length ? a1 : a2;
   var arr2 = a1.length >= a2.length ? a2 : a1;
   var isIndex = true;
+
   for (var i = 0; i < arr1.length; i++) {
     if (arr2.indexOf(arr1[i]) === -1) isIndex = false;
   }
+
   return isIndex;
 }
 
-// Special Keys
 var _keyMap = {
   backspace: 8,
   '⌫': 8,
@@ -3095,9 +3345,8 @@ var _keyMap = {
   '[': 219,
   ']': 221,
   '\\': 220
-};
+}; // Modifier Keys
 
-// Modifier Keys
 var _modifier = {
   // shiftKey
   '⇧': 16,
@@ -3131,136 +3380,130 @@ var _mods = {
   17: false,
   91: false
 };
-var _handlers = {};
+var _handlers = {}; // F1~F12 special key
 
-// F1~F12 special key
 for (var k = 1; k < 20; k++) {
   _keyMap["f".concat(k)] = 111 + k;
 }
 
 var _downKeys = []; // 记录摁下的绑定键
-var winListendFocus = false; // window是否已经监听了focus事件
-var _scope = 'all'; // 默认热键范围
-var elementHasBindEvent = []; // 已绑定事件的节点记录
 
+var winListendFocus = false; // window是否已经监听了focus事件
+
+var _scope = 'all'; // 默认热键范围
+
+var elementHasBindEvent = []; // 已绑定事件的节点记录
 // 返回键码
+
 var code = function code(x) {
   return _keyMap[x.toLowerCase()] || _modifier[x.toLowerCase()] || x.toUpperCase().charCodeAt(0);
 };
+
 var getKey = function getKey(x) {
   return Object.keys(_keyMap).find(function (k) {
     return _keyMap[k] === x;
   });
 };
+
 var getModifier = function getModifier(x) {
   return Object.keys(_modifier).find(function (k) {
     return _modifier[k] === x;
   });
-};
+}; // 设置获取当前范围（默认为'所有'）
 
-// 设置获取当前范围（默认为'所有'）
+
 function setScope(scope) {
   _scope = scope || 'all';
-}
-// 获取当前范围
+} // 获取当前范围
+
+
 function getScope() {
   return _scope || 'all';
-}
-// 获取摁下绑定键的键值
+} // 获取摁下绑定键的键值
+
+
 function getPressedKeyCodes() {
   return _downKeys.slice(0);
 }
+
 function getPressedKeyString() {
   return _downKeys.map(function (c) {
     return getKey(c) || getModifier(c) || String.fromCharCode(c);
   });
-}
-function getAllKeyCodes() {
-  var result = [];
-  Object.keys(_handlers).forEach(function (k) {
-    _handlers[k].forEach(function (_ref) {
-      var key = _ref.key,
-        scope = _ref.scope,
-        mods = _ref.mods,
-        shortcut = _ref.shortcut;
-      result.push({
-        scope: scope,
-        shortcut: shortcut,
-        mods: mods,
-        keys: key.split('+').map(function (v) {
-          return code(v);
-        })
-      });
-    });
-  });
-  return result;
-}
-
-// 表单控件控件判断 返回 Boolean
+} // 表单控件控件判断 返回 Boolean
 // hotkey is effective only when filter return true
+
+
 function filter(event) {
   var target = event.target || event.srcElement;
   var tagName = target.tagName;
-  var flag = true;
-  // ignore: isContentEditable === 'true', <input> and <textarea> when readOnly state is false, <select>
+  var flag = true; // ignore: isContentEditable === 'true', <input> and <textarea> when readOnly state is false, <select>
+
   if (target.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') && !target.readOnly) {
     flag = false;
   }
-  return flag;
-}
 
-// 判断摁下的键是否为某个键，返回true或者false
+  return flag;
+} // 判断摁下的键是否为某个键，返回true或者false
+
+
 function isPressed(keyCode) {
   if (typeof keyCode === 'string') {
     keyCode = code(keyCode); // 转换成键码
   }
 
   return _downKeys.indexOf(keyCode) !== -1;
-}
+} // 循环删除handlers中的所有 scope(范围)
 
-// 循环删除handlers中的所有 scope(范围)
+
 function deleteScope(scope, newScope) {
   var handlers;
-  var i;
+  var i; // 没有指定scope，获取scope
 
-  // 没有指定scope，获取scope
   if (!scope) scope = getScope();
+
   for (var key in _handlers) {
     if (Object.prototype.hasOwnProperty.call(_handlers, key)) {
       handlers = _handlers[key];
+
       for (i = 0; i < handlers.length;) {
         if (handlers[i].scope === scope) handlers.splice(i, 1);else i++;
       }
     }
-  }
+  } // 如果scope被删除，将scope重置为all
 
-  // 如果scope被删除，将scope重置为all
+
   if (getScope() === scope) setScope(newScope || 'all');
-}
+} // 清除修饰键
 
-// 清除修饰键
+
 function clearModifier(event) {
   var key = event.keyCode || event.which || event.charCode;
-  var i = _downKeys.indexOf(key);
 
-  // 从列表中清除按压过的键
+  var i = _downKeys.indexOf(key); // 从列表中清除按压过的键
+
+
   if (i >= 0) {
     _downKeys.splice(i, 1);
-  }
-  // 特殊处理 cmmand 键，在 cmmand 组合快捷键 keyup 只执行一次的问题
+  } // 特殊处理 cmmand 键，在 cmmand 组合快捷键 keyup 只执行一次的问题
+
+
   if (event.key && event.key.toLowerCase() === 'meta') {
     _downKeys.splice(0, _downKeys.length);
-  }
+  } // 修饰键 shiftKey altKey ctrlKey (command||metaKey) 清除
 
-  // 修饰键 shiftKey altKey ctrlKey (command||metaKey) 清除
+
   if (key === 93 || key === 224) key = 91;
-  if (key in _mods) {
-    _mods[key] = false;
 
-    // 将修饰键重置为false
-    for (var k in _modifier) if (_modifier[k] === key) hotkeys[k] = false;
+  if (key in _mods) {
+    _mods[key] = false; // 将修饰键重置为false
+
+    for (var k in _modifier) {
+      if (_modifier[k] === key) hotkeys[k] = false;
+    }
   }
 }
+
 function unbind(keysInfo) {
   // unbind(), unbind all keys
   if (typeof keysInfo === 'undefined') {
@@ -3279,14 +3522,17 @@ function unbind(keysInfo) {
     for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
       args[_key - 1] = arguments[_key];
     }
+
     // support old method
     // eslint-disable-line
     var scope = args[0],
-      method = args[1];
+        method = args[1];
+
     if (typeof scope === 'function') {
       method = scope;
       scope = '';
     }
+
     eachUnbind({
       key: keysInfo,
       scope: scope,
@@ -3294,23 +3540,23 @@ function unbind(keysInfo) {
       splitKey: '+'
     });
   }
-}
+} // 解除绑定某个范围的快捷键
 
-// 解除绑定某个范围的快捷键
-var eachUnbind = function eachUnbind(_ref2) {
-  var key = _ref2.key,
-    scope = _ref2.scope,
-    method = _ref2.method,
-    _ref2$splitKey = _ref2.splitKey,
-    splitKey = _ref2$splitKey === void 0 ? '+' : _ref2$splitKey;
+
+var eachUnbind = function eachUnbind(_ref) {
+  var key = _ref.key,
+      scope = _ref.scope,
+      method = _ref.method,
+      _ref$splitKey = _ref.splitKey,
+      splitKey = _ref$splitKey === void 0 ? '+' : _ref$splitKey;
   var multipleKeys = getKeys(key);
   multipleKeys.forEach(function (originKey) {
     var unbindKeys = originKey.split(splitKey);
     var len = unbindKeys.length;
     var lastKey = unbindKeys[len - 1];
     var keyCode = lastKey === '*' ? '*' : code(lastKey);
-    if (!_handlers[keyCode]) return;
-    // 判断是否传入范围，没有就获取范围
+    if (!_handlers[keyCode]) return; // 判断是否传入范围，没有就获取范围
+
     if (!scope) scope = getScope();
     var mods = len > 1 ? getMods(_modifier, unbindKeys) : [];
     _handlers[keyCode] = _handlers[keyCode].filter(function (record) {
@@ -3319,31 +3565,30 @@ var eachUnbind = function eachUnbind(_ref2) {
       return !(isMatchingMethod && record.scope === scope && compareArray(record.mods, mods));
     });
   });
-};
+}; // 对监听对应快捷键的回调函数进行处理
 
-// 对监听对应快捷键的回调函数进行处理
+
 function eventHandler(event, handler, scope, element) {
   if (handler.element !== element) {
     return;
   }
-  var modifiersMatch;
 
-  // 看它是否在当前范围
+  var modifiersMatch; // 看它是否在当前范围
+
   if (handler.scope === scope || handler.scope === 'all') {
     // 检查是否匹配修饰符（如果有返回true）
     modifiersMatch = handler.mods.length > 0;
+
     for (var y in _mods) {
       if (Object.prototype.hasOwnProperty.call(_mods, y)) {
         if (!_mods[y] && handler.mods.indexOf(+y) > -1 || _mods[y] && handler.mods.indexOf(+y) === -1) {
           modifiersMatch = false;
         }
       }
-    }
+    } // 调用处理程序，如果是修饰键不做处理
 
-    // 调用处理程序，如果是修饰键不做处理
+
     if (handler.mods.length === 0 && !_mods[16] && !_mods[18] && !_mods[17] && !_mods[91] || modifiersMatch || handler.shortcut === '*') {
-      handler.keys = [];
-      handler.keys = handler.keys.concat(_downKeys);
       if (handler.method(event, handler) === false) {
         if (event.preventDefault) event.preventDefault();else event.returnValue = false;
         if (event.stopPropagation) event.stopPropagation();
@@ -3351,33 +3596,33 @@ function eventHandler(event, handler, scope, element) {
       }
     }
   }
-}
+} // 处理keydown事件
 
-// 处理keydown事件
+
 function dispatch(event, element) {
   var asterisk = _handlers['*'];
-  var key = event.keyCode || event.which || event.charCode;
+  var key = event.keyCode || event.which || event.charCode; // 表单控件过滤 默认表单控件不触发快捷键
 
-  // 表单控件过滤 默认表单控件不触发快捷键
-  if (!hotkeys.filter.call(this, event)) return;
-
-  // Gecko(Firefox)的command键值224，在Webkit(Chrome)中保持一致
+  if (!hotkeys.filter.call(this, event)) return; // Gecko(Firefox)的command键值224，在Webkit(Chrome)中保持一致
   // Webkit左右 command 键值不一样
-  if (key === 93 || key === 224) key = 91;
 
+  if (key === 93 || key === 224) key = 91;
   /**
    * Collect bound keys
    * If an Input Method Editor is processing key input and the event is keydown, return 229.
    * https://stackoverflow.com/questions/25043934/is-it-ok-to-ignore-keydown-events-with-keycode-229
    * http://lists.w3.org/Archives/Public/www-dom/2010JulSep/att-0182/keyCode-spec.html
    */
+
   if (_downKeys.indexOf(key) === -1 && key !== 229) _downKeys.push(key);
   /**
    * Jest test cases are required.
    * ===============================
    */
+
   ['ctrlKey', 'altKey', 'shiftKey', 'metaKey'].forEach(function (keyName) {
     var keyNum = modifierMap[keyName];
+
     if (event[keyName] && _downKeys.indexOf(keyNum) === -1) {
       _downKeys.push(keyNum);
     } else if (!event[keyName] && _downKeys.indexOf(keyNum) > -1) {
@@ -3397,16 +3642,16 @@ function dispatch(event, element) {
    */
 
   if (key in _mods) {
-    _mods[key] = true;
+    _mods[key] = true; // 将特殊字符的key注册到 hotkeys 上
 
-    // 将特殊字符的key注册到 hotkeys 上
     for (var k in _modifier) {
       if (_modifier[k] === key) hotkeys[k] = true;
     }
-    if (!asterisk) return;
-  }
 
-  // 将 modifierMap 里面的修饰键绑定到 event 中
+    if (!asterisk) return;
+  } // 将 modifierMap 里面的修饰键绑定到 event 中
+
+
   for (var e in _mods) {
     if (Object.prototype.hasOwnProperty.call(_mods, e)) {
       _mods[e] = event[modifierMap[e]];
@@ -3418,29 +3663,35 @@ function dispatch(event, element) {
    * An example of this is ctrl+alt+m on a Swedish keyboard which is used to type μ.
    * Browser support: https://caniuse.com/#feat=keyboardevent-getmodifierstate
    */
+
+
   if (event.getModifierState && !(event.altKey && !event.ctrlKey) && event.getModifierState('AltGraph')) {
     if (_downKeys.indexOf(17) === -1) {
       _downKeys.push(17);
     }
+
     if (_downKeys.indexOf(18) === -1) {
       _downKeys.push(18);
     }
+
     _mods[17] = true;
     _mods[18] = true;
-  }
+  } // 获取范围 默认为 `all`
 
-  // 获取范围 默认为 `all`
-  var scope = getScope();
-  // 对任何快捷键都需要做的处理
+
+  var scope = getScope(); // 对任何快捷键都需要做的处理
+
   if (asterisk) {
     for (var i = 0; i < asterisk.length; i++) {
       if (asterisk[i].scope === scope && (event.type === 'keydown' && asterisk[i].keydown || event.type === 'keyup' && asterisk[i].keyup)) {
         eventHandler(event, asterisk[i], scope, element);
       }
     }
-  }
-  // key 不在 _handlers 中返回
+  } // key 不在 _handlers 中返回
+
+
   if (!(key in _handlers)) return;
+
   for (var _i = 0; _i < _handlers[key].length; _i++) {
     if (event.type === 'keydown' && _handlers[key][_i].keydown || event.type === 'keyup' && _handlers[key][_i].keyup) {
       if (_handlers[key][_i].key) {
@@ -3448,9 +3699,11 @@ function dispatch(event, element) {
         var splitKey = record.splitKey;
         var keyShortcut = record.key.split(splitKey);
         var _downKeysCurrent = []; // 记录当前按键键值
+
         for (var a = 0; a < keyShortcut.length; a++) {
           _downKeysCurrent.push(code(keyShortcut[a]));
         }
+
         if (_downKeysCurrent.sort().join('') === _downKeys.sort().join('')) {
           // 找到处理内容
           eventHandler(event, record, scope, element);
@@ -3458,53 +3711,61 @@ function dispatch(event, element) {
       }
     }
   }
-}
+} // 判断 element 是否已经绑定事件
 
-// 判断 element 是否已经绑定事件
+
 function isElementBind(element) {
   return elementHasBindEvent.indexOf(element) > -1;
 }
+
 function hotkeys(key, option, method) {
   _downKeys = [];
   var keys = getKeys(key); // 需要处理的快捷键列表
+
   var mods = [];
   var scope = 'all'; // scope默认为all，所有范围都有效
+
   var element = document; // 快捷键事件绑定节点
+
   var i = 0;
   var keyup = false;
   var keydown = true;
   var splitKey = '+';
-  var capture = false;
+  var capture = false; // 对为设定范围的判断
 
-  // 对为设定范围的判断
   if (method === undefined && typeof option === 'function') {
     method = option;
   }
+
   if (Object.prototype.toString.call(option) === '[object Object]') {
     if (option.scope) scope = option.scope; // eslint-disable-line
+
     if (option.element) element = option.element; // eslint-disable-line
+
     if (option.keyup) keyup = option.keyup; // eslint-disable-line
+
     if (option.keydown !== undefined) keydown = option.keydown; // eslint-disable-line
+
     if (option.capture !== undefined) capture = option.capture; // eslint-disable-line
+
     if (typeof option.splitKey === 'string') splitKey = option.splitKey; // eslint-disable-line
   }
 
-  if (typeof option === 'string') scope = option;
+  if (typeof option === 'string') scope = option; // 对于每个快捷键进行处理
 
-  // 对于每个快捷键进行处理
   for (; i < keys.length; i++) {
     key = keys[i].split(splitKey); // 按键列表
-    mods = [];
 
-    // 如果是组合快捷键取得组合快捷键
-    if (key.length > 1) mods = getMods(_modifier, key);
+    mods = []; // 如果是组合快捷键取得组合快捷键
 
-    // 将非修饰键转化为键码
+    if (key.length > 1) mods = getMods(_modifier, key); // 将非修饰键转化为键码
+
     key = key[key.length - 1];
     key = key === '*' ? '*' : code(key); // *表示匹配所有快捷键
-
     // 判断key是否在_handlers中，不在就赋一个空数组
+
     if (!(key in _handlers)) _handlers[key] = [];
+
     _handlers[key].push({
       keyup: keyup,
       keydown: keydown,
@@ -3516,31 +3777,36 @@ function hotkeys(key, option, method) {
       splitKey: splitKey,
       element: element
     });
-  }
-  // 在全局document上设置快捷键
+  } // 在全局document上设置快捷键
+
+
   if (typeof element !== 'undefined' && !isElementBind(element) && window) {
     elementHasBindEvent.push(element);
     addEvent(element, 'keydown', function (e) {
       dispatch(e, element);
     }, capture);
+
     if (!winListendFocus) {
       winListendFocus = true;
       addEvent(window, 'focus', function () {
         _downKeys = [];
       }, capture);
     }
+
     addEvent(element, 'keyup', function (e) {
       dispatch(e, element);
       clearModifier(e);
     }, capture);
   }
 }
+
 function trigger(shortcut) {
   var scope = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'all';
   Object.keys(_handlers).forEach(function (key) {
     var dataList = _handlers[key].filter(function (item) {
       return item.scope === scope && item.shortcut === shortcut;
     });
+
     dataList.forEach(function (data) {
       if (data && data.method) {
         data.method();
@@ -3548,13 +3814,13 @@ function trigger(shortcut) {
     });
   });
 }
+
 var _api = {
   getPressedKeyString: getPressedKeyString,
   setScope: setScope,
   getScope: getScope,
   deleteScope: deleteScope,
   getPressedKeyCodes: getPressedKeyCodes,
-  getAllKeyCodes: getAllKeyCodes,
   isPressed: isPressed,
   filter: filter,
   trigger: trigger,
@@ -3563,19 +3829,24 @@ var _api = {
   modifier: _modifier,
   modifierMap: modifierMap
 };
+
 for (var a in _api) {
   if (Object.prototype.hasOwnProperty.call(_api, a)) {
     hotkeys[a] = _api[a];
   }
 }
+
 if (typeof window !== 'undefined') {
   var _hotkeys = window.hotkeys;
+
   hotkeys.noConflict = function (deep) {
     if (deep && window.hotkeys === hotkeys) {
       window.hotkeys = _hotkeys;
     }
+
     return hotkeys;
   };
+
   window.hotkeys = hotkeys;
 }
 
@@ -3584,18 +3855,21 @@ if (typeof window !== 'undefined') {
 
 /***/ }),
 
-/***/ 6284:
+/***/ 6311:
 /***/ (function(module, exports) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
- * jQuery JavaScript Library v3.7.1
+ * jQuery JavaScript Library v3.6.4
  * https://jquery.com/
+ *
+ * Includes Sizzle.js
+ * https://sizzlejs.com/
  *
  * Copyright OpenJS Foundation and other contributors
  * Released under the MIT license
  * https://jquery.org/license
  *
- * Date: 2023-08-28T13:37Z
+ * Date: 2023-03-08T15:28Z
  */
 ( function( global, factory ) {
 
@@ -3736,9 +4010,8 @@ function toType( obj ) {
 
 
 
-var version = "3.7.1",
-
-	rhtmlSuffix = /HTML$/i,
+var
+	version = "3.6.4",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -3984,38 +4257,6 @@ jQuery.extend( {
 		return obj;
 	},
 
-
-	// Retrieve the text value of an array of DOM nodes
-	text: function( elem ) {
-		var node,
-			ret = "",
-			i = 0,
-			nodeType = elem.nodeType;
-
-		if ( !nodeType ) {
-
-			// If no nodeType, this is expected to be an array
-			while ( ( node = elem[ i++ ] ) ) {
-
-				// Do not traverse comment nodes
-				ret += jQuery.text( node );
-			}
-		}
-		if ( nodeType === 1 || nodeType === 11 ) {
-			return elem.textContent;
-		}
-		if ( nodeType === 9 ) {
-			return elem.documentElement.textContent;
-		}
-		if ( nodeType === 3 || nodeType === 4 ) {
-			return elem.nodeValue;
-		}
-
-		// Do not include comment or processing instruction nodes
-
-		return ret;
-	},
-
 	// results is for internal usage only
 	makeArray: function( arr, results ) {
 		var ret = results || [];
@@ -4036,15 +4277,6 @@ jQuery.extend( {
 
 	inArray: function( elem, arr, i ) {
 		return arr == null ? -1 : indexOf.call( arr, elem, i );
-	},
-
-	isXMLDoc: function( elem ) {
-		var namespace = elem && elem.namespaceURI,
-			docElem = elem && ( elem.ownerDocument || elem ).documentElement;
-
-		// Assume HTML when documentElement doesn't yet exist, such as inside
-		// document fragments.
-		return !rhtmlSuffix.test( namespace || docElem && docElem.nodeName || "HTML" );
 	},
 
 	// Support: Android <=4.0 only, PhantomJS 1 only
@@ -4148,98 +4380,43 @@ function isArrayLike( obj ) {
 	return type === "array" || length === 0 ||
 		typeof length === "number" && length > 0 && ( length - 1 ) in obj;
 }
-
-
-function nodeName( elem, name ) {
-
-	return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
-
-}
-var pop = arr.pop;
-
-
-var sort = arr.sort;
-
-
-var splice = arr.splice;
-
-
-var whitespace = "[\\x20\\t\\r\\n\\f]";
-
-
-var rtrimCSS = new RegExp(
-	"^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$",
-	"g"
-);
-
-
-
-
-// Note: an element does not contain itself
-jQuery.contains = function( a, b ) {
-	var bup = b && b.parentNode;
-
-	return a === bup || !!( bup && bup.nodeType === 1 && (
-
-		// Support: IE 9 - 11+
-		// IE doesn't have `contains` on SVG.
-		a.contains ?
-			a.contains( bup ) :
-			a.compareDocumentPosition && a.compareDocumentPosition( bup ) & 16
-	) );
-};
-
-
-
-
-// CSS string/identifier serialization
-// https://drafts.csswg.org/cssom/#common-serializing-idioms
-var rcssescape = /([\0-\x1f\x7f]|^-?\d)|^-$|[^\x80-\uFFFF\w-]/g;
-
-function fcssescape( ch, asCodePoint ) {
-	if ( asCodePoint ) {
-
-		// U+0000 NULL becomes U+FFFD REPLACEMENT CHARACTER
-		if ( ch === "\0" ) {
-			return "\uFFFD";
-		}
-
-		// Control characters and (dependent upon position) numbers get escaped as code points
-		return ch.slice( 0, -1 ) + "\\" + ch.charCodeAt( ch.length - 1 ).toString( 16 ) + " ";
-	}
-
-	// Other potentially-special ASCII characters get backslash-escaped
-	return "\\" + ch;
-}
-
-jQuery.escapeSelector = function( sel ) {
-	return ( sel + "" ).replace( rcssescape, fcssescape );
-};
-
-
-
-
-var preferredDoc = document,
-	pushNative = push;
-
-( function() {
-
+var Sizzle =
+/*!
+ * Sizzle CSS Selector Engine v2.3.10
+ * https://sizzlejs.com/
+ *
+ * Copyright JS Foundation and other contributors
+ * Released under the MIT license
+ * https://js.foundation/
+ *
+ * Date: 2023-02-14
+ */
+( function( window ) {
 var i,
+	support,
 	Expr,
+	getText,
+	isXML,
+	tokenize,
+	compile,
+	select,
 	outermostContext,
 	sortInput,
 	hasDuplicate,
-	push = pushNative,
 
 	// Local document vars
+	setDocument,
 	document,
-	documentElement,
+	docElem,
 	documentIsHTML,
 	rbuggyQSA,
+	rbuggyMatches,
 	matches,
+	contains,
 
 	// Instance-specific data
-	expando = jQuery.expando,
+	expando = "sizzle" + 1 * new Date(),
+	preferredDoc = window.document,
 	dirruns = 0,
 	done = 0,
 	classCache = createCache(),
@@ -4253,22 +4430,47 @@ var i,
 		return 0;
 	},
 
-	booleans = "checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|" +
-		"loop|multiple|open|readonly|required|scoped",
+	// Instance methods
+	hasOwn = ( {} ).hasOwnProperty,
+	arr = [],
+	pop = arr.pop,
+	pushNative = arr.push,
+	push = arr.push,
+	slice = arr.slice,
+
+	// Use a stripped-down indexOf as it's faster than native
+	// https://jsperf.com/thor-indexof-vs-for/5
+	indexOf = function( list, elem ) {
+		var i = 0,
+			len = list.length;
+		for ( ; i < len; i++ ) {
+			if ( list[ i ] === elem ) {
+				return i;
+			}
+		}
+		return -1;
+	},
+
+	booleans = "checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|" +
+		"ismap|loop|multiple|open|readonly|required|scoped",
 
 	// Regular expressions
+
+	// http://www.w3.org/TR/css3-selectors/#whitespace
+	whitespace = "[\\x20\\t\\r\\n\\f]",
 
 	// https://www.w3.org/TR/css-syntax-3/#ident-token-diagram
 	identifier = "(?:\\\\[\\da-fA-F]{1,6}" + whitespace +
 		"?|\\\\[^\\r\\n\\f]|[\\w-]|[^\0-\\x7f])+",
 
-	// Attribute selectors: https://www.w3.org/TR/selectors/#attribute-selectors
+	// Attribute selectors: http://www.w3.org/TR/selectors/#attribute-selectors
 	attributes = "\\[" + whitespace + "*(" + identifier + ")(?:" + whitespace +
 
 		// Operator (capture 2)
 		"*([*^$|!~]?=)" + whitespace +
 
-		// "Attribute values must be CSS identifiers [capture 5] or strings [capture 3 or capture 4]"
+		// "Attribute values must be CSS identifiers [capture 5]
+		// or strings [capture 3 or capture 4]"
 		"*(?:'((?:\\\\.|[^\\\\'])*)'|\"((?:\\\\.|[^\\\\\"])*)\"|(" + identifier + "))|)" +
 		whitespace + "*\\]",
 
@@ -4287,36 +4489,40 @@ var i,
 
 	// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
 	rwhitespace = new RegExp( whitespace + "+", "g" ),
+	rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" +
+		whitespace + "+$", "g" ),
 
 	rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
-	rleadingCombinator = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")" +
-		whitespace + "*" ),
+	rleadingCombinator = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace +
+		"*" ),
 	rdescend = new RegExp( whitespace + "|>" ),
 
 	rpseudo = new RegExp( pseudos ),
 	ridentifier = new RegExp( "^" + identifier + "$" ),
 
 	matchExpr = {
-		ID: new RegExp( "^#(" + identifier + ")" ),
-		CLASS: new RegExp( "^\\.(" + identifier + ")" ),
-		TAG: new RegExp( "^(" + identifier + "|[*])" ),
-		ATTR: new RegExp( "^" + attributes ),
-		PSEUDO: new RegExp( "^" + pseudos ),
-		CHILD: new RegExp(
-			"^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" +
-				whitespace + "*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" +
-				whitespace + "*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
-		bool: new RegExp( "^(?:" + booleans + ")$", "i" ),
+		"ID": new RegExp( "^#(" + identifier + ")" ),
+		"CLASS": new RegExp( "^\\.(" + identifier + ")" ),
+		"TAG": new RegExp( "^(" + identifier + "|[*])" ),
+		"ATTR": new RegExp( "^" + attributes ),
+		"PSEUDO": new RegExp( "^" + pseudos ),
+		"CHILD": new RegExp( "^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" +
+			whitespace + "*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" +
+			whitespace + "*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
+		"bool": new RegExp( "^(?:" + booleans + ")$", "i" ),
 
 		// For use in libraries implementing .is()
 		// We use this for POS matching in `select`
-		needsContext: new RegExp( "^" + whitespace +
+		"needsContext": new RegExp( "^" + whitespace +
 			"*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" + whitespace +
 			"*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" )
 	},
 
+	rhtml = /HTML$/i,
 	rinputs = /^(?:input|select|textarea|button)$/i,
 	rheader = /^h\d$/i,
+
+	rnative = /^[^{]+\{\s*\[native \w/,
 
 	// Easily-parseable/retrievable ID or TAG or CLASS selectors
 	rquickExpr = /^(?:#([\w-]+)|(\w+)|\.([\w-]+))$/,
@@ -4324,50 +4530,59 @@ var i,
 	rsibling = /[+~]/,
 
 	// CSS escapes
-	// https://www.w3.org/TR/CSS21/syndata.html#escaped-characters
-	runescape = new RegExp( "\\\\[\\da-fA-F]{1,6}" + whitespace +
-		"?|\\\\([^\\r\\n\\f])", "g" ),
+	// http://www.w3.org/TR/CSS21/syndata.html#escaped-characters
+	runescape = new RegExp( "\\\\[\\da-fA-F]{1,6}" + whitespace + "?|\\\\([^\\r\\n\\f])", "g" ),
 	funescape = function( escape, nonHex ) {
 		var high = "0x" + escape.slice( 1 ) - 0x10000;
 
-		if ( nonHex ) {
+		return nonHex ?
 
 			// Strip the backslash prefix from a non-hex escape sequence
-			return nonHex;
-		}
+			nonHex :
 
-		// Replace a hexadecimal escape sequence with the encoded Unicode code point
-		// Support: IE <=11+
-		// For values outside the Basic Multilingual Plane (BMP), manually construct a
-		// surrogate pair
-		return high < 0 ?
-			String.fromCharCode( high + 0x10000 ) :
-			String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
+			// Replace a hexadecimal escape sequence with the encoded Unicode code point
+			// Support: IE <=11+
+			// For values outside the Basic Multilingual Plane (BMP), manually construct a
+			// surrogate pair
+			high < 0 ?
+				String.fromCharCode( high + 0x10000 ) :
+				String.fromCharCode( high >> 10 | 0xD800, high & 0x3FF | 0xDC00 );
 	},
 
-	// Used for iframes; see `setDocument`.
-	// Support: IE 9 - 11+, Edge 12 - 18+
+	// CSS string/identifier serialization
+	// https://drafts.csswg.org/cssom/#common-serializing-idioms
+	rcssescape = /([\0-\x1f\x7f]|^-?\d)|^-$|[^\0-\x1f\x7f-\uFFFF\w-]/g,
+	fcssescape = function( ch, asCodePoint ) {
+		if ( asCodePoint ) {
+
+			// U+0000 NULL becomes U+FFFD REPLACEMENT CHARACTER
+			if ( ch === "\0" ) {
+				return "\uFFFD";
+			}
+
+			// Control characters and (dependent upon position) numbers get escaped as code points
+			return ch.slice( 0, -1 ) + "\\" +
+				ch.charCodeAt( ch.length - 1 ).toString( 16 ) + " ";
+		}
+
+		// Other potentially-special ASCII characters get backslash-escaped
+		return "\\" + ch;
+	},
+
+	// Used for iframes
+	// See setDocument()
 	// Removing the function wrapper causes a "Permission Denied"
-	// error in IE/Edge.
+	// error in IE
 	unloadHandler = function() {
 		setDocument();
 	},
 
 	inDisabledFieldset = addCombinator(
 		function( elem ) {
-			return elem.disabled === true && nodeName( elem, "fieldset" );
+			return elem.disabled === true && elem.nodeName.toLowerCase() === "fieldset";
 		},
 		{ dir: "parentNode", next: "legend" }
 	);
-
-// Support: IE <=9 only
-// Accessing document.activeElement can throw unexpectedly
-// https://bugs.jquery.com/ticket/13393
-function safeActiveElement() {
-	try {
-		return document.activeElement;
-	} catch ( err ) { }
-}
 
 // Optimize for push.apply( _, NodeList )
 try {
@@ -4376,22 +4591,32 @@ try {
 		preferredDoc.childNodes
 	);
 
-	// Support: Android <=4.0
+	// Support: Android<4.0
 	// Detect silently failing push.apply
 	// eslint-disable-next-line no-unused-expressions
 	arr[ preferredDoc.childNodes.length ].nodeType;
 } catch ( e ) {
-	push = {
-		apply: function( target, els ) {
+	push = { apply: arr.length ?
+
+		// Leverage slice if possible
+		function( target, els ) {
 			pushNative.apply( target, slice.call( els ) );
-		},
-		call: function( target ) {
-			pushNative.apply( target, slice.call( arguments, 1 ) );
+		} :
+
+		// Support: IE<9
+		// Otherwise append directly
+		function( target, els ) {
+			var j = target.length,
+				i = 0;
+
+			// Can't trust NodeList.length
+			while ( ( target[ j++ ] = els[ i++ ] ) ) {}
+			target.length = j - 1;
 		}
 	};
 }
 
-function find( selector, context, results, seed ) {
+function Sizzle( selector, context, results, seed ) {
 	var m, i, elem, nid, match, groups, newSelector,
 		newContext = context && context.ownerDocument,
 
@@ -4425,10 +4650,11 @@ function find( selector, context, results, seed ) {
 					if ( nodeType === 9 ) {
 						if ( ( elem = context.getElementById( m ) ) ) {
 
-							// Support: IE 9 only
+							// Support: IE, Opera, Webkit
+							// TODO: identify versions
 							// getElementById can match elements by name instead of ID
 							if ( elem.id === m ) {
-								push.call( results, elem );
+								results.push( elem );
 								return results;
 							}
 						} else {
@@ -4438,13 +4664,14 @@ function find( selector, context, results, seed ) {
 					// Element context
 					} else {
 
-						// Support: IE 9 only
+						// Support: IE, Opera, Webkit
+						// TODO: identify versions
 						// getElementById can match elements by name instead of ID
 						if ( newContext && ( elem = newContext.getElementById( m ) ) &&
-							find.contains( context, elem ) &&
+							contains( context, elem ) &&
 							elem.id === m ) {
 
-							push.call( results, elem );
+							results.push( elem );
 							return results;
 						}
 					}
@@ -4455,15 +4682,22 @@ function find( selector, context, results, seed ) {
 					return results;
 
 				// Class selector
-				} else if ( ( m = match[ 3 ] ) && context.getElementsByClassName ) {
+				} else if ( ( m = match[ 3 ] ) && support.getElementsByClassName &&
+					context.getElementsByClassName ) {
+
 					push.apply( results, context.getElementsByClassName( m ) );
 					return results;
 				}
 			}
 
 			// Take advantage of querySelectorAll
-			if ( !nonnativeSelectorCache[ selector + " " ] &&
-				( !rbuggyQSA || !rbuggyQSA.test( selector ) ) ) {
+			if ( support.qsa &&
+				!nonnativeSelectorCache[ selector + " " ] &&
+				( !rbuggyQSA || !rbuggyQSA.test( selector ) ) &&
+
+				// Support: IE 8 only
+				// Exclude object elements
+				( nodeType !== 1 || context.nodeName.toLowerCase() !== "object" ) ) {
 
 				newSelector = selector;
 				newContext = context;
@@ -4484,15 +4718,11 @@ function find( selector, context, results, seed ) {
 
 					// We can use :scope instead of the ID hack if the browser
 					// supports it & if we're not changing the context.
-					// Support: IE 11+, Edge 17 - 18+
-					// IE/Edge sometimes throw a "Permission denied" error when
-					// strict-comparing two documents; shallow comparisons work.
-					// eslint-disable-next-line eqeqeq
-					if ( newContext != context || !support.scope ) {
+					if ( newContext !== context || !support.scope ) {
 
 						// Capture the context ID, setting it first if necessary
 						if ( ( nid = context.getAttribute( "id" ) ) ) {
-							nid = jQuery.escapeSelector( nid );
+							nid = nid.replace( rcssescape, fcssescape );
 						} else {
 							context.setAttribute( "id", ( nid = expando ) );
 						}
@@ -4525,7 +4755,7 @@ function find( selector, context, results, seed ) {
 	}
 
 	// All others
-	return select( selector.replace( rtrimCSS, "$1" ), context, results, seed );
+	return select( selector.replace( rtrim, "$1" ), context, results, seed );
 }
 
 /**
@@ -4539,8 +4769,7 @@ function createCache() {
 
 	function cache( key, value ) {
 
-		// Use (key + " ") to avoid collision with native prototype properties
-		// (see https://github.com/jquery/sizzle/issues/157)
+		// Use (key + " ") to avoid collision with native prototype properties (see Issue #157)
 		if ( keys.push( key + " " ) > Expr.cacheLength ) {
 
 			// Only keep the most recent entries
@@ -4552,7 +4781,7 @@ function createCache() {
 }
 
 /**
- * Mark a function for special use by jQuery selector module
+ * Mark a function for special use by Sizzle
  * @param {Function} fn The function to mark
  */
 function markFunction( fn ) {
@@ -4584,12 +4813,55 @@ function assert( fn ) {
 }
 
 /**
+ * Adds the same handler for all of the specified attrs
+ * @param {String} attrs Pipe-separated list of attributes
+ * @param {Function} handler The method that will be applied
+ */
+function addHandle( attrs, handler ) {
+	var arr = attrs.split( "|" ),
+		i = arr.length;
+
+	while ( i-- ) {
+		Expr.attrHandle[ arr[ i ] ] = handler;
+	}
+}
+
+/**
+ * Checks document order of two siblings
+ * @param {Element} a
+ * @param {Element} b
+ * @returns {Number} Returns less than 0 if a precedes b, greater than 0 if a follows b
+ */
+function siblingCheck( a, b ) {
+	var cur = b && a,
+		diff = cur && a.nodeType === 1 && b.nodeType === 1 &&
+			a.sourceIndex - b.sourceIndex;
+
+	// Use IE sourceIndex if available on both nodes
+	if ( diff ) {
+		return diff;
+	}
+
+	// Check if b follows a
+	if ( cur ) {
+		while ( ( cur = cur.nextSibling ) ) {
+			if ( cur === b ) {
+				return -1;
+			}
+		}
+	}
+
+	return a ? 1 : -1;
+}
+
+/**
  * Returns a function to use in pseudos for input types
  * @param {String} type
  */
 function createInputPseudo( type ) {
 	return function( elem ) {
-		return nodeName( elem, "input" ) && elem.type === type;
+		var name = elem.nodeName.toLowerCase();
+		return name === "input" && elem.type === type;
 	};
 }
 
@@ -4599,8 +4871,8 @@ function createInputPseudo( type ) {
  */
 function createButtonPseudo( type ) {
 	return function( elem ) {
-		return ( nodeName( elem, "input" ) || nodeName( elem, "button" ) ) &&
-			elem.type === type;
+		var name = elem.nodeName.toLowerCase();
+		return ( name === "input" || name === "button" ) && elem.type === type;
 	};
 }
 
@@ -4636,13 +4908,14 @@ function createDisabledPseudo( disabled ) {
 					}
 				}
 
-				// Support: IE 6 - 11+
+				// Support: IE 6 - 11
 				// Use the isDisabled shortcut property to check for disabled fieldset ancestors
 				return elem.isDisabled === disabled ||
 
 					// Where there is no isDisabled, check manually
+					/* jshint -W018 */
 					elem.isDisabled !== !disabled &&
-						inDisabledFieldset( elem ) === disabled;
+					inDisabledFieldset( elem ) === disabled;
 			}
 
 			return elem.disabled === disabled;
@@ -4682,7 +4955,7 @@ function createPositionalPseudo( fn ) {
 }
 
 /**
- * Checks a node for validity as a jQuery selector context
+ * Checks a node for validity as a Sizzle context
  * @param {Element|Object=} context
  * @returns {Element|Object|Boolean} The input node if acceptable, otherwise a falsy value
  */
@@ -4690,13 +4963,31 @@ function testContext( context ) {
 	return context && typeof context.getElementsByTagName !== "undefined" && context;
 }
 
+// Expose support vars for convenience
+support = Sizzle.support = {};
+
+/**
+ * Detects XML nodes
+ * @param {Element|Object} elem An element or a document
+ * @returns {Boolean} True iff elem is a non-HTML XML node
+ */
+isXML = Sizzle.isXML = function( elem ) {
+	var namespace = elem && elem.namespaceURI,
+		docElem = elem && ( elem.ownerDocument || elem ).documentElement;
+
+	// Support: IE <=8
+	// Assume HTML when documentElement doesn't yet exist, such as inside loading iframes
+	// https://bugs.jquery.com/ticket/4833
+	return !rhtml.test( namespace || docElem && docElem.nodeName || "HTML" );
+};
+
 /**
  * Sets document-related variables once based on the current document
- * @param {Element|Object} [node] An element or document object to use to set the document
+ * @param {Element|Object} [doc] An element or document object to use to set the document
  * @returns {Object} Returns the current document
  */
-function setDocument( node ) {
-	var subWindow,
+setDocument = Sizzle.setDocument = function( node ) {
+	var hasCompare, subWindow,
 		doc = node ? node.ownerDocument || node : preferredDoc;
 
 	// Return early if doc is invalid or already selected
@@ -4710,58 +5001,41 @@ function setDocument( node ) {
 
 	// Update global variables
 	document = doc;
-	documentElement = document.documentElement;
-	documentIsHTML = !jQuery.isXMLDoc( document );
-
-	// Support: iOS 7 only, IE 9 - 11+
-	// Older browsers didn't support unprefixed `matches`.
-	matches = documentElement.matches ||
-		documentElement.webkitMatchesSelector ||
-		documentElement.msMatchesSelector;
+	docElem = document.documentElement;
+	documentIsHTML = !isXML( document );
 
 	// Support: IE 9 - 11+, Edge 12 - 18+
-	// Accessing iframe documents after unload throws "permission denied" errors
-	// (see trac-13936).
-	// Limit the fix to IE & Edge Legacy; despite Edge 15+ implementing `matches`,
-	// all IE 9+ and Edge Legacy versions implement `msMatchesSelector` as well.
-	if ( documentElement.msMatchesSelector &&
-
-		// Support: IE 11+, Edge 17 - 18+
-		// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
-		// two documents; shallow comparisons work.
-		// eslint-disable-next-line eqeqeq
-		preferredDoc != document &&
+	// Accessing iframe documents after unload throws "permission denied" errors (jQuery #13936)
+	// Support: IE 11+, Edge 17 - 18+
+	// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
+	// two documents; shallow comparisons work.
+	// eslint-disable-next-line eqeqeq
+	if ( preferredDoc != document &&
 		( subWindow = document.defaultView ) && subWindow.top !== subWindow ) {
 
-		// Support: IE 9 - 11+, Edge 12 - 18+
-		subWindow.addEventListener( "unload", unloadHandler );
+		// Support: IE 11, Edge
+		if ( subWindow.addEventListener ) {
+			subWindow.addEventListener( "unload", unloadHandler, false );
+
+		// Support: IE 9 - 10 only
+		} else if ( subWindow.attachEvent ) {
+			subWindow.attachEvent( "onunload", unloadHandler );
+		}
 	}
 
-	// Support: IE <10
-	// Check if getElementById returns elements by name
-	// The broken getElementById methods don't pick up programmatically-set names,
-	// so use a roundabout getElementsByName test
-	support.getById = assert( function( el ) {
-		documentElement.appendChild( el ).id = jQuery.expando;
-		return !document.getElementsByName ||
-			!document.getElementsByName( jQuery.expando ).length;
+	// Support: IE 8 - 11+, Edge 12 - 18+, Chrome <=16 - 25 only, Firefox <=3.6 - 31 only,
+	// Safari 4 - 5 only, Opera <=11.6 - 12.x only
+	// IE/Edge & older browsers don't support the :scope pseudo-class.
+	// Support: Safari 6.0 only
+	// Safari 6.0 supports :scope but it's an alias of :root there.
+	support.scope = assert( function( el ) {
+		docElem.appendChild( el ).appendChild( document.createElement( "div" ) );
+		return typeof el.querySelectorAll !== "undefined" &&
+			!el.querySelectorAll( ":scope fieldset div" ).length;
 	} );
 
-	// Support: IE 9 only
-	// Check to see if it's possible to do matchesSelector
-	// on a disconnected node.
-	support.disconnectedMatch = assert( function( el ) {
-		return matches.call( el, "*" );
-	} );
-
-	// Support: IE 9 - 11+, Edge 12 - 18+
-	// IE/Edge don't support the :scope pseudo-class.
-	support.scope = assert( function() {
-		return document.querySelectorAll( ":scope" );
-	} );
-
-	// Support: Chrome 105 - 111 only, Safari 15.4 - 16.3 only
-	// Make sure the `:has()` argument is parsed unforgivingly.
+	// Support: Chrome 105 - 110+, Safari 15.4 - 16.3+
+	// Make sure the the `:has()` argument is parsed unforgivingly.
 	// We include `*` in the test to detect buggy implementations that are
 	// _selectively_ forgiving (specifically when the list includes at least
 	// one valid selector).
@@ -4778,22 +5052,54 @@ function setDocument( node ) {
 		}
 	} );
 
+	/* Attributes
+	---------------------------------------------------------------------- */
+
+	// Support: IE<8
+	// Verify that getAttribute really returns attributes and not properties
+	// (excepting IE8 booleans)
+	support.attributes = assert( function( el ) {
+		el.className = "i";
+		return !el.getAttribute( "className" );
+	} );
+
+	/* getElement(s)By*
+	---------------------------------------------------------------------- */
+
+	// Check if getElementsByTagName("*") returns only elements
+	support.getElementsByTagName = assert( function( el ) {
+		el.appendChild( document.createComment( "" ) );
+		return !el.getElementsByTagName( "*" ).length;
+	} );
+
+	// Support: IE<9
+	support.getElementsByClassName = rnative.test( document.getElementsByClassName );
+
+	// Support: IE<10
+	// Check if getElementById returns elements by name
+	// The broken getElementById methods don't pick up programmatically-set names,
+	// so use a roundabout getElementsByName test
+	support.getById = assert( function( el ) {
+		docElem.appendChild( el ).id = expando;
+		return !document.getElementsByName || !document.getElementsByName( expando ).length;
+	} );
+
 	// ID filter and find
 	if ( support.getById ) {
-		Expr.filter.ID = function( id ) {
+		Expr.filter[ "ID" ] = function( id ) {
 			var attrId = id.replace( runescape, funescape );
 			return function( elem ) {
 				return elem.getAttribute( "id" ) === attrId;
 			};
 		};
-		Expr.find.ID = function( id, context ) {
+		Expr.find[ "ID" ] = function( id, context ) {
 			if ( typeof context.getElementById !== "undefined" && documentIsHTML ) {
 				var elem = context.getElementById( id );
 				return elem ? [ elem ] : [];
 			}
 		};
 	} else {
-		Expr.filter.ID =  function( id ) {
+		Expr.filter[ "ID" ] =  function( id ) {
 			var attrId = id.replace( runescape, funescape );
 			return function( elem ) {
 				var node = typeof elem.getAttributeNode !== "undefined" &&
@@ -4804,7 +5110,7 @@ function setDocument( node ) {
 
 		// Support: IE 6 - 7 only
 		// getElementById is not reliable as a find shortcut
-		Expr.find.ID = function( id, context ) {
+		Expr.find[ "ID" ] = function( id, context ) {
 			if ( typeof context.getElementById !== "undefined" && documentIsHTML ) {
 				var node, i, elems,
 					elem = context.getElementById( id );
@@ -4834,18 +5140,40 @@ function setDocument( node ) {
 	}
 
 	// Tag
-	Expr.find.TAG = function( tag, context ) {
-		if ( typeof context.getElementsByTagName !== "undefined" ) {
-			return context.getElementsByTagName( tag );
+	Expr.find[ "TAG" ] = support.getElementsByTagName ?
+		function( tag, context ) {
+			if ( typeof context.getElementsByTagName !== "undefined" ) {
+				return context.getElementsByTagName( tag );
 
-		// DocumentFragment nodes don't have gEBTN
-		} else {
-			return context.querySelectorAll( tag );
-		}
-	};
+			// DocumentFragment nodes don't have gEBTN
+			} else if ( support.qsa ) {
+				return context.querySelectorAll( tag );
+			}
+		} :
+
+		function( tag, context ) {
+			var elem,
+				tmp = [],
+				i = 0,
+
+				// By happy coincidence, a (broken) gEBTN appears on DocumentFragment nodes too
+				results = context.getElementsByTagName( tag );
+
+			// Filter out possible comments
+			if ( tag === "*" ) {
+				while ( ( elem = results[ i++ ] ) ) {
+					if ( elem.nodeType === 1 ) {
+						tmp.push( elem );
+					}
+				}
+
+				return tmp;
+			}
+			return results;
+		};
 
 	// Class
-	Expr.find.CLASS = function( className, context ) {
+	Expr.find[ "CLASS" ] = support.getElementsByClassName && function( className, context ) {
 		if ( typeof context.getElementsByClassName !== "undefined" && documentIsHTML ) {
 			return context.getElementsByClassName( className );
 		}
@@ -4856,75 +5184,139 @@ function setDocument( node ) {
 
 	// QSA and matchesSelector support
 
+	// matchesSelector(:active) reports false when true (IE9/Opera 11.5)
+	rbuggyMatches = [];
+
+	// qSa(:focus) reports false when true (Chrome 21)
+	// We allow this because of a bug in IE8/9 that throws an error
+	// whenever `document.activeElement` is accessed on an iframe
+	// So, we allow :focus to pass through QSA all the time to avoid the IE error
+	// See https://bugs.jquery.com/ticket/13378
 	rbuggyQSA = [];
 
-	// Build QSA regex
-	// Regex strategy adopted from Diego Perini
-	assert( function( el ) {
+	if ( ( support.qsa = rnative.test( document.querySelectorAll ) ) ) {
 
-		var input;
+		// Build QSA regex
+		// Regex strategy adopted from Diego Perini
+		assert( function( el ) {
 
-		documentElement.appendChild( el ).innerHTML =
-			"<a id='" + expando + "' href='' disabled='disabled'></a>" +
-			"<select id='" + expando + "-\r\\' disabled='disabled'>" +
-			"<option selected=''></option></select>";
+			var input;
 
-		// Support: iOS <=7 - 8 only
-		// Boolean attributes and "value" are not treated correctly in some XML documents
-		if ( !el.querySelectorAll( "[selected]" ).length ) {
-			rbuggyQSA.push( "\\[" + whitespace + "*(?:value|" + booleans + ")" );
-		}
+			// Select is set to empty string on purpose
+			// This is to test IE's treatment of not explicitly
+			// setting a boolean content attribute,
+			// since its presence should be enough
+			// https://bugs.jquery.com/ticket/12359
+			docElem.appendChild( el ).innerHTML = "<a id='" + expando + "'></a>" +
+				"<select id='" + expando + "-\r\\' msallowcapture=''>" +
+				"<option selected=''></option></select>";
 
-		// Support: iOS <=7 - 8 only
-		if ( !el.querySelectorAll( "[id~=" + expando + "-]" ).length ) {
-			rbuggyQSA.push( "~=" );
-		}
+			// Support: IE8, Opera 11-12.16
+			// Nothing should be selected when empty strings follow ^= or $= or *=
+			// The test attribute must be unknown in Opera but "safe" for WinRT
+			// https://msdn.microsoft.com/en-us/library/ie/hh465388.aspx#attribute_section
+			if ( el.querySelectorAll( "[msallowcapture^='']" ).length ) {
+				rbuggyQSA.push( "[*^$]=" + whitespace + "*(?:''|\"\")" );
+			}
 
-		// Support: iOS 8 only
-		// https://bugs.webkit.org/show_bug.cgi?id=136851
-		// In-page `selector#id sibling-combinator selector` fails
-		if ( !el.querySelectorAll( "a#" + expando + "+*" ).length ) {
-			rbuggyQSA.push( ".#.+[+~]" );
-		}
+			// Support: IE8
+			// Boolean attributes and "value" are not treated correctly
+			if ( !el.querySelectorAll( "[selected]" ).length ) {
+				rbuggyQSA.push( "\\[" + whitespace + "*(?:value|" + booleans + ")" );
+			}
 
-		// Support: Chrome <=105+, Firefox <=104+, Safari <=15.4+
-		// In some of the document kinds, these selectors wouldn't work natively.
-		// This is probably OK but for backwards compatibility we want to maintain
-		// handling them through jQuery traversal in jQuery 3.x.
-		if ( !el.querySelectorAll( ":checked" ).length ) {
-			rbuggyQSA.push( ":checked" );
-		}
+			// Support: Chrome<29, Android<4.4, Safari<7.0+, iOS<7.0+, PhantomJS<1.9.8+
+			if ( !el.querySelectorAll( "[id~=" + expando + "-]" ).length ) {
+				rbuggyQSA.push( "~=" );
+			}
 
-		// Support: Windows 8 Native Apps
-		// The type and name attributes are restricted during .innerHTML assignment
-		input = document.createElement( "input" );
-		input.setAttribute( "type", "hidden" );
-		el.appendChild( input ).setAttribute( "name", "D" );
+			// Support: IE 11+, Edge 15 - 18+
+			// IE 11/Edge don't find elements on a `[name='']` query in some cases.
+			// Adding a temporary attribute to the document before the selection works
+			// around the issue.
+			// Interestingly, IE 10 & older don't seem to have the issue.
+			input = document.createElement( "input" );
+			input.setAttribute( "name", "" );
+			el.appendChild( input );
+			if ( !el.querySelectorAll( "[name='']" ).length ) {
+				rbuggyQSA.push( "\\[" + whitespace + "*name" + whitespace + "*=" +
+					whitespace + "*(?:''|\"\")" );
+			}
 
-		// Support: IE 9 - 11+
-		// IE's :disabled selector does not pick up the children of disabled fieldsets
-		// Support: Chrome <=105+, Firefox <=104+, Safari <=15.4+
-		// In some of the document kinds, these selectors wouldn't work natively.
-		// This is probably OK but for backwards compatibility we want to maintain
-		// handling them through jQuery traversal in jQuery 3.x.
-		documentElement.appendChild( el ).disabled = true;
-		if ( el.querySelectorAll( ":disabled" ).length !== 2 ) {
-			rbuggyQSA.push( ":enabled", ":disabled" );
-		}
+			// Webkit/Opera - :checked should return selected option elements
+			// http://www.w3.org/TR/2011/REC-css3-selectors-20110929/#checked
+			// IE8 throws error here and will not see later tests
+			if ( !el.querySelectorAll( ":checked" ).length ) {
+				rbuggyQSA.push( ":checked" );
+			}
 
-		// Support: IE 11+, Edge 15 - 18+
-		// IE 11/Edge don't find elements on a `[name='']` query in some cases.
-		// Adding a temporary attribute to the document before the selection works
-		// around the issue.
-		// Interestingly, IE 10 & older don't seem to have the issue.
-		input = document.createElement( "input" );
-		input.setAttribute( "name", "" );
-		el.appendChild( input );
-		if ( !el.querySelectorAll( "[name='']" ).length ) {
-			rbuggyQSA.push( "\\[" + whitespace + "*name" + whitespace + "*=" +
-				whitespace + "*(?:''|\"\")" );
-		}
-	} );
+			// Support: Safari 8+, iOS 8+
+			// https://bugs.webkit.org/show_bug.cgi?id=136851
+			// In-page `selector#id sibling-combinator selector` fails
+			if ( !el.querySelectorAll( "a#" + expando + "+*" ).length ) {
+				rbuggyQSA.push( ".#.+[+~]" );
+			}
+
+			// Support: Firefox <=3.6 - 5 only
+			// Old Firefox doesn't throw on a badly-escaped identifier.
+			el.querySelectorAll( "\\\f" );
+			rbuggyQSA.push( "[\\r\\n\\f]" );
+		} );
+
+		assert( function( el ) {
+			el.innerHTML = "<a href='' disabled='disabled'></a>" +
+				"<select disabled='disabled'><option/></select>";
+
+			// Support: Windows 8 Native Apps
+			// The type and name attributes are restricted during .innerHTML assignment
+			var input = document.createElement( "input" );
+			input.setAttribute( "type", "hidden" );
+			el.appendChild( input ).setAttribute( "name", "D" );
+
+			// Support: IE8
+			// Enforce case-sensitivity of name attribute
+			if ( el.querySelectorAll( "[name=d]" ).length ) {
+				rbuggyQSA.push( "name" + whitespace + "*[*^$|!~]?=" );
+			}
+
+			// FF 3.5 - :enabled/:disabled and hidden elements (hidden elements are still enabled)
+			// IE8 throws error here and will not see later tests
+			if ( el.querySelectorAll( ":enabled" ).length !== 2 ) {
+				rbuggyQSA.push( ":enabled", ":disabled" );
+			}
+
+			// Support: IE9-11+
+			// IE's :disabled selector does not pick up the children of disabled fieldsets
+			docElem.appendChild( el ).disabled = true;
+			if ( el.querySelectorAll( ":disabled" ).length !== 2 ) {
+				rbuggyQSA.push( ":enabled", ":disabled" );
+			}
+
+			// Support: Opera 10 - 11 only
+			// Opera 10-11 does not throw on post-comma invalid pseudos
+			el.querySelectorAll( "*,:x" );
+			rbuggyQSA.push( ",.*:" );
+		} );
+	}
+
+	if ( ( support.matchesSelector = rnative.test( ( matches = docElem.matches ||
+		docElem.webkitMatchesSelector ||
+		docElem.mozMatchesSelector ||
+		docElem.oMatchesSelector ||
+		docElem.msMatchesSelector ) ) ) ) {
+
+		assert( function( el ) {
+
+			// Check to see if it's possible to do matchesSelector
+			// on a disconnected node (IE 9)
+			support.disconnectedMatch = matches.call( el, "*" );
+
+			// This should fail with an exception
+			// Gecko does not error, returns false instead
+			matches.call( el, "[s!='']:x" );
+			rbuggyMatches.push( "!=", pseudos );
+		} );
+	}
 
 	if ( !support.cssHas ) {
 
@@ -4938,12 +5330,49 @@ function setDocument( node ) {
 	}
 
 	rbuggyQSA = rbuggyQSA.length && new RegExp( rbuggyQSA.join( "|" ) );
+	rbuggyMatches = rbuggyMatches.length && new RegExp( rbuggyMatches.join( "|" ) );
+
+	/* Contains
+	---------------------------------------------------------------------- */
+	hasCompare = rnative.test( docElem.compareDocumentPosition );
+
+	// Element contains another
+	// Purposefully self-exclusive
+	// As in, an element does not contain itself
+	contains = hasCompare || rnative.test( docElem.contains ) ?
+		function( a, b ) {
+
+			// Support: IE <9 only
+			// IE doesn't have `contains` on `document` so we need to check for
+			// `documentElement` presence.
+			// We need to fall back to `a` when `documentElement` is missing
+			// as `ownerDocument` of elements within `<template/>` may have
+			// a null one - a default behavior of all modern browsers.
+			var adown = a.nodeType === 9 && a.documentElement || a,
+				bup = b && b.parentNode;
+			return a === bup || !!( bup && bup.nodeType === 1 && (
+				adown.contains ?
+					adown.contains( bup ) :
+					a.compareDocumentPosition && a.compareDocumentPosition( bup ) & 16
+			) );
+		} :
+		function( a, b ) {
+			if ( b ) {
+				while ( ( b = b.parentNode ) ) {
+					if ( b === a ) {
+						return true;
+					}
+				}
+			}
+			return false;
+		};
 
 	/* Sorting
 	---------------------------------------------------------------------- */
 
 	// Document order sorting
-	sortOrder = function( a, b ) {
+	sortOrder = hasCompare ?
+	function( a, b ) {
 
 		// Flag for duplicate removal
 		if ( a === b ) {
@@ -4977,8 +5406,8 @@ function setDocument( node ) {
 			// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 			// two documents; shallow comparisons work.
 			// eslint-disable-next-line eqeqeq
-			if ( a === document || a.ownerDocument == preferredDoc &&
-				find.contains( preferredDoc, a ) ) {
+			if ( a == document || a.ownerDocument == preferredDoc &&
+				contains( preferredDoc, a ) ) {
 				return -1;
 			}
 
@@ -4986,33 +5415,100 @@ function setDocument( node ) {
 			// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
 			// two documents; shallow comparisons work.
 			// eslint-disable-next-line eqeqeq
-			if ( b === document || b.ownerDocument == preferredDoc &&
-				find.contains( preferredDoc, b ) ) {
+			if ( b == document || b.ownerDocument == preferredDoc &&
+				contains( preferredDoc, b ) ) {
 				return 1;
 			}
 
 			// Maintain original order
 			return sortInput ?
-				( indexOf.call( sortInput, a ) - indexOf.call( sortInput, b ) ) :
+				( indexOf( sortInput, a ) - indexOf( sortInput, b ) ) :
 				0;
 		}
 
 		return compare & 4 ? -1 : 1;
+	} :
+	function( a, b ) {
+
+		// Exit early if the nodes are identical
+		if ( a === b ) {
+			hasDuplicate = true;
+			return 0;
+		}
+
+		var cur,
+			i = 0,
+			aup = a.parentNode,
+			bup = b.parentNode,
+			ap = [ a ],
+			bp = [ b ];
+
+		// Parentless nodes are either documents or disconnected
+		if ( !aup || !bup ) {
+
+			// Support: IE 11+, Edge 17 - 18+
+			// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
+			// two documents; shallow comparisons work.
+			/* eslint-disable eqeqeq */
+			return a == document ? -1 :
+				b == document ? 1 :
+				/* eslint-enable eqeqeq */
+				aup ? -1 :
+				bup ? 1 :
+				sortInput ?
+				( indexOf( sortInput, a ) - indexOf( sortInput, b ) ) :
+				0;
+
+		// If the nodes are siblings, we can do a quick check
+		} else if ( aup === bup ) {
+			return siblingCheck( a, b );
+		}
+
+		// Otherwise we need full lists of their ancestors for comparison
+		cur = a;
+		while ( ( cur = cur.parentNode ) ) {
+			ap.unshift( cur );
+		}
+		cur = b;
+		while ( ( cur = cur.parentNode ) ) {
+			bp.unshift( cur );
+		}
+
+		// Walk down the tree looking for a discrepancy
+		while ( ap[ i ] === bp[ i ] ) {
+			i++;
+		}
+
+		return i ?
+
+			// Do a sibling check if the nodes have a common ancestor
+			siblingCheck( ap[ i ], bp[ i ] ) :
+
+			// Otherwise nodes in our document sort first
+			// Support: IE 11+, Edge 17 - 18+
+			// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
+			// two documents; shallow comparisons work.
+			/* eslint-disable eqeqeq */
+			ap[ i ] == preferredDoc ? -1 :
+			bp[ i ] == preferredDoc ? 1 :
+			/* eslint-enable eqeqeq */
+			0;
 	};
 
 	return document;
-}
-
-find.matches = function( expr, elements ) {
-	return find( expr, null, null, elements );
 };
 
-find.matchesSelector = function( elem, expr ) {
+Sizzle.matches = function( expr, elements ) {
+	return Sizzle( expr, null, null, elements );
+};
+
+Sizzle.matchesSelector = function( elem, expr ) {
 	setDocument( elem );
 
-	if ( documentIsHTML &&
+	if ( support.matchesSelector && documentIsHTML &&
 		!nonnativeSelectorCache[ expr + " " ] &&
-		( !rbuggyQSA || !rbuggyQSA.test( expr ) ) ) {
+		( !rbuggyMatches || !rbuggyMatches.test( expr ) ) &&
+		( !rbuggyQSA     || !rbuggyQSA.test( expr ) ) ) {
 
 		try {
 			var ret = matches.call( elem, expr );
@@ -5020,9 +5516,9 @@ find.matchesSelector = function( elem, expr ) {
 			// IE 9's matchesSelector returns false on disconnected nodes
 			if ( ret || support.disconnectedMatch ||
 
-					// As well, disconnected nodes are said to be in a document
-					// fragment in IE 9
-					elem.document && elem.document.nodeType !== 11 ) {
+				// As well, disconnected nodes are said to be in a document
+				// fragment in IE 9
+				elem.document && elem.document.nodeType !== 11 ) {
 				return ret;
 			}
 		} catch ( e ) {
@@ -5030,10 +5526,10 @@ find.matchesSelector = function( elem, expr ) {
 		}
 	}
 
-	return find( expr, document, null, [ elem ] ).length > 0;
+	return Sizzle( expr, document, null, [ elem ] ).length > 0;
 };
 
-find.contains = function( context, elem ) {
+Sizzle.contains = function( context, elem ) {
 
 	// Set document vars if needed
 	// Support: IE 11+, Edge 17 - 18+
@@ -5043,11 +5539,10 @@ find.contains = function( context, elem ) {
 	if ( ( context.ownerDocument || context ) != document ) {
 		setDocument( context );
 	}
-	return jQuery.contains( context, elem );
+	return contains( context, elem );
 };
 
-
-find.attr = function( elem, name ) {
+Sizzle.attr = function( elem, name ) {
 
 	// Set document vars if needed
 	// Support: IE 11+, Edge 17 - 18+
@@ -5060,19 +5555,25 @@ find.attr = function( elem, name ) {
 
 	var fn = Expr.attrHandle[ name.toLowerCase() ],
 
-		// Don't get fooled by Object.prototype properties (see trac-13807)
+		// Don't get fooled by Object.prototype properties (jQuery #13807)
 		val = fn && hasOwn.call( Expr.attrHandle, name.toLowerCase() ) ?
 			fn( elem, name, !documentIsHTML ) :
 			undefined;
 
-	if ( val !== undefined ) {
-		return val;
-	}
-
-	return elem.getAttribute( name );
+	return val !== undefined ?
+		val :
+		support.attributes || !documentIsHTML ?
+			elem.getAttribute( name ) :
+			( val = elem.getAttributeNode( name ) ) && val.specified ?
+				val.value :
+				null;
 };
 
-find.error = function( msg ) {
+Sizzle.escape = function( sel ) {
+	return ( sel + "" ).replace( rcssescape, fcssescape );
+};
+
+Sizzle.error = function( msg ) {
 	throw new Error( "Syntax error, unrecognized expression: " + msg );
 };
 
@@ -5080,20 +5581,16 @@ find.error = function( msg ) {
  * Document sorting and removing duplicates
  * @param {ArrayLike} results
  */
-jQuery.uniqueSort = function( results ) {
+Sizzle.uniqueSort = function( results ) {
 	var elem,
 		duplicates = [],
 		j = 0,
 		i = 0;
 
 	// Unless we *know* we can detect duplicates, assume their presence
-	//
-	// Support: Android <=4.0+
-	// Testing for detecting duplicates is unpredictable so instead assume we can't
-	// depend on duplicate detection in all browsers without a stable sort.
-	hasDuplicate = !support.sortStable;
-	sortInput = !support.sortStable && slice.call( results, 0 );
-	sort.call( results, sortOrder );
+	hasDuplicate = !support.detectDuplicates;
+	sortInput = !support.sortStable && results.slice( 0 );
+	results.sort( sortOrder );
 
 	if ( hasDuplicate ) {
 		while ( ( elem = results[ i++ ] ) ) {
@@ -5102,7 +5599,7 @@ jQuery.uniqueSort = function( results ) {
 			}
 		}
 		while ( j-- ) {
-			splice.call( results, duplicates[ j ], 1 );
+			results.splice( duplicates[ j ], 1 );
 		}
 	}
 
@@ -5113,11 +5610,47 @@ jQuery.uniqueSort = function( results ) {
 	return results;
 };
 
-jQuery.fn.uniqueSort = function() {
-	return this.pushStack( jQuery.uniqueSort( slice.apply( this ) ) );
+/**
+ * Utility function for retrieving the text value of an array of DOM nodes
+ * @param {Array|Element} elem
+ */
+getText = Sizzle.getText = function( elem ) {
+	var node,
+		ret = "",
+		i = 0,
+		nodeType = elem.nodeType;
+
+	if ( !nodeType ) {
+
+		// If no nodeType, this is expected to be an array
+		while ( ( node = elem[ i++ ] ) ) {
+
+			// Do not traverse comment nodes
+			ret += getText( node );
+		}
+	} else if ( nodeType === 1 || nodeType === 9 || nodeType === 11 ) {
+
+		// Use textContent for elements
+		// innerText usage removed for consistency of new lines (jQuery #11153)
+		if ( typeof elem.textContent === "string" ) {
+			return elem.textContent;
+		} else {
+
+			// Traverse its children
+			for ( elem = elem.firstChild; elem; elem = elem.nextSibling ) {
+				ret += getText( elem );
+			}
+		}
+	} else if ( nodeType === 3 || nodeType === 4 ) {
+		return elem.nodeValue;
+	}
+
+	// Do not include comment or processing instruction nodes
+
+	return ret;
 };
 
-Expr = jQuery.expr = {
+Expr = Sizzle.selectors = {
 
 	// Can be adjusted by the user
 	cacheLength: 50,
@@ -5138,12 +5671,12 @@ Expr = jQuery.expr = {
 	},
 
 	preFilter: {
-		ATTR: function( match ) {
+		"ATTR": function( match ) {
 			match[ 1 ] = match[ 1 ].replace( runescape, funescape );
 
 			// Move the given value to match[3] whether quoted or unquoted
-			match[ 3 ] = ( match[ 3 ] || match[ 4 ] || match[ 5 ] || "" )
-				.replace( runescape, funescape );
+			match[ 3 ] = ( match[ 3 ] || match[ 4 ] ||
+				match[ 5 ] || "" ).replace( runescape, funescape );
 
 			if ( match[ 2 ] === "~=" ) {
 				match[ 3 ] = " " + match[ 3 ] + " ";
@@ -5152,7 +5685,7 @@ Expr = jQuery.expr = {
 			return match.slice( 0, 4 );
 		},
 
-		CHILD: function( match ) {
+		"CHILD": function( match ) {
 
 			/* matches from matchExpr["CHILD"]
 				1 type (only|nth|...)
@@ -5170,30 +5703,29 @@ Expr = jQuery.expr = {
 
 				// nth-* requires argument
 				if ( !match[ 3 ] ) {
-					find.error( match[ 0 ] );
+					Sizzle.error( match[ 0 ] );
 				}
 
 				// numeric x and y parameters for Expr.filter.CHILD
 				// remember that false/true cast respectively to 0/1
 				match[ 4 ] = +( match[ 4 ] ?
 					match[ 5 ] + ( match[ 6 ] || 1 ) :
-					2 * ( match[ 3 ] === "even" || match[ 3 ] === "odd" )
-				);
+					2 * ( match[ 3 ] === "even" || match[ 3 ] === "odd" ) );
 				match[ 5 ] = +( ( match[ 7 ] + match[ 8 ] ) || match[ 3 ] === "odd" );
 
-			// other types prohibit arguments
+				// other types prohibit arguments
 			} else if ( match[ 3 ] ) {
-				find.error( match[ 0 ] );
+				Sizzle.error( match[ 0 ] );
 			}
 
 			return match;
 		},
 
-		PSEUDO: function( match ) {
+		"PSEUDO": function( match ) {
 			var excess,
 				unquoted = !match[ 6 ] && match[ 2 ];
 
-			if ( matchExpr.CHILD.test( match[ 0 ] ) ) {
+			if ( matchExpr[ "CHILD" ].test( match[ 0 ] ) ) {
 				return null;
 			}
 
@@ -5222,36 +5754,36 @@ Expr = jQuery.expr = {
 
 	filter: {
 
-		TAG: function( nodeNameSelector ) {
-			var expectedNodeName = nodeNameSelector.replace( runescape, funescape ).toLowerCase();
+		"TAG": function( nodeNameSelector ) {
+			var nodeName = nodeNameSelector.replace( runescape, funescape ).toLowerCase();
 			return nodeNameSelector === "*" ?
 				function() {
 					return true;
 				} :
 				function( elem ) {
-					return nodeName( elem, expectedNodeName );
+					return elem.nodeName && elem.nodeName.toLowerCase() === nodeName;
 				};
 		},
 
-		CLASS: function( className ) {
+		"CLASS": function( className ) {
 			var pattern = classCache[ className + " " ];
 
 			return pattern ||
-				( pattern = new RegExp( "(^|" + whitespace + ")" + className +
-					"(" + whitespace + "|$)" ) ) &&
-				classCache( className, function( elem ) {
-					return pattern.test(
-						typeof elem.className === "string" && elem.className ||
-							typeof elem.getAttribute !== "undefined" &&
-								elem.getAttribute( "class" ) ||
-							""
-					);
+				( pattern = new RegExp( "(^|" + whitespace +
+					")" + className + "(" + whitespace + "|$)" ) ) && classCache(
+						className, function( elem ) {
+							return pattern.test(
+								typeof elem.className === "string" && elem.className ||
+								typeof elem.getAttribute !== "undefined" &&
+									elem.getAttribute( "class" ) ||
+								""
+							);
 				} );
 		},
 
-		ATTR: function( name, operator, check ) {
+		"ATTR": function( name, operator, check ) {
 			return function( elem ) {
-				var result = find.attr( elem, name );
+				var result = Sizzle.attr( elem, name );
 
 				if ( result == null ) {
 					return operator === "!=";
@@ -5262,34 +5794,22 @@ Expr = jQuery.expr = {
 
 				result += "";
 
-				if ( operator === "=" ) {
-					return result === check;
-				}
-				if ( operator === "!=" ) {
-					return result !== check;
-				}
-				if ( operator === "^=" ) {
-					return check && result.indexOf( check ) === 0;
-				}
-				if ( operator === "*=" ) {
-					return check && result.indexOf( check ) > -1;
-				}
-				if ( operator === "$=" ) {
-					return check && result.slice( -check.length ) === check;
-				}
-				if ( operator === "~=" ) {
-					return ( " " + result.replace( rwhitespace, " " ) + " " )
-						.indexOf( check ) > -1;
-				}
-				if ( operator === "|=" ) {
-					return result === check || result.slice( 0, check.length + 1 ) === check + "-";
-				}
+				/* eslint-disable max-len */
 
-				return false;
+				return operator === "=" ? result === check :
+					operator === "!=" ? result !== check :
+					operator === "^=" ? check && result.indexOf( check ) === 0 :
+					operator === "*=" ? check && result.indexOf( check ) > -1 :
+					operator === "$=" ? check && result.slice( -check.length ) === check :
+					operator === "~=" ? ( " " + result.replace( rwhitespace, " " ) + " " ).indexOf( check ) > -1 :
+					operator === "|=" ? result === check || result.slice( 0, check.length + 1 ) === check + "-" :
+					false;
+				/* eslint-enable max-len */
+
 			};
 		},
 
-		CHILD: function( type, what, _argument, first, last ) {
+		"CHILD": function( type, what, _argument, first, last ) {
 			var simple = type.slice( 0, 3 ) !== "nth",
 				forward = type.slice( -4 ) !== "last",
 				ofType = what === "of-type";
@@ -5302,7 +5822,7 @@ Expr = jQuery.expr = {
 				} :
 
 				function( elem, _context, xml ) {
-					var cache, outerCache, node, nodeIndex, start,
+					var cache, uniqueCache, outerCache, node, nodeIndex, start,
 						dir = simple !== forward ? "nextSibling" : "previousSibling",
 						parent = elem.parentNode,
 						name = ofType && elem.nodeName.toLowerCase(),
@@ -5317,7 +5837,7 @@ Expr = jQuery.expr = {
 								node = elem;
 								while ( ( node = node[ dir ] ) ) {
 									if ( ofType ?
-										nodeName( node, name ) :
+										node.nodeName.toLowerCase() === name :
 										node.nodeType === 1 ) {
 
 										return false;
@@ -5336,8 +5856,17 @@ Expr = jQuery.expr = {
 						if ( forward && useCache ) {
 
 							// Seek `elem` from a previously-cached index
-							outerCache = parent[ expando ] || ( parent[ expando ] = {} );
-							cache = outerCache[ type ] || [];
+
+							// ...in a gzip-friendly way
+							node = parent;
+							outerCache = node[ expando ] || ( node[ expando ] = {} );
+
+							// Support: IE <9 only
+							// Defend against cloned attroperties (jQuery gh-1709)
+							uniqueCache = outerCache[ node.uniqueID ] ||
+								( outerCache[ node.uniqueID ] = {} );
+
+							cache = uniqueCache[ type ] || [];
 							nodeIndex = cache[ 0 ] === dirruns && cache[ 1 ];
 							diff = nodeIndex && cache[ 2 ];
 							node = nodeIndex && parent.childNodes[ nodeIndex ];
@@ -5349,7 +5878,7 @@ Expr = jQuery.expr = {
 
 								// When found, cache indexes on `parent` and break
 								if ( node.nodeType === 1 && ++diff && node === elem ) {
-									outerCache[ type ] = [ dirruns, nodeIndex, diff ];
+									uniqueCache[ type ] = [ dirruns, nodeIndex, diff ];
 									break;
 								}
 							}
@@ -5358,8 +5887,17 @@ Expr = jQuery.expr = {
 
 							// Use previously-cached element index if available
 							if ( useCache ) {
-								outerCache = elem[ expando ] || ( elem[ expando ] = {} );
-								cache = outerCache[ type ] || [];
+
+								// ...in a gzip-friendly way
+								node = elem;
+								outerCache = node[ expando ] || ( node[ expando ] = {} );
+
+								// Support: IE <9 only
+								// Defend against cloned attroperties (jQuery gh-1709)
+								uniqueCache = outerCache[ node.uniqueID ] ||
+									( outerCache[ node.uniqueID ] = {} );
+
+								cache = uniqueCache[ type ] || [];
 								nodeIndex = cache[ 0 ] === dirruns && cache[ 1 ];
 								diff = nodeIndex;
 							}
@@ -5373,7 +5911,7 @@ Expr = jQuery.expr = {
 									( diff = nodeIndex = 0 ) || start.pop() ) ) {
 
 									if ( ( ofType ?
-										nodeName( node, name ) :
+										node.nodeName.toLowerCase() === name :
 										node.nodeType === 1 ) &&
 										++diff ) {
 
@@ -5381,7 +5919,13 @@ Expr = jQuery.expr = {
 										if ( useCache ) {
 											outerCache = node[ expando ] ||
 												( node[ expando ] = {} );
-											outerCache[ type ] = [ dirruns, diff ];
+
+											// Support: IE <9 only
+											// Defend against cloned attroperties (jQuery gh-1709)
+											uniqueCache = outerCache[ node.uniqueID ] ||
+												( outerCache[ node.uniqueID ] = {} );
+
+											uniqueCache[ type ] = [ dirruns, diff ];
 										}
 
 										if ( node === elem ) {
@@ -5399,19 +5943,19 @@ Expr = jQuery.expr = {
 				};
 		},
 
-		PSEUDO: function( pseudo, argument ) {
+		"PSEUDO": function( pseudo, argument ) {
 
 			// pseudo-class names are case-insensitive
-			// https://www.w3.org/TR/selectors/#pseudo-classes
+			// http://www.w3.org/TR/selectors/#pseudo-classes
 			// Prioritize by case sensitivity in case custom pseudos are added with uppercase letters
 			// Remember that setFilters inherits from pseudos
 			var args,
 				fn = Expr.pseudos[ pseudo ] || Expr.setFilters[ pseudo.toLowerCase() ] ||
-					find.error( "unsupported pseudo: " + pseudo );
+					Sizzle.error( "unsupported pseudo: " + pseudo );
 
 			// The user may use createPseudo to indicate that
 			// arguments are needed to create the filter function
-			// just as jQuery does
+			// just as Sizzle does
 			if ( fn[ expando ] ) {
 				return fn( argument );
 			}
@@ -5425,7 +5969,7 @@ Expr = jQuery.expr = {
 							matched = fn( seed, argument ),
 							i = matched.length;
 						while ( i-- ) {
-							idx = indexOf.call( seed, matched[ i ] );
+							idx = indexOf( seed, matched[ i ] );
 							seed[ idx ] = !( matches[ idx ] = matched[ i ] );
 						}
 					} ) :
@@ -5441,14 +5985,14 @@ Expr = jQuery.expr = {
 	pseudos: {
 
 		// Potentially complex pseudos
-		not: markFunction( function( selector ) {
+		"not": markFunction( function( selector ) {
 
 			// Trim the selector passed to compile
 			// to avoid treating leading and trailing
 			// spaces as combinators
 			var input = [],
 				results = [],
-				matcher = compile( selector.replace( rtrimCSS, "$1" ) );
+				matcher = compile( selector.replace( rtrim, "$1" ) );
 
 			return matcher[ expando ] ?
 				markFunction( function( seed, matches, _context, xml ) {
@@ -5467,23 +6011,22 @@ Expr = jQuery.expr = {
 					input[ 0 ] = elem;
 					matcher( input, null, xml, results );
 
-					// Don't keep the element
-					// (see https://github.com/jquery/sizzle/issues/299)
+					// Don't keep the element (issue #299)
 					input[ 0 ] = null;
 					return !results.pop();
 				};
 		} ),
 
-		has: markFunction( function( selector ) {
+		"has": markFunction( function( selector ) {
 			return function( elem ) {
-				return find( selector, elem ).length > 0;
+				return Sizzle( selector, elem ).length > 0;
 			};
 		} ),
 
-		contains: markFunction( function( text ) {
+		"contains": markFunction( function( text ) {
 			text = text.replace( runescape, funescape );
 			return function( elem ) {
-				return ( elem.textContent || jQuery.text( elem ) ).indexOf( text ) > -1;
+				return ( elem.textContent || getText( elem ) ).indexOf( text ) > -1;
 			};
 		} ),
 
@@ -5493,12 +6036,12 @@ Expr = jQuery.expr = {
 		// or beginning with the identifier C immediately followed by "-".
 		// The matching of C against the element's language value is performed case-insensitively.
 		// The identifier C does not have to be a valid language name."
-		// https://www.w3.org/TR/selectors/#lang-pseudo
-		lang: markFunction( function( lang ) {
+		// http://www.w3.org/TR/selectors/#lang-pseudo
+		"lang": markFunction( function( lang ) {
 
 			// lang value must be a valid identifier
 			if ( !ridentifier.test( lang || "" ) ) {
-				find.error( "unsupported lang: " + lang );
+				Sizzle.error( "unsupported lang: " + lang );
 			}
 			lang = lang.replace( runescape, funescape ).toLowerCase();
 			return function( elem ) {
@@ -5517,39 +6060,38 @@ Expr = jQuery.expr = {
 		} ),
 
 		// Miscellaneous
-		target: function( elem ) {
+		"target": function( elem ) {
 			var hash = window.location && window.location.hash;
 			return hash && hash.slice( 1 ) === elem.id;
 		},
 
-		root: function( elem ) {
-			return elem === documentElement;
+		"root": function( elem ) {
+			return elem === docElem;
 		},
 
-		focus: function( elem ) {
-			return elem === safeActiveElement() &&
-				document.hasFocus() &&
+		"focus": function( elem ) {
+			return elem === document.activeElement &&
+				( !document.hasFocus || document.hasFocus() ) &&
 				!!( elem.type || elem.href || ~elem.tabIndex );
 		},
 
 		// Boolean properties
-		enabled: createDisabledPseudo( false ),
-		disabled: createDisabledPseudo( true ),
+		"enabled": createDisabledPseudo( false ),
+		"disabled": createDisabledPseudo( true ),
 
-		checked: function( elem ) {
+		"checked": function( elem ) {
 
 			// In CSS3, :checked should return both checked and selected elements
-			// https://www.w3.org/TR/2011/REC-css3-selectors-20110929/#checked
-			return ( nodeName( elem, "input" ) && !!elem.checked ) ||
-				( nodeName( elem, "option" ) && !!elem.selected );
+			// http://www.w3.org/TR/2011/REC-css3-selectors-20110929/#checked
+			var nodeName = elem.nodeName.toLowerCase();
+			return ( nodeName === "input" && !!elem.checked ) ||
+				( nodeName === "option" && !!elem.selected );
 		},
 
-		selected: function( elem ) {
+		"selected": function( elem ) {
 
-			// Support: IE <=11+
-			// Accessing the selectedIndex property
-			// forces the browser to treat the default option as
-			// selected when in an optgroup.
+			// Accessing this property makes selected-by-default
+			// options in Safari work properly
 			if ( elem.parentNode ) {
 				// eslint-disable-next-line no-unused-expressions
 				elem.parentNode.selectedIndex;
@@ -5559,9 +6101,9 @@ Expr = jQuery.expr = {
 		},
 
 		// Contents
-		empty: function( elem ) {
+		"empty": function( elem ) {
 
-			// https://www.w3.org/TR/selectors/#empty-pseudo
+			// http://www.w3.org/TR/selectors/#empty-pseudo
 			// :empty is negated by element (1) or content nodes (text: 3; cdata: 4; entity ref: 5),
 			//   but not by others (comment: 8; processing instruction: 7; etc.)
 			// nodeType < 6 works because attributes (2) do not appear as children
@@ -5573,49 +6115,49 @@ Expr = jQuery.expr = {
 			return true;
 		},
 
-		parent: function( elem ) {
-			return !Expr.pseudos.empty( elem );
+		"parent": function( elem ) {
+			return !Expr.pseudos[ "empty" ]( elem );
 		},
 
 		// Element/input types
-		header: function( elem ) {
+		"header": function( elem ) {
 			return rheader.test( elem.nodeName );
 		},
 
-		input: function( elem ) {
+		"input": function( elem ) {
 			return rinputs.test( elem.nodeName );
 		},
 
-		button: function( elem ) {
-			return nodeName( elem, "input" ) && elem.type === "button" ||
-				nodeName( elem, "button" );
+		"button": function( elem ) {
+			var name = elem.nodeName.toLowerCase();
+			return name === "input" && elem.type === "button" || name === "button";
 		},
 
-		text: function( elem ) {
+		"text": function( elem ) {
 			var attr;
-			return nodeName( elem, "input" ) && elem.type === "text" &&
+			return elem.nodeName.toLowerCase() === "input" &&
+				elem.type === "text" &&
 
 				// Support: IE <10 only
-				// New HTML5 attribute values (e.g., "search") appear
-				// with elem.type === "text"
+				// New HTML5 attribute values (e.g., "search") appear with elem.type === "text"
 				( ( attr = elem.getAttribute( "type" ) ) == null ||
 					attr.toLowerCase() === "text" );
 		},
 
 		// Position-in-collection
-		first: createPositionalPseudo( function() {
+		"first": createPositionalPseudo( function() {
 			return [ 0 ];
 		} ),
 
-		last: createPositionalPseudo( function( _matchIndexes, length ) {
+		"last": createPositionalPseudo( function( _matchIndexes, length ) {
 			return [ length - 1 ];
 		} ),
 
-		eq: createPositionalPseudo( function( _matchIndexes, length, argument ) {
+		"eq": createPositionalPseudo( function( _matchIndexes, length, argument ) {
 			return [ argument < 0 ? argument + length : argument ];
 		} ),
 
-		even: createPositionalPseudo( function( matchIndexes, length ) {
+		"even": createPositionalPseudo( function( matchIndexes, length ) {
 			var i = 0;
 			for ( ; i < length; i += 2 ) {
 				matchIndexes.push( i );
@@ -5623,7 +6165,7 @@ Expr = jQuery.expr = {
 			return matchIndexes;
 		} ),
 
-		odd: createPositionalPseudo( function( matchIndexes, length ) {
+		"odd": createPositionalPseudo( function( matchIndexes, length ) {
 			var i = 1;
 			for ( ; i < length; i += 2 ) {
 				matchIndexes.push( i );
@@ -5631,24 +6173,19 @@ Expr = jQuery.expr = {
 			return matchIndexes;
 		} ),
 
-		lt: createPositionalPseudo( function( matchIndexes, length, argument ) {
-			var i;
-
-			if ( argument < 0 ) {
-				i = argument + length;
-			} else if ( argument > length ) {
-				i = length;
-			} else {
-				i = argument;
-			}
-
+		"lt": createPositionalPseudo( function( matchIndexes, length, argument ) {
+			var i = argument < 0 ?
+				argument + length :
+				argument > length ?
+					length :
+					argument;
 			for ( ; --i >= 0; ) {
 				matchIndexes.push( i );
 			}
 			return matchIndexes;
 		} ),
 
-		gt: createPositionalPseudo( function( matchIndexes, length, argument ) {
+		"gt": createPositionalPseudo( function( matchIndexes, length, argument ) {
 			var i = argument < 0 ? argument + length : argument;
 			for ( ; ++i < length; ) {
 				matchIndexes.push( i );
@@ -5658,7 +6195,7 @@ Expr = jQuery.expr = {
 	}
 };
 
-Expr.pseudos.nth = Expr.pseudos.eq;
+Expr.pseudos[ "nth" ] = Expr.pseudos[ "eq" ];
 
 // Add button/input type pseudos
 for ( i in { radio: true, checkbox: true, file: true, password: true, image: true } ) {
@@ -5673,7 +6210,7 @@ function setFilters() {}
 setFilters.prototype = Expr.filters = Expr.pseudos;
 Expr.setFilters = new setFilters();
 
-function tokenize( selector, parseOnly ) {
+tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
 	var matched, match, tokens, type,
 		soFar, groups, preFilters,
 		cached = tokenCache[ selector + " " ];
@@ -5707,7 +6244,7 @@ function tokenize( selector, parseOnly ) {
 				value: matched,
 
 				// Cast descendant combinators to space
-				type: match[ 0 ].replace( rtrimCSS, " " )
+				type: match[ 0 ].replace( rtrim, " " )
 			} );
 			soFar = soFar.slice( matched.length );
 		}
@@ -5734,16 +6271,14 @@ function tokenize( selector, parseOnly ) {
 	// Return the length of the invalid excess
 	// if we're just parsing
 	// Otherwise, throw an error or return tokens
-	if ( parseOnly ) {
-		return soFar.length;
-	}
+	return parseOnly ?
+		soFar.length :
+		soFar ?
+			Sizzle.error( selector ) :
 
-	return soFar ?
-		find.error( selector ) :
-
-		// Cache the tokens
-		tokenCache( selector, groups ).slice( 0 );
-}
+			// Cache the tokens
+			tokenCache( selector, groups ).slice( 0 );
+};
 
 function toSelector( tokens ) {
 	var i = 0,
@@ -5776,7 +6311,7 @@ function addCombinator( matcher, combinator, base ) {
 
 		// Check against all ancestor/preceding elements
 		function( elem, context, xml ) {
-			var oldCache, outerCache,
+			var oldCache, uniqueCache, outerCache,
 				newCache = [ dirruns, doneName ];
 
 			// We can't set arbitrary data on XML nodes, so they don't benefit from combinator caching
@@ -5793,9 +6328,14 @@ function addCombinator( matcher, combinator, base ) {
 					if ( elem.nodeType === 1 || checkNonElements ) {
 						outerCache = elem[ expando ] || ( elem[ expando ] = {} );
 
-						if ( skip && nodeName( elem, skip ) ) {
+						// Support: IE <9 only
+						// Defend against cloned attroperties (jQuery gh-1709)
+						uniqueCache = outerCache[ elem.uniqueID ] ||
+							( outerCache[ elem.uniqueID ] = {} );
+
+						if ( skip && skip === elem.nodeName.toLowerCase() ) {
 							elem = elem[ dir ] || elem;
-						} else if ( ( oldCache = outerCache[ key ] ) &&
+						} else if ( ( oldCache = uniqueCache[ key ] ) &&
 							oldCache[ 0 ] === dirruns && oldCache[ 1 ] === doneName ) {
 
 							// Assign to newCache so results back-propagate to previous elements
@@ -5803,7 +6343,7 @@ function addCombinator( matcher, combinator, base ) {
 						} else {
 
 							// Reuse newcache so results back-propagate to previous elements
-							outerCache[ key ] = newCache;
+							uniqueCache[ key ] = newCache;
 
 							// A match means we're done; a fail means we have to keep checking
 							if ( ( newCache[ 2 ] = matcher( elem, context, xml ) ) ) {
@@ -5835,7 +6375,7 @@ function multipleContexts( selector, contexts, results ) {
 	var i = 0,
 		len = contexts.length;
 	for ( ; i < len; i++ ) {
-		find( selector, contexts[ i ], results );
+		Sizzle( selector, contexts[ i ], results );
 	}
 	return results;
 }
@@ -5869,37 +6409,38 @@ function setMatcher( preFilter, selector, matcher, postFilter, postFinder, postS
 		postFinder = setMatcher( postFinder, postSelector );
 	}
 	return markFunction( function( seed, results, context, xml ) {
-		var temp, i, elem, matcherOut,
+		var temp, i, elem,
 			preMap = [],
 			postMap = [],
 			preexisting = results.length,
 
 			// Get initial elements from seed or context
-			elems = seed ||
-				multipleContexts( selector || "*",
-					context.nodeType ? [ context ] : context, [] ),
+			elems = seed || multipleContexts(
+				selector || "*",
+				context.nodeType ? [ context ] : context,
+				[]
+			),
 
 			// Prefilter to get matcher input, preserving a map for seed-results synchronization
 			matcherIn = preFilter && ( seed || !selector ) ?
 				condense( elems, preMap, preFilter, context, xml ) :
-				elems;
+				elems,
 
+			matcherOut = matcher ?
+
+				// If we have a postFinder, or filtered seed, or non-seed postFilter or preexisting results,
+				postFinder || ( seed ? preFilter : preexisting || postFilter ) ?
+
+					// ...intermediate processing is necessary
+					[] :
+
+					// ...otherwise use results directly
+					results :
+				matcherIn;
+
+		// Find primary matches
 		if ( matcher ) {
-
-			// If we have a postFinder, or filtered seed, or non-seed postFilter
-			// or preexisting results,
-			matcherOut = postFinder || ( seed ? preFilter : preexisting || postFilter ) ?
-
-				// ...intermediate processing is necessary
-				[] :
-
-				// ...otherwise use results directly
-				results;
-
-			// Find primary matches
 			matcher( matcherIn, matcherOut, context, xml );
-		} else {
-			matcherOut = matcherIn;
 		}
 
 		// Apply postFilter
@@ -5937,7 +6478,7 @@ function setMatcher( preFilter, selector, matcher, postFilter, postFinder, postS
 				i = matcherOut.length;
 				while ( i-- ) {
 					if ( ( elem = matcherOut[ i ] ) &&
-						( temp = postFinder ? indexOf.call( seed, elem ) : preMap[ i ] ) > -1 ) {
+						( temp = postFinder ? indexOf( seed, elem ) : preMap[ i ] ) > -1 ) {
 
 						seed[ temp ] = !( results[ temp ] = elem );
 					}
@@ -5972,21 +6513,15 @@ function matcherFromTokens( tokens ) {
 			return elem === checkContext;
 		}, implicitRelative, true ),
 		matchAnyContext = addCombinator( function( elem ) {
-			return indexOf.call( checkContext, elem ) > -1;
+			return indexOf( checkContext, elem ) > -1;
 		}, implicitRelative, true ),
 		matchers = [ function( elem, context, xml ) {
-
-			// Support: IE 11+, Edge 17 - 18+
-			// IE/Edge sometimes throw a "Permission denied" error when strict-comparing
-			// two documents; shallow comparisons work.
-			// eslint-disable-next-line eqeqeq
-			var ret = ( !leadingRelative && ( xml || context != outermostContext ) ) || (
+			var ret = ( !leadingRelative && ( xml || context !== outermostContext ) ) || (
 				( checkContext = context ).nodeType ?
 					matchContext( elem, context, xml ) :
 					matchAnyContext( elem, context, xml ) );
 
-			// Avoid hanging onto element
-			// (see https://github.com/jquery/sizzle/issues/299)
+			// Avoid hanging onto element (issue #299)
 			checkContext = null;
 			return ret;
 		} ];
@@ -6011,10 +6546,11 @@ function matcherFromTokens( tokens ) {
 					i > 1 && elementMatcher( matchers ),
 					i > 1 && toSelector(
 
-						// If the preceding token was a descendant combinator, insert an implicit any-element `*`
-						tokens.slice( 0, i - 1 )
-							.concat( { value: tokens[ i - 2 ].type === " " ? "*" : "" } )
-					).replace( rtrimCSS, "$1" ),
+					// If the preceding token was a descendant combinator, insert an implicit any-element `*`
+					tokens
+						.slice( 0, i - 1 )
+						.concat( { value: tokens[ i - 2 ].type === " " ? "*" : "" } )
+					).replace( rtrim, "$1" ),
 					matcher,
 					i < j && matcherFromTokens( tokens.slice( i, j ) ),
 					j < len && matcherFromTokens( ( tokens = tokens.slice( j ) ) ),
@@ -6040,7 +6576,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 				contextBackup = outermostContext,
 
 				// We must always have either seed elements or outermost context
-				elems = seed || byElement && Expr.find.TAG( "*", outermost ),
+				elems = seed || byElement && Expr.find[ "TAG" ]( "*", outermost ),
 
 				// Use integer dirruns iff this is the outermost matcher
 				dirrunsUnique = ( dirruns += contextBackup == null ? 1 : Math.random() || 0.1 ),
@@ -6056,9 +6592,8 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 			}
 
 			// Add elements passing elementMatchers directly to results
-			// Support: iOS <=7 - 9 only
-			// Tolerate NodeList properties (IE: "length"; Safari: <number>) matching
-			// elements by id. (see trac-14142)
+			// Support: IE<9, Safari
+			// Tolerate NodeList properties (IE: "length"; Safari: <number>) matching elements by id
 			for ( ; i !== len && ( elem = elems[ i ] ) != null; i++ ) {
 				if ( byElement && elem ) {
 					j = 0;
@@ -6073,7 +6608,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 					}
 					while ( ( matcher = elementMatchers[ j++ ] ) ) {
 						if ( matcher( elem, context || document, xml ) ) {
-							push.call( results, elem );
+							results.push( elem );
 							break;
 						}
 					}
@@ -6136,7 +6671,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 				if ( outermost && !seed && setMatched.length > 0 &&
 					( matchedCount + setMatchers.length ) > 1 ) {
 
-					jQuery.uniqueSort( results );
+					Sizzle.uniqueSort( results );
 				}
 			}
 
@@ -6154,7 +6689,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 		superMatcher;
 }
 
-function compile( selector, match /* Internal Use Only */ ) {
+compile = Sizzle.compile = function( selector, match /* Internal Use Only */ ) {
 	var i,
 		setMatchers = [],
 		elementMatchers = [],
@@ -6177,25 +6712,27 @@ function compile( selector, match /* Internal Use Only */ ) {
 		}
 
 		// Cache the compiled function
-		cached = compilerCache( selector,
-			matcherFromGroupMatchers( elementMatchers, setMatchers ) );
+		cached = compilerCache(
+			selector,
+			matcherFromGroupMatchers( elementMatchers, setMatchers )
+		);
 
 		// Save selector and tokenization
 		cached.selector = selector;
 	}
 	return cached;
-}
+};
 
 /**
- * A low-level selection function that works with jQuery's compiled
+ * A low-level selection function that works with Sizzle's compiled
  *  selector functions
  * @param {String|Function} selector A selector or a pre-compiled
- *  selector function built with jQuery selector compile
+ *  selector function built with Sizzle.compile
  * @param {Element} context
  * @param {Array} [results]
  * @param {Array} [seed] A set of elements to match against
  */
-function select( selector, context, results, seed ) {
+select = Sizzle.select = function( selector, context, results, seed ) {
 	var i, tokens, token, type, find,
 		compiled = typeof selector === "function" && selector,
 		match = !seed && tokenize( ( selector = compiled.selector || selector ) );
@@ -6209,12 +6746,10 @@ function select( selector, context, results, seed ) {
 		// Reduce context if the leading compound selector is an ID
 		tokens = match[ 0 ] = match[ 0 ].slice( 0 );
 		if ( tokens.length > 2 && ( token = tokens[ 0 ] ).type === "ID" &&
-				context.nodeType === 9 && documentIsHTML && Expr.relative[ tokens[ 1 ].type ] ) {
+			context.nodeType === 9 && documentIsHTML && Expr.relative[ tokens[ 1 ].type ] ) {
 
-			context = ( Expr.find.ID(
-				token.matches[ 0 ].replace( runescape, funescape ),
-				context
-			) || [] )[ 0 ];
+			context = ( Expr.find[ "ID" ]( token.matches[ 0 ]
+				.replace( runescape, funescape ), context ) || [] )[ 0 ];
 			if ( !context ) {
 				return results;
 
@@ -6227,7 +6762,7 @@ function select( selector, context, results, seed ) {
 		}
 
 		// Fetch a seed set for right-to-left matching
-		i = matchExpr.needsContext.test( selector ) ? 0 : tokens.length;
+		i = matchExpr[ "needsContext" ].test( selector ) ? 0 : tokens.length;
 		while ( i-- ) {
 			token = tokens[ i ];
 
@@ -6240,8 +6775,8 @@ function select( selector, context, results, seed ) {
 				// Search, expanding context for leading sibling combinators
 				if ( ( seed = find(
 					token.matches[ 0 ].replace( runescape, funescape ),
-					rsibling.test( tokens[ 0 ].type ) &&
-						testContext( context.parentNode ) || context
+					rsibling.test( tokens[ 0 ].type ) && testContext( context.parentNode ) ||
+						context
 				) ) ) {
 
 					// If seed is empty or no tokens remain, we can return early
@@ -6268,18 +6803,21 @@ function select( selector, context, results, seed ) {
 		!context || rsibling.test( selector ) && testContext( context.parentNode ) || context
 	);
 	return results;
-}
+};
 
 // One-time assignments
 
-// Support: Android <=4.0 - 4.1+
 // Sort stability
 support.sortStable = expando.split( "" ).sort( sortOrder ).join( "" ) === expando;
+
+// Support: Chrome 14-35+
+// Always assume duplicates if they aren't passed to the comparison function
+support.detectDuplicates = !!hasDuplicate;
 
 // Initialize against the default document
 setDocument();
 
-// Support: Android <=4.0 - 4.1+
+// Support: Webkit<537.32 - Safari 6.0.3/Chrome 25 (fixed in Chrome 27)
 // Detached nodes confoundingly follow *each other*
 support.sortDetached = assert( function( el ) {
 
@@ -6287,29 +6825,68 @@ support.sortDetached = assert( function( el ) {
 	return el.compareDocumentPosition( document.createElement( "fieldset" ) ) & 1;
 } );
 
-jQuery.find = find;
+// Support: IE<8
+// Prevent attribute/property "interpolation"
+// https://msdn.microsoft.com/en-us/library/ms536429%28VS.85%29.aspx
+if ( !assert( function( el ) {
+	el.innerHTML = "<a href='#'></a>";
+	return el.firstChild.getAttribute( "href" ) === "#";
+} ) ) {
+	addHandle( "type|href|height|width", function( elem, name, isXML ) {
+		if ( !isXML ) {
+			return elem.getAttribute( name, name.toLowerCase() === "type" ? 1 : 2 );
+		}
+	} );
+}
+
+// Support: IE<9
+// Use defaultValue in place of getAttribute("value")
+if ( !support.attributes || !assert( function( el ) {
+	el.innerHTML = "<input/>";
+	el.firstChild.setAttribute( "value", "" );
+	return el.firstChild.getAttribute( "value" ) === "";
+} ) ) {
+	addHandle( "value", function( elem, _name, isXML ) {
+		if ( !isXML && elem.nodeName.toLowerCase() === "input" ) {
+			return elem.defaultValue;
+		}
+	} );
+}
+
+// Support: IE<9
+// Use getAttributeNode to fetch booleans when getAttribute lies
+if ( !assert( function( el ) {
+	return el.getAttribute( "disabled" ) == null;
+} ) ) {
+	addHandle( booleans, function( elem, name, isXML ) {
+		var val;
+		if ( !isXML ) {
+			return elem[ name ] === true ? name.toLowerCase() :
+				( val = elem.getAttributeNode( name ) ) && val.specified ?
+					val.value :
+					null;
+		}
+	} );
+}
+
+return Sizzle;
+
+} )( window );
+
+
+
+jQuery.find = Sizzle;
+jQuery.expr = Sizzle.selectors;
 
 // Deprecated
 jQuery.expr[ ":" ] = jQuery.expr.pseudos;
-jQuery.unique = jQuery.uniqueSort;
+jQuery.uniqueSort = jQuery.unique = Sizzle.uniqueSort;
+jQuery.text = Sizzle.getText;
+jQuery.isXMLDoc = Sizzle.isXML;
+jQuery.contains = Sizzle.contains;
+jQuery.escapeSelector = Sizzle.escape;
 
-// These have always been private, but they used to be documented as part of
-// Sizzle so let's maintain them for now for backwards compatibility purposes.
-find.compile = compile;
-find.select = select;
-find.setDocument = setDocument;
-find.tokenize = tokenize;
 
-find.escape = jQuery.escapeSelector;
-find.getText = jQuery.text;
-find.isXML = jQuery.isXMLDoc;
-find.selectors = jQuery.expr;
-find.support = jQuery.support;
-find.uniqueSort = jQuery.uniqueSort;
-
-	/* eslint-enable */
-
-} )();
 
 
 var dir = function( elem, dir, until ) {
@@ -6343,6 +6920,13 @@ var siblings = function( n, elem ) {
 
 var rneedsContext = jQuery.expr.match.needsContext;
 
+
+
+function nodeName( elem, name ) {
+
+	return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
+
+}
 var rsingleTag = ( /^<([a-z][^\/\0>:\x20\t\r\n\f]*)[\x20\t\r\n\f]*\/?>(?:<\/\1>|)$/i );
 
 
@@ -6593,7 +7177,7 @@ jQuery.fn.extend( {
 					if ( cur.nodeType < 11 && ( targets ?
 						targets.index( cur ) > -1 :
 
-						// Don't pass non-elements to jQuery#find
+						// Don't pass non-elements to Sizzle
 						cur.nodeType === 1 &&
 							jQuery.find.matchesSelector( cur, selectors ) ) ) {
 
@@ -7148,7 +7732,7 @@ jQuery.extend( {
 
 											if ( jQuery.Deferred.exceptionHook ) {
 												jQuery.Deferred.exceptionHook( e,
-													process.error );
+													process.stackTrace );
 											}
 
 											// Support: Promises/A+ section 2.3.3.3.4.1
@@ -7176,17 +7760,10 @@ jQuery.extend( {
 								process();
 							} else {
 
-								// Call an optional hook to record the error, in case of exception
+								// Call an optional hook to record the stack, in case of exception
 								// since it's otherwise lost when execution goes async
-								if ( jQuery.Deferred.getErrorHook ) {
-									process.error = jQuery.Deferred.getErrorHook();
-
-								// The deprecated alias of the above. While the name suggests
-								// returning the stack, not an error instance, jQuery just passes
-								// it directly to `console.warn` so both will work; an instance
-								// just better cooperates with source maps.
-								} else if ( jQuery.Deferred.getStackHook ) {
-									process.error = jQuery.Deferred.getStackHook();
+								if ( jQuery.Deferred.getStackHook ) {
+									process.stackTrace = jQuery.Deferred.getStackHook();
 								}
 								window.setTimeout( process );
 							}
@@ -7361,16 +7938,12 @@ jQuery.extend( {
 // warn about them ASAP rather than swallowing them by default.
 var rerrorNames = /^(Eval|Internal|Range|Reference|Syntax|Type|URI)Error$/;
 
-// If `jQuery.Deferred.getErrorHook` is defined, `asyncError` is an error
-// captured before the async barrier to get the original error cause
-// which may otherwise be hidden.
-jQuery.Deferred.exceptionHook = function( error, asyncError ) {
+jQuery.Deferred.exceptionHook = function( error, stack ) {
 
 	// Support: IE 8 - 9 only
 	// Console exists when dev tools are open, which can happen at any time
 	if ( window.console && window.console.warn && error && rerrorNames.test( error.name ) ) {
-		window.console.warn( "jQuery.Deferred exception: " + error.message,
-			error.stack, asyncError );
+		window.console.warn( "jQuery.Deferred exception: " + error.message, error.stack, stack );
 	}
 };
 
@@ -8426,6 +8999,25 @@ function returnFalse() {
 	return false;
 }
 
+// Support: IE <=9 - 11+
+// focus() and blur() are asynchronous, except when they are no-op.
+// So expect focus to be synchronous when the element is already active,
+// and blur to be synchronous when the element is not already active.
+// (focus and blur are always synchronous in other supported browsers,
+// this just defines when we can count on it).
+function expectSync( elem, type ) {
+	return ( elem === safeActiveElement() ) === ( type === "focus" );
+}
+
+// Support: IE <=9 only
+// Accessing document.activeElement can throw unexpectedly
+// https://bugs.jquery.com/ticket/13393
+function safeActiveElement() {
+	try {
+		return document.activeElement;
+	} catch ( err ) { }
+}
+
 function on( elem, types, selector, data, fn, one ) {
 	var origFn, type;
 
@@ -8863,7 +9455,7 @@ jQuery.event = {
 					el.click && nodeName( el, "input" ) ) {
 
 					// dataPriv.set( el, "click", ... )
-					leverageNative( el, "click", true );
+					leverageNative( el, "click", returnTrue );
 				}
 
 				// Return false to allow normal processing in the caller
@@ -8914,10 +9506,10 @@ jQuery.event = {
 // synthetic events by interrupting progress until reinvoked in response to
 // *native* events that it fires directly, ensuring that state changes have
 // already occurred before other listeners are invoked.
-function leverageNative( el, type, isSetup ) {
+function leverageNative( el, type, expectSync ) {
 
-	// Missing `isSetup` indicates a trigger call, which must force setup through jQuery.event.add
-	if ( !isSetup ) {
+	// Missing expectSync indicates a trigger call, which must force setup through jQuery.event.add
+	if ( !expectSync ) {
 		if ( dataPriv.get( el, type ) === undefined ) {
 			jQuery.event.add( el, type, returnTrue );
 		}
@@ -8929,13 +9521,15 @@ function leverageNative( el, type, isSetup ) {
 	jQuery.event.add( el, type, {
 		namespace: false,
 		handler: function( event ) {
-			var result,
+			var notAsync, result,
 				saved = dataPriv.get( this, type );
 
 			if ( ( event.isTrigger & 1 ) && this[ type ] ) {
 
 				// Interrupt processing of the outer synthetic .trigger()ed event
-				if ( !saved ) {
+				// Saved data should be false in such cases, but might be a leftover capture object
+				// from an async native handler (gh-4350)
+				if ( !saved.length ) {
 
 					// Store arguments for use when handling the inner native event
 					// There will always be at least one argument (an event object), so this array
@@ -8944,22 +9538,33 @@ function leverageNative( el, type, isSetup ) {
 					dataPriv.set( this, type, saved );
 
 					// Trigger the native event and capture its result
+					// Support: IE <=9 - 11+
+					// focus() and blur() are asynchronous
+					notAsync = expectSync( this, type );
 					this[ type ]();
 					result = dataPriv.get( this, type );
-					dataPriv.set( this, type, false );
-
+					if ( saved !== result || notAsync ) {
+						dataPriv.set( this, type, false );
+					} else {
+						result = {};
+					}
 					if ( saved !== result ) {
 
 						// Cancel the outer synthetic event
 						event.stopImmediatePropagation();
 						event.preventDefault();
 
-						return result;
+						// Support: Chrome 86+
+						// In Chrome, if an element having a focusout handler is blurred by
+						// clicking outside of it, it invokes the handler synchronously. If
+						// that handler calls `.remove()` on the element, the data is cleared,
+						// leaving `result` undefined. We need to guard against this.
+						return result && result.value;
 					}
 
 				// If this is an inner synthetic event for an event with a bubbling surrogate
-				// (focus or blur), assume that the surrogate already propagated from triggering
-				// the native event and prevent that from happening again here.
+				// (focus or blur), assume that the surrogate already propagated from triggering the
+				// native event and prevent that from happening again here.
 				// This technically gets the ordering wrong w.r.t. to `.trigger()` (in which the
 				// bubbling surrogate propagates *after* the non-bubbling base), but that seems
 				// less bad than duplication.
@@ -8969,25 +9574,22 @@ function leverageNative( el, type, isSetup ) {
 
 			// If this is a native event triggered above, everything is now in order
 			// Fire an inner synthetic event with the original arguments
-			} else if ( saved ) {
+			} else if ( saved.length ) {
 
 				// ...and capture the result
-				dataPriv.set( this, type, jQuery.event.trigger(
-					saved[ 0 ],
-					saved.slice( 1 ),
-					this
-				) );
+				dataPriv.set( this, type, {
+					value: jQuery.event.trigger(
 
-				// Abort handling of the native event by all jQuery handlers while allowing
-				// native handlers on the same element to run. On target, this is achieved
-				// by stopping immediate propagation just on the jQuery event. However,
-				// the native event is re-wrapped by a jQuery one on each level of the
-				// propagation so the only way to stop it for jQuery is to stop it for
-				// everyone via native `stopPropagation()`. This is not a problem for
-				// focus/blur which don't bubble, but it does also stop click on checkboxes
-				// and radios. We accept this limitation.
-				event.stopPropagation();
-				event.isImmediatePropagationStopped = returnTrue;
+						// Support: IE <=9 - 11+
+						// Extend with the prototype to reset the above stopImmediatePropagation()
+						jQuery.extend( saved[ 0 ], jQuery.Event.prototype ),
+						saved.slice( 1 ),
+						this
+					)
+				} );
+
+				// Abort handling of the native event
+				event.stopImmediatePropagation();
 			}
 		}
 	} );
@@ -9126,73 +9728,18 @@ jQuery.each( {
 }, jQuery.event.addProp );
 
 jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateType ) {
-
-	function focusMappedHandler( nativeEvent ) {
-		if ( document.documentMode ) {
-
-			// Support: IE 11+
-			// Attach a single focusin/focusout handler on the document while someone wants
-			// focus/blur. This is because the former are synchronous in IE while the latter
-			// are async. In other browsers, all those handlers are invoked synchronously.
-
-			// `handle` from private data would already wrap the event, but we need
-			// to change the `type` here.
-			var handle = dataPriv.get( this, "handle" ),
-				event = jQuery.event.fix( nativeEvent );
-			event.type = nativeEvent.type === "focusin" ? "focus" : "blur";
-			event.isSimulated = true;
-
-			// First, handle focusin/focusout
-			handle( nativeEvent );
-
-			// ...then, handle focus/blur
-			//
-			// focus/blur don't bubble while focusin/focusout do; simulate the former by only
-			// invoking the handler at the lower level.
-			if ( event.target === event.currentTarget ) {
-
-				// The setup part calls `leverageNative`, which, in turn, calls
-				// `jQuery.event.add`, so event handle will already have been set
-				// by this point.
-				handle( event );
-			}
-		} else {
-
-			// For non-IE browsers, attach a single capturing handler on the document
-			// while someone wants focusin/focusout.
-			jQuery.event.simulate( delegateType, nativeEvent.target,
-				jQuery.event.fix( nativeEvent ) );
-		}
-	}
-
 	jQuery.event.special[ type ] = {
 
 		// Utilize native event if possible so blur/focus sequence is correct
 		setup: function() {
 
-			var attaches;
-
 			// Claim the first handler
 			// dataPriv.set( this, "focus", ... )
 			// dataPriv.set( this, "blur", ... )
-			leverageNative( this, type, true );
+			leverageNative( this, type, expectSync );
 
-			if ( document.documentMode ) {
-
-				// Support: IE 9 - 11+
-				// We use the same native handler for focusin & focus (and focusout & blur)
-				// so we need to coordinate setup & teardown parts between those events.
-				// Use `delegateType` as the key as `type` is already used by `leverageNative`.
-				attaches = dataPriv.get( this, delegateType );
-				if ( !attaches ) {
-					this.addEventListener( delegateType, focusMappedHandler );
-				}
-				dataPriv.set( this, delegateType, ( attaches || 0 ) + 1 );
-			} else {
-
-				// Return false to allow normal processing in the caller
-				return false;
-			}
+			// Return false to allow normal processing in the caller
+			return false;
 		},
 		trigger: function() {
 
@@ -9203,24 +9750,6 @@ jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateTyp
 			return true;
 		},
 
-		teardown: function() {
-			var attaches;
-
-			if ( document.documentMode ) {
-				attaches = dataPriv.get( this, delegateType ) - 1;
-				if ( !attaches ) {
-					this.removeEventListener( delegateType, focusMappedHandler );
-					dataPriv.remove( this, delegateType );
-				} else {
-					dataPriv.set( this, delegateType, attaches );
-				}
-			} else {
-
-				// Return false to indicate standard teardown should be applied
-				return false;
-			}
-		},
-
 		// Suppress native focus or blur if we're currently inside
 		// a leveraged native-event stack
 		_default: function( event ) {
@@ -9228,58 +9757,6 @@ jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateTyp
 		},
 
 		delegateType: delegateType
-	};
-
-	// Support: Firefox <=44
-	// Firefox doesn't have focus(in | out) events
-	// Related ticket - https://bugzilla.mozilla.org/show_bug.cgi?id=687787
-	//
-	// Support: Chrome <=48 - 49, Safari <=9.0 - 9.1
-	// focus(in | out) events fire after focus & blur events,
-	// which is spec violation - http://www.w3.org/TR/DOM-Level-3-Events/#events-focusevent-event-order
-	// Related ticket - https://bugs.chromium.org/p/chromium/issues/detail?id=449857
-	//
-	// Support: IE 9 - 11+
-	// To preserve relative focusin/focus & focusout/blur event order guaranteed on the 3.x branch,
-	// attach a single handler for both events in IE.
-	jQuery.event.special[ delegateType ] = {
-		setup: function() {
-
-			// Handle: regular nodes (via `this.ownerDocument`), window
-			// (via `this.document`) & document (via `this`).
-			var doc = this.ownerDocument || this.document || this,
-				dataHolder = document.documentMode ? this : doc,
-				attaches = dataPriv.get( dataHolder, delegateType );
-
-			// Support: IE 9 - 11+
-			// We use the same native handler for focusin & focus (and focusout & blur)
-			// so we need to coordinate setup & teardown parts between those events.
-			// Use `delegateType` as the key as `type` is already used by `leverageNative`.
-			if ( !attaches ) {
-				if ( document.documentMode ) {
-					this.addEventListener( delegateType, focusMappedHandler );
-				} else {
-					doc.addEventListener( type, focusMappedHandler, true );
-				}
-			}
-			dataPriv.set( dataHolder, delegateType, ( attaches || 0 ) + 1 );
-		},
-		teardown: function() {
-			var doc = this.ownerDocument || this.document || this,
-				dataHolder = document.documentMode ? this : doc,
-				attaches = dataPriv.get( dataHolder, delegateType ) - 1;
-
-			if ( !attaches ) {
-				if ( document.documentMode ) {
-					this.removeEventListener( delegateType, focusMappedHandler );
-				} else {
-					doc.removeEventListener( type, focusMappedHandler, true );
-				}
-				dataPriv.remove( dataHolder, delegateType );
-			} else {
-				dataPriv.set( dataHolder, delegateType, attaches );
-			}
-		}
 	};
 } );
 
@@ -9512,7 +9989,7 @@ function domManip( collection, args, callback, ignored ) {
 			if ( hasScripts ) {
 				doc = scripts[ scripts.length - 1 ].ownerDocument;
 
-				// Re-enable scripts
+				// Reenable scripts
 				jQuery.map( scripts, restoreScript );
 
 				// Evaluate executable scripts on first document insertion
@@ -9583,8 +10060,7 @@ jQuery.extend( {
 		if ( !support.noCloneChecked && ( elem.nodeType === 1 || elem.nodeType === 11 ) &&
 				!jQuery.isXMLDoc( elem ) ) {
 
-			// We eschew jQuery#find here for performance reasons:
-			// https://jsperf.com/getall-vs-sizzle/2
+			// We eschew Sizzle here for performance reasons: https://jsperf.com/getall-vs-sizzle/2
 			destElements = getAll( clone );
 			srcElements = getAll( elem );
 
@@ -9860,6 +10336,15 @@ var swap = function( elem, options, callback ) {
 
 var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 
+var whitespace = "[\\x20\\t\\r\\n\\f]";
+
+
+var rtrimCSS = new RegExp(
+	"^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$",
+	"g"
+);
+
+
 
 
 ( function() {
@@ -9969,7 +10454,7 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 				trChild = document.createElement( "div" );
 
 				table.style.cssText = "position:absolute;left:-11111px;border-collapse:separate";
-				tr.style.cssText = "box-sizing:content-box;border:1px solid";
+				tr.style.cssText = "border:1px solid";
 
 				// Support: Chrome 86+
 				// Height set through cssText does not get applied.
@@ -9981,7 +10466,7 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 				// In our bodyBackground.html iframe,
 				// display for all div elements is set to "inline",
 				// which causes a problem only in Android 8 Chrome 86.
-				// Ensuring the div is `display: block`
+				// Ensuring the div is display: block
 				// gets around this issue.
 				trChild.style.display = "block";
 
@@ -10168,8 +10653,7 @@ function setPositiveNumber( _elem, value, subtract ) {
 function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computedVal ) {
 	var i = dimension === "width" ? 1 : 0,
 		extra = 0,
-		delta = 0,
-		marginDelta = 0;
+		delta = 0;
 
 	// Adjustment may not be necessary
 	if ( box === ( isBorderBox ? "border" : "content" ) ) {
@@ -10179,10 +10663,8 @@ function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computed
 	for ( ; i < 4; i += 2 ) {
 
 		// Both box models exclude margin
-		// Count margin delta separately to only add it after scroll gutter adjustment.
-		// This is needed to make negative margins work with `outerHeight( true )` (gh-3982).
 		if ( box === "margin" ) {
-			marginDelta += jQuery.css( elem, box + cssExpand[ i ], true, styles );
+			delta += jQuery.css( elem, box + cssExpand[ i ], true, styles );
 		}
 
 		// If we get here with a content-box, we're seeking "padding" or "border" or "margin"
@@ -10233,7 +10715,7 @@ function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computed
 		) ) || 0;
 	}
 
-	return delta + marginDelta;
+	return delta;
 }
 
 function getWidthOrHeight( elem, dimension, extra ) {
@@ -10331,35 +10813,26 @@ jQuery.extend( {
 
 	// Don't automatically add "px" to these possibly-unitless properties
 	cssNumber: {
-		animationIterationCount: true,
-		aspectRatio: true,
-		borderImageSlice: true,
-		columnCount: true,
-		flexGrow: true,
-		flexShrink: true,
-		fontWeight: true,
-		gridArea: true,
-		gridColumn: true,
-		gridColumnEnd: true,
-		gridColumnStart: true,
-		gridRow: true,
-		gridRowEnd: true,
-		gridRowStart: true,
-		lineHeight: true,
-		opacity: true,
-		order: true,
-		orphans: true,
-		scale: true,
-		widows: true,
-		zIndex: true,
-		zoom: true,
-
-		// SVG-related
-		fillOpacity: true,
-		floodOpacity: true,
-		stopOpacity: true,
-		strokeMiterlimit: true,
-		strokeOpacity: true
+		"animationIterationCount": true,
+		"columnCount": true,
+		"fillOpacity": true,
+		"flexGrow": true,
+		"flexShrink": true,
+		"fontWeight": true,
+		"gridArea": true,
+		"gridColumn": true,
+		"gridColumnEnd": true,
+		"gridColumnStart": true,
+		"gridRow": true,
+		"gridRowEnd": true,
+		"gridRowStart": true,
+		"lineHeight": true,
+		"opacity": true,
+		"order": true,
+		"orphans": true,
+		"widows": true,
+		"zIndex": true,
+		"zoom": true
 	},
 
 	// Add in properties whose names you wish to fix before
@@ -12085,39 +12558,9 @@ jQuery.each( [ "radio", "checkbox" ], function() {
 
 
 // Return jQuery for attributes-only inclusion
-var location = window.location;
-
-var nonce = { guid: Date.now() };
-
-var rquery = ( /\?/ );
 
 
-
-// Cross-browser xml parsing
-jQuery.parseXML = function( data ) {
-	var xml, parserErrorElem;
-	if ( !data || typeof data !== "string" ) {
-		return null;
-	}
-
-	// Support: IE 9 - 11 only
-	// IE throws on parseFromString with invalid input.
-	try {
-		xml = ( new window.DOMParser() ).parseFromString( data, "text/xml" );
-	} catch ( e ) {}
-
-	parserErrorElem = xml && xml.getElementsByTagName( "parsererror" )[ 0 ];
-	if ( !xml || parserErrorElem ) {
-		jQuery.error( "Invalid XML: " + (
-			parserErrorElem ?
-				jQuery.map( parserErrorElem.childNodes, function( el ) {
-					return el.textContent;
-				} ).join( "\n" ) :
-				data
-		) );
-	}
-	return xml;
-};
+support.focusin = "onfocusin" in window;
 
 
 var rfocusMorph = /^(?:focusinfocus|focusoutblur)$/,
@@ -12303,6 +12746,85 @@ jQuery.fn.extend( {
 		}
 	}
 } );
+
+
+// Support: Firefox <=44
+// Firefox doesn't have focus(in | out) events
+// Related ticket - https://bugzilla.mozilla.org/show_bug.cgi?id=687787
+//
+// Support: Chrome <=48 - 49, Safari <=9.0 - 9.1
+// focus(in | out) events fire after focus & blur events,
+// which is spec violation - http://www.w3.org/TR/DOM-Level-3-Events/#events-focusevent-event-order
+// Related ticket - https://bugs.chromium.org/p/chromium/issues/detail?id=449857
+if ( !support.focusin ) {
+	jQuery.each( { focus: "focusin", blur: "focusout" }, function( orig, fix ) {
+
+		// Attach a single capturing handler on the document while someone wants focusin/focusout
+		var handler = function( event ) {
+			jQuery.event.simulate( fix, event.target, jQuery.event.fix( event ) );
+		};
+
+		jQuery.event.special[ fix ] = {
+			setup: function() {
+
+				// Handle: regular nodes (via `this.ownerDocument`), window
+				// (via `this.document`) & document (via `this`).
+				var doc = this.ownerDocument || this.document || this,
+					attaches = dataPriv.access( doc, fix );
+
+				if ( !attaches ) {
+					doc.addEventListener( orig, handler, true );
+				}
+				dataPriv.access( doc, fix, ( attaches || 0 ) + 1 );
+			},
+			teardown: function() {
+				var doc = this.ownerDocument || this.document || this,
+					attaches = dataPriv.access( doc, fix ) - 1;
+
+				if ( !attaches ) {
+					doc.removeEventListener( orig, handler, true );
+					dataPriv.remove( doc, fix );
+
+				} else {
+					dataPriv.access( doc, fix, attaches );
+				}
+			}
+		};
+	} );
+}
+var location = window.location;
+
+var nonce = { guid: Date.now() };
+
+var rquery = ( /\?/ );
+
+
+
+// Cross-browser xml parsing
+jQuery.parseXML = function( data ) {
+	var xml, parserErrorElem;
+	if ( !data || typeof data !== "string" ) {
+		return null;
+	}
+
+	// Support: IE 9 - 11 only
+	// IE throws on parseFromString with invalid input.
+	try {
+		xml = ( new window.DOMParser() ).parseFromString( data, "text/xml" );
+	} catch ( e ) {}
+
+	parserErrorElem = xml && xml.getElementsByTagName( "parsererror" )[ 0 ];
+	if ( !xml || parserErrorElem ) {
+		jQuery.error( "Invalid XML: " + (
+			parserErrorElem ?
+				jQuery.map( parserErrorElem.childNodes, function( el ) {
+					return el.textContent;
+				} ).join( "\n" ) :
+				data
+		) );
+	}
+	return xml;
+};
 
 
 var
@@ -14149,9 +14671,7 @@ jQuery.fn.extend( {
 	},
 
 	hover: function( fnOver, fnOut ) {
-		return this
-			.on( "mouseenter", fnOver )
-			.on( "mouseleave", fnOut || fnOver );
+		return this.mouseenter( fnOver ).mouseleave( fnOut || fnOver );
 	}
 } );
 
@@ -14308,10 +14828,10 @@ return jQuery;
 
 /***/ }),
 
-/***/ 7594:
+/***/ 7948:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var root = __webpack_require__(5637);
+var root = __webpack_require__(1737);
 
 /** Built-in value references. */
 var Symbol = root.Symbol;
@@ -14321,12 +14841,12 @@ module.exports = Symbol;
 
 /***/ }),
 
-/***/ 8104:
+/***/ 9:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Symbol = __webpack_require__(7594),
-    getRawTag = __webpack_require__(4039),
-    objectToString = __webpack_require__(5231);
+var Symbol = __webpack_require__(7948),
+    getRawTag = __webpack_require__(7067),
+    objectToString = __webpack_require__(7738);
 
 /** `Object#toString` result references. */
 var nullTag = '[object Null]',
@@ -14356,10 +14876,10 @@ module.exports = baseGetTag;
 
 /***/ }),
 
-/***/ 2098:
+/***/ 4605:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var trimmedEndIndex = __webpack_require__(7661);
+var trimmedEndIndex = __webpack_require__(7814);
 
 /** Used to match leading whitespace. */
 var reTrimStart = /^\s+/;
@@ -14382,7 +14902,7 @@ module.exports = baseTrim;
 
 /***/ }),
 
-/***/ 181:
+/***/ 702:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
 /** Detect free variable `global` from Node.js. */
@@ -14393,10 +14913,10 @@ module.exports = freeGlobal;
 
 /***/ }),
 
-/***/ 4039:
+/***/ 7067:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Symbol = __webpack_require__(7594);
+var Symbol = __webpack_require__(7948);
 
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
@@ -14446,7 +14966,7 @@ module.exports = getRawTag;
 
 /***/ }),
 
-/***/ 5231:
+/***/ 7738:
 /***/ (function(module) {
 
 /** Used for built-in method references. */
@@ -14475,10 +14995,10 @@ module.exports = objectToString;
 
 /***/ }),
 
-/***/ 5637:
+/***/ 1737:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var freeGlobal = __webpack_require__(181);
+var freeGlobal = __webpack_require__(702);
 
 /** Detect free variable `self`. */
 var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
@@ -14491,7 +15011,7 @@ module.exports = root;
 
 /***/ }),
 
-/***/ 7661:
+/***/ 7814:
 /***/ (function(module) {
 
 /** Used to match a single whitespace character. */
@@ -14517,12 +15037,12 @@ module.exports = trimmedEndIndex;
 
 /***/ }),
 
-/***/ 8285:
+/***/ 875:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var isObject = __webpack_require__(5719),
-    now = __webpack_require__(5983),
-    toNumber = __webpack_require__(7336);
+var isObject = __webpack_require__(2259),
+    now = __webpack_require__(7758),
+    toNumber = __webpack_require__(7425);
 
 /** Error message constants. */
 var FUNC_ERROR_TEXT = 'Expected a function';
@@ -14715,7 +15235,7 @@ module.exports = debounce;
 
 /***/ }),
 
-/***/ 5719:
+/***/ 2259:
 /***/ (function(module) {
 
 /**
@@ -14753,7 +15273,7 @@ module.exports = isObject;
 
 /***/ }),
 
-/***/ 1695:
+/***/ 4007:
 /***/ (function(module) {
 
 /**
@@ -14789,11 +15309,11 @@ module.exports = isObjectLike;
 
 /***/ }),
 
-/***/ 4534:
+/***/ 9855:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(8104),
-    isObjectLike = __webpack_require__(1695);
+var baseGetTag = __webpack_require__(9),
+    isObjectLike = __webpack_require__(4007);
 
 /** `Object#toString` result references. */
 var symbolTag = '[object Symbol]';
@@ -14825,10 +15345,10 @@ module.exports = isSymbol;
 
 /***/ }),
 
-/***/ 5983:
+/***/ 7758:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var root = __webpack_require__(5637);
+var root = __webpack_require__(1737);
 
 /**
  * Gets the timestamp of the number of milliseconds that have elapsed since
@@ -14855,12 +15375,12 @@ module.exports = now;
 
 /***/ }),
 
-/***/ 7336:
+/***/ 7425:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var baseTrim = __webpack_require__(2098),
-    isObject = __webpack_require__(5719),
-    isSymbol = __webpack_require__(4534);
+var baseTrim = __webpack_require__(4605),
+    isObject = __webpack_require__(2259),
+    isSymbol = __webpack_require__(9855);
 
 /** Used as references for various `Number` constants. */
 var NAN = 0 / 0;
@@ -14926,36 +15446,42 @@ module.exports = toNumber;
 
 /***/ }),
 
-/***/ 5281:
+/***/ 6032:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   lK: function() { return /* binding */ AutoScrollPlugin; }
+/* harmony export */   "lK": function() { return /* binding */ AutoScrollPlugin; }
 /* harmony export */ });
 /* unused harmony exports MultiDrag, OnSpill, Sortable, Swap */
 /**!
- * Sortable 1.15.1
+ * Sortable 1.15.0
  * @author	RubaXa   <trash@rubaxa.org>
  * @author	owenm    <owen23355@gmail.com>
  * @license MIT
  */
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
+
   if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
+
     if (enumerableOnly) {
       symbols = symbols.filter(function (sym) {
         return Object.getOwnPropertyDescriptor(object, sym).enumerable;
       });
     }
+
     keys.push.apply(keys, symbols);
   }
+
   return keys;
 }
+
 function _objectSpread2(target) {
   for (var i = 1; i < arguments.length; i++) {
     var source = arguments[i] != null ? arguments[i] : {};
+
     if (i % 2) {
       ownKeys(Object(source), true).forEach(function (key) {
         _defineProperty(target, key, source[key]);
@@ -14968,8 +15494,10 @@ function _objectSpread2(target) {
       });
     }
   }
+
   return target;
 }
+
 function _typeof(obj) {
   "@babel/helpers - typeof";
 
@@ -14982,8 +15510,10 @@ function _typeof(obj) {
       return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
     };
   }
+
   return _typeof(obj);
 }
+
 function _defineProperty(obj, key, value) {
   if (key in obj) {
     Object.defineProperty(obj, key, {
@@ -14995,40 +15525,53 @@ function _defineProperty(obj, key, value) {
   } else {
     obj[key] = value;
   }
+
   return obj;
 }
+
 function _extends() {
   _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
+
       for (var key in source) {
         if (Object.prototype.hasOwnProperty.call(source, key)) {
           target[key] = source[key];
         }
       }
     }
+
     return target;
   };
+
   return _extends.apply(this, arguments);
 }
+
 function _objectWithoutPropertiesLoose(source, excluded) {
   if (source == null) return {};
   var target = {};
   var sourceKeys = Object.keys(source);
   var key, i;
+
   for (i = 0; i < sourceKeys.length; i++) {
     key = sourceKeys[i];
     if (excluded.indexOf(key) >= 0) continue;
     target[key] = source[key];
   }
+
   return target;
 }
+
 function _objectWithoutProperties(source, excluded) {
   if (source == null) return {};
+
   var target = _objectWithoutPropertiesLoose(source, excluded);
+
   var key, i;
+
   if (Object.getOwnPropertySymbols) {
     var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
     for (i = 0; i < sourceSymbolKeys.length; i++) {
       key = sourceSymbolKeys[i];
       if (excluded.indexOf(key) >= 0) continue;
@@ -15036,17 +15579,22 @@ function _objectWithoutProperties(source, excluded) {
       target[key] = source[key];
     }
   }
+
   return target;
 }
+
 function _toConsumableArray(arr) {
   return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
 }
+
 function _arrayWithoutHoles(arr) {
   if (Array.isArray(arr)) return _arrayLikeToArray(arr);
 }
+
 function _iterableToArray(iter) {
   if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
 }
+
 function _unsupportedIterableToArray(o, minLen) {
   if (!o) return;
   if (typeof o === "string") return _arrayLikeToArray(o, minLen);
@@ -15055,22 +15603,27 @@ function _unsupportedIterableToArray(o, minLen) {
   if (n === "Map" || n === "Set") return Array.from(o);
   if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
 }
+
 function _arrayLikeToArray(arr, len) {
   if (len == null || len > arr.length) len = arr.length;
+
   for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
   return arr2;
 }
+
 function _nonIterableSpread() {
   throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
-var version = "1.15.1";
+var version = "1.15.0";
 
 function userAgent(pattern) {
   if (typeof window !== 'undefined' && window.navigator) {
     return !! /*@__PURE__*/navigator.userAgent.match(pattern);
   }
 }
+
 var IE11OrLess = userAgent(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i);
 var Edge = userAgent(/Edge/i);
 var FireFox = userAgent(/firefox/i);
@@ -15082,15 +15635,23 @@ var captureMode = {
   capture: false,
   passive: false
 };
+
 function on(el, event, fn) {
   el.addEventListener(event, fn, !IE11OrLess && captureMode);
 }
+
 function off(el, event, fn) {
   el.removeEventListener(event, fn, !IE11OrLess && captureMode);
 }
-function matches( /**HTMLElement*/el, /**String*/selector) {
+
+function matches(
+/**HTMLElement*/
+el,
+/**String*/
+selector) {
   if (!selector) return;
   selector[0] === '>' && (selector = selector.substring(1));
+
   if (el) {
     try {
       if (el.matches) {
@@ -15104,25 +15665,39 @@ function matches( /**HTMLElement*/el, /**String*/selector) {
       return false;
     }
   }
+
   return false;
 }
+
 function getParentOrHost(el) {
   return el.host && el !== document && el.host.nodeType ? el.host : el.parentNode;
 }
-function closest( /**HTMLElement*/el, /**String*/selector, /**HTMLElement*/ctx, includeCTX) {
+
+function closest(
+/**HTMLElement*/
+el,
+/**String*/
+selector,
+/**HTMLElement*/
+ctx, includeCTX) {
   if (el) {
     ctx = ctx || document;
+
     do {
       if (selector != null && (selector[0] === '>' ? el.parentNode === ctx && matches(el, selector) : matches(el, selector)) || includeCTX && el === ctx) {
         return el;
       }
+
       if (el === ctx) break;
       /* jshint boss:true */
     } while (el = getParentOrHost(el));
   }
+
   return null;
 }
+
 var R_SPACE = /\s+/g;
+
 function toggleClass(el, name, state) {
   if (el && name) {
     if (el.classList) {
@@ -15133,8 +15708,10 @@ function toggleClass(el, name, state) {
     }
   }
 }
+
 function css(el, prop, val) {
   var style = el && el.style;
+
   if (style) {
     if (val === void 0) {
       if (document.defaultView && document.defaultView.getComputedStyle) {
@@ -15142,55 +15719,68 @@ function css(el, prop, val) {
       } else if (el.currentStyle) {
         val = el.currentStyle;
       }
+
       return prop === void 0 ? val : val[prop];
     } else {
       if (!(prop in style) && prop.indexOf('webkit') === -1) {
         prop = '-webkit-' + prop;
       }
+
       style[prop] = val + (typeof val === 'string' ? '' : 'px');
     }
   }
 }
+
 function matrix(el, selfOnly) {
   var appliedTransforms = '';
+
   if (typeof el === 'string') {
     appliedTransforms = el;
   } else {
     do {
       var transform = css(el, 'transform');
+
       if (transform && transform !== 'none') {
         appliedTransforms = transform + ' ' + appliedTransforms;
       }
       /* jshint boss:true */
+
     } while (!selfOnly && (el = el.parentNode));
   }
+
   var matrixFn = window.DOMMatrix || window.WebKitCSSMatrix || window.CSSMatrix || window.MSCSSMatrix;
   /*jshint -W056 */
+
   return matrixFn && new matrixFn(appliedTransforms);
 }
+
 function find(ctx, tagName, iterator) {
   if (ctx) {
     var list = ctx.getElementsByTagName(tagName),
-      i = 0,
-      n = list.length;
+        i = 0,
+        n = list.length;
+
     if (iterator) {
       for (; i < n; i++) {
         iterator(list[i], i);
       }
     }
+
     return list;
   }
+
   return [];
 }
+
 function getWindowScrollingElement() {
   var scrollingElement = document.scrollingElement;
+
   if (scrollingElement) {
     return scrollingElement;
   } else {
     return document.documentElement;
   }
 }
-
 /**
  * Returns the "bounding client rect" of given element
  * @param  {HTMLElement} el                       The element whose boundingClientRect is wanted
@@ -15200,9 +15790,12 @@ function getWindowScrollingElement() {
  * @param  {[HTMLElement]} container              The parent the element will be placed in
  * @return {Object}                               The boundingClientRect of el, with specified adjustments
  */
+
+
 function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoScale, container) {
   if (!el.getBoundingClientRect && el !== window) return;
   var elRect, top, left, bottom, right, height, width;
+
   if (el !== window && el.parentNode && el !== getWindowScrollingElement()) {
     elRect = el.getBoundingClientRect();
     top = elRect.top;
@@ -15219,18 +15812,17 @@ function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoS
     height = window.innerHeight;
     width = window.innerWidth;
   }
+
   if ((relativeToContainingBlock || relativeToNonStaticParent) && el !== window) {
     // Adjust for translate()
-    container = container || el.parentNode;
-
-    // solves #1123 (see: https://stackoverflow.com/a/37953806/6088312)
+    container = container || el.parentNode; // solves #1123 (see: https://stackoverflow.com/a/37953806/6088312)
     // Not needed on <= IE11
+
     if (!IE11OrLess) {
       do {
         if (container && container.getBoundingClientRect && (css(container, 'transform') !== 'none' || relativeToNonStaticParent && css(container, 'position') !== 'static')) {
-          var containerRect = container.getBoundingClientRect();
+          var containerRect = container.getBoundingClientRect(); // Set relative to edges of padding box of container
 
-          // Set relative to edges of padding box of container
           top -= containerRect.top + parseInt(css(container, 'border-top-width'));
           left -= containerRect.left + parseInt(css(container, 'border-left-width'));
           bottom = top + elRect.height;
@@ -15238,14 +15830,17 @@ function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoS
           break;
         }
         /* jshint boss:true */
+
       } while (container = container.parentNode);
     }
   }
+
   if (undoScale && el !== window) {
     // Adjust for scale()
     var elMatrix = matrix(container || el),
-      scaleX = elMatrix && elMatrix.a,
-      scaleY = elMatrix && elMatrix.d;
+        scaleX = elMatrix && elMatrix.a,
+        scaleY = elMatrix && elMatrix.d;
+
     if (elMatrix) {
       top /= scaleY;
       left /= scaleX;
@@ -15255,6 +15850,7 @@ function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoS
       right = left + width;
     }
   }
+
   return {
     top: top,
     left: left,
@@ -15264,27 +15860,6 @@ function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoS
     height: height
   };
 }
-
-/**
- * Returns the content rect of the element (bounding rect minus border and padding)
- * @param {HTMLElement} el 
- */
-function getContentRect(el) {
-  var rect = getRect(el);
-  var paddingLeft = parseInt(css(el, 'padding-left')),
-    paddingTop = parseInt(css(el, 'padding-top')),
-    paddingRight = parseInt(css(el, 'padding-right')),
-    paddingBottom = parseInt(css(el, 'padding-bottom'));
-  rect.top += paddingTop + parseInt(css(el, 'border-top-width'));
-  rect.left += paddingLeft + parseInt(css(el, 'border-left-width'));
-  // Client Width/Height includes padding only
-  rect.width = el.clientWidth - paddingLeft - paddingRight;
-  rect.height = el.clientHeight - paddingTop - paddingBottom;
-  rect.bottom = rect.top + rect.height;
-  rect.right = rect.left + rect.width;
-  return rect;
-}
-
 /**
  * Checks if a side of an element is scrolled past a side of its parents
  * @param  {HTMLElement}  el           The element who's side being scrolled out of view is in question
@@ -15292,26 +15867,30 @@ function getContentRect(el) {
  * @param  {String}       parentSide   Side of the parent in question ('top', 'left', 'right', 'bottom')
  * @return {HTMLElement}               The parent scroll element that the el's side is scrolled past, or null if there is no such element
  */
+
+
 function isScrolledPast(el, elSide, parentSide) {
   var parent = getParentAutoScrollElement(el, true),
-    elSideVal = getRect(el)[elSide];
-
+      elSideVal = getRect(el)[elSide];
   /* jshint boss:true */
+
   while (parent) {
     var parentSideVal = getRect(parent)[parentSide],
-      visible = void 0;
+        visible = void 0;
+
     if (parentSide === 'top' || parentSide === 'left') {
       visible = elSideVal >= parentSideVal;
     } else {
       visible = elSideVal <= parentSideVal;
     }
+
     if (!visible) return parent;
     if (parent === getWindowScrollingElement()) break;
     parent = getParentAutoScrollElement(parent, false);
   }
+
   return false;
 }
-
 /**
  * Gets nth child of el, ignoring hidden children, sortable's elements (does not ignore clone if it's visible)
  * and non-draggable elements
@@ -15320,36 +15899,44 @@ function isScrolledPast(el, elSide, parentSide) {
  * @param  {Object} options       Parent Sortable's options
  * @return {HTMLElement}          The child at index childNum, or null if not found
  */
+
+
 function getChild(el, childNum, options, includeDragEl) {
   var currentChild = 0,
-    i = 0,
-    children = el.children;
+      i = 0,
+      children = el.children;
+
   while (i < children.length) {
     if (children[i].style.display !== 'none' && children[i] !== Sortable.ghost && (includeDragEl || children[i] !== Sortable.dragged) && closest(children[i], options.draggable, el, false)) {
       if (currentChild === childNum) {
         return children[i];
       }
+
       currentChild++;
     }
+
     i++;
   }
+
   return null;
 }
-
 /**
  * Gets the last child in the el, ignoring ghostEl or invisible elements (clones)
  * @param  {HTMLElement} el       Parent element
  * @param  {selector} selector    Any other elements that should be ignored
  * @return {HTMLElement}          The last child, ignoring ghostEl
  */
+
+
 function lastChild(el, selector) {
   var last = el.lastElementChild;
+
   while (last && (last === Sortable.ghost || css(last, 'display') === 'none' || selector && !matches(last, selector))) {
     last = last.previousElementSibling;
   }
+
   return last || null;
 }
-
 /**
  * Returns the index of an element within its parent for a selected set of
  * elements
@@ -15357,67 +15944,81 @@ function lastChild(el, selector) {
  * @param  {selector} selector
  * @return {number}
  */
+
+
 function index(el, selector) {
   var index = 0;
+
   if (!el || !el.parentNode) {
     return -1;
   }
-
   /* jshint boss:true */
+
+
   while (el = el.previousElementSibling) {
     if (el.nodeName.toUpperCase() !== 'TEMPLATE' && el !== Sortable.clone && (!selector || matches(el, selector))) {
       index++;
     }
   }
+
   return index;
 }
-
 /**
  * Returns the scroll offset of the given element, added with all the scroll offsets of parent elements.
  * The value is returned in real pixels.
  * @param  {HTMLElement} el
  * @return {Array}             Offsets in the format of [left, top]
  */
+
+
 function getRelativeScrollOffset(el) {
   var offsetLeft = 0,
-    offsetTop = 0,
-    winScroller = getWindowScrollingElement();
+      offsetTop = 0,
+      winScroller = getWindowScrollingElement();
+
   if (el) {
     do {
       var elMatrix = matrix(el),
-        scaleX = elMatrix.a,
-        scaleY = elMatrix.d;
+          scaleX = elMatrix.a,
+          scaleY = elMatrix.d;
       offsetLeft += el.scrollLeft * scaleX;
       offsetTop += el.scrollTop * scaleY;
     } while (el !== winScroller && (el = el.parentNode));
   }
+
   return [offsetLeft, offsetTop];
 }
-
 /**
  * Returns the index of the object within the given array
  * @param  {Array} arr   Array that may or may not hold the object
  * @param  {Object} obj  An object that has a key-value pair unique to and identical to a key-value pair in the object you want to find
  * @return {Number}      The index of the object in the array, or -1
  */
+
+
 function indexOfObject(arr, obj) {
   for (var i in arr) {
     if (!arr.hasOwnProperty(i)) continue;
+
     for (var key in obj) {
       if (obj.hasOwnProperty(key) && obj[key] === arr[i][key]) return Number(i);
     }
   }
+
   return -1;
 }
+
 function getParentAutoScrollElement(el, includeSelf) {
   // skip to window
   if (!el || !el.getBoundingClientRect) return getWindowScrollingElement();
   var elem = el;
   var gotSelf = false;
+
   do {
     // we don't need to get elem css if it isn't even overflowing in the first place (performance)
     if (elem.clientWidth < elem.scrollWidth || elem.clientHeight < elem.scrollHeight) {
       var elemCSS = css(elem);
+
       if (elem.clientWidth < elem.scrollWidth && (elemCSS.overflowX == 'auto' || elemCSS.overflowX == 'scroll') || elem.clientHeight < elem.scrollHeight && (elemCSS.overflowY == 'auto' || elemCSS.overflowY == 'scroll')) {
         if (!elem.getBoundingClientRect || elem === document.body) return getWindowScrollingElement();
         if (gotSelf || includeSelf) return elem;
@@ -15425,9 +16026,12 @@ function getParentAutoScrollElement(el, includeSelf) {
       }
     }
     /* jshint boss:true */
+
   } while (elem = elem.parentNode);
+
   return getWindowScrollingElement();
 }
+
 function extend(dst, src) {
   if (dst && src) {
     for (var key in src) {
@@ -15436,39 +16040,49 @@ function extend(dst, src) {
       }
     }
   }
+
   return dst;
 }
+
 function isRectEqual(rect1, rect2) {
   return Math.round(rect1.top) === Math.round(rect2.top) && Math.round(rect1.left) === Math.round(rect2.left) && Math.round(rect1.height) === Math.round(rect2.height) && Math.round(rect1.width) === Math.round(rect2.width);
 }
+
 var _throttleTimeout;
+
 function throttle(callback, ms) {
   return function () {
     if (!_throttleTimeout) {
       var args = arguments,
-        _this = this;
+          _this = this;
+
       if (args.length === 1) {
         callback.call(_this, args[0]);
       } else {
         callback.apply(_this, args);
       }
+
       _throttleTimeout = setTimeout(function () {
         _throttleTimeout = void 0;
       }, ms);
     }
   };
 }
+
 function cancelThrottle() {
   clearTimeout(_throttleTimeout);
   _throttleTimeout = void 0;
 }
+
 function scrollBy(el, x, y) {
   el.scrollLeft += x;
   el.scrollTop += y;
 }
+
 function clone(el) {
   var Polymer = window.Polymer;
   var $ = window.jQuery || window.Zepto;
+
   if (Polymer && Polymer.dom) {
     return Polymer.dom(el).cloneNode(true);
   } else if ($) {
@@ -15477,6 +16091,7 @@ function clone(el) {
     return el.cloneNode(true);
   }
 }
+
 function setRect(el, rect) {
   css(el, 'position', 'absolute');
   css(el, 'top', rect.top);
@@ -15484,6 +16099,7 @@ function setRect(el, rect) {
   css(el, 'width', rect.width);
   css(el, 'height', rect.height);
 }
+
 function unsetRect(el) {
   css(el, 'position', '');
   css(el, 'top', '');
@@ -15491,11 +16107,12 @@ function unsetRect(el) {
   css(el, 'width', '');
   css(el, 'height', '');
 }
+
 var expando = 'Sortable' + new Date().getTime();
 
 function AnimationStateManager() {
   var animationStates = [],
-    animationCallbackId;
+      animationCallbackId;
   return {
     captureAnimationState: function captureAnimationState() {
       animationStates = [];
@@ -15507,16 +16124,19 @@ function AnimationStateManager() {
           target: child,
           rect: getRect(child)
         });
-        var fromRect = _objectSpread2({}, animationStates[animationStates.length - 1].rect);
 
-        // If animating: compensate for current animation
+        var fromRect = _objectSpread2({}, animationStates[animationStates.length - 1].rect); // If animating: compensate for current animation
+
+
         if (child.thisAnimationDuration) {
           var childMatrix = matrix(child, true);
+
           if (childMatrix) {
             fromRect.top -= childMatrix.f;
             fromRect.left -= childMatrix.e;
           }
         }
+
         child.fromRect = fromRect;
       });
     },
@@ -15530,47 +16150,54 @@ function AnimationStateManager() {
     },
     animateAll: function animateAll(callback) {
       var _this = this;
+
       if (!this.options.animation) {
         clearTimeout(animationCallbackId);
         if (typeof callback === 'function') callback();
         return;
       }
+
       var animating = false,
-        animationTime = 0;
+          animationTime = 0;
       animationStates.forEach(function (state) {
         var time = 0,
-          target = state.target,
-          fromRect = target.fromRect,
-          toRect = getRect(target),
-          prevFromRect = target.prevFromRect,
-          prevToRect = target.prevToRect,
-          animatingRect = state.rect,
-          targetMatrix = matrix(target, true);
+            target = state.target,
+            fromRect = target.fromRect,
+            toRect = getRect(target),
+            prevFromRect = target.prevFromRect,
+            prevToRect = target.prevToRect,
+            animatingRect = state.rect,
+            targetMatrix = matrix(target, true);
+
         if (targetMatrix) {
           // Compensate for current animation
           toRect.top -= targetMatrix.f;
           toRect.left -= targetMatrix.e;
         }
+
         target.toRect = toRect;
+
         if (target.thisAnimationDuration) {
           // Could also check if animatingRect is between fromRect and toRect
-          if (isRectEqual(prevFromRect, toRect) && !isRectEqual(fromRect, toRect) &&
-          // Make sure animatingRect is on line between toRect & fromRect
+          if (isRectEqual(prevFromRect, toRect) && !isRectEqual(fromRect, toRect) && // Make sure animatingRect is on line between toRect & fromRect
           (animatingRect.top - toRect.top) / (animatingRect.left - toRect.left) === (fromRect.top - toRect.top) / (fromRect.left - toRect.left)) {
             // If returning to same place as started from animation and on same axis
             time = calculateRealTime(animatingRect, prevFromRect, prevToRect, _this.options);
           }
-        }
+        } // if fromRect != toRect: animate
 
-        // if fromRect != toRect: animate
+
         if (!isRectEqual(toRect, fromRect)) {
           target.prevFromRect = fromRect;
           target.prevToRect = toRect;
+
           if (!time) {
             time = _this.options.animation;
           }
+
           _this.animate(target, animatingRect, toRect, time);
         }
+
         if (time) {
           animating = true;
           animationTime = Math.max(animationTime, time);
@@ -15586,6 +16213,7 @@ function AnimationStateManager() {
         }
       });
       clearTimeout(animationCallbackId);
+
       if (!animating) {
         if (typeof callback === 'function') callback();
       } else {
@@ -15593,6 +16221,7 @@ function AnimationStateManager() {
           if (typeof callback === 'function') callback();
         }, animationTime);
       }
+
       animationStates = [];
     },
     animate: function animate(target, currentRect, toRect, duration) {
@@ -15600,10 +16229,10 @@ function AnimationStateManager() {
         css(target, 'transition', '');
         css(target, 'transform', '');
         var elMatrix = matrix(this.el),
-          scaleX = elMatrix && elMatrix.a,
-          scaleY = elMatrix && elMatrix.d,
-          translateX = (currentRect.left - toRect.left) / (scaleX || 1),
-          translateY = (currentRect.top - toRect.top) / (scaleY || 1);
+            scaleX = elMatrix && elMatrix.a,
+            scaleY = elMatrix && elMatrix.d,
+            translateX = (currentRect.left - toRect.left) / (scaleX || 1),
+            translateY = (currentRect.top - toRect.top) / (scaleY || 1);
         target.animatingX = !!translateX;
         target.animatingY = !!translateY;
         css(target, 'transform', 'translate3d(' + translateX + 'px,' + translateY + 'px,0)');
@@ -15623,9 +16252,11 @@ function AnimationStateManager() {
     }
   };
 }
+
 function repaint(target) {
   return target.offsetWidth;
 }
+
 function calculateRealTime(animatingRect, fromRect, toRect, options) {
   return Math.sqrt(Math.pow(fromRect.top - animatingRect.top, 2) + Math.pow(fromRect.left - animatingRect.left, 2)) / Math.sqrt(Math.pow(fromRect.top - toRect.top, 2) + Math.pow(fromRect.left - toRect.left, 2)) * options.animation;
 }
@@ -15642,6 +16273,7 @@ var PluginManager = {
         plugin[option] = defaults[option];
       }
     }
+
     plugins.forEach(function (p) {
       if (p.pluginName === plugin.pluginName) {
         throw "Sortable: Cannot mount plugin ".concat(plugin.pluginName, " more than once");
@@ -15651,22 +16283,25 @@ var PluginManager = {
   },
   pluginEvent: function pluginEvent(eventName, sortable, evt) {
     var _this = this;
+
     this.eventCanceled = false;
+
     evt.cancel = function () {
       _this.eventCanceled = true;
     };
+
     var eventNameGlobal = eventName + 'Global';
     plugins.forEach(function (plugin) {
-      if (!sortable[plugin.pluginName]) return;
-      // Fire global events if it exists in this sortable
+      if (!sortable[plugin.pluginName]) return; // Fire global events if it exists in this sortable
+
       if (sortable[plugin.pluginName][eventNameGlobal]) {
         sortable[plugin.pluginName][eventNameGlobal](_objectSpread2({
           sortable: sortable
         }, evt));
-      }
-
-      // Only fire plugin event if plugin is enabled in this sortable,
+      } // Only fire plugin event if plugin is enabled in this sortable,
       // and plugin has event defined
+
+
       if (sortable.options[plugin.pluginName] && sortable[plugin.pluginName][eventName]) {
         sortable[plugin.pluginName][eventName](_objectSpread2({
           sortable: sortable
@@ -15681,14 +16316,15 @@ var PluginManager = {
       var initialized = new plugin(sortable, el, sortable.options);
       initialized.sortable = sortable;
       initialized.options = sortable.options;
-      sortable[pluginName] = initialized;
+      sortable[pluginName] = initialized; // Add default options from plugin
 
-      // Add default options from plugin
       _extends(defaults, initialized.defaults);
     });
+
     for (var option in sortable.options) {
       if (!sortable.options.hasOwnProperty(option)) continue;
       var modified = this.modifyOption(sortable, option, sortable.options[option]);
+
       if (typeof modified !== 'undefined') {
         sortable.options[option] = modified;
       }
@@ -15698,6 +16334,7 @@ var PluginManager = {
     var eventProperties = {};
     plugins.forEach(function (plugin) {
       if (typeof plugin.eventProperties !== 'function') return;
+
       _extends(eventProperties, plugin.eventProperties.call(sortable[plugin.pluginName], name));
     });
     return eventProperties;
@@ -15706,9 +16343,8 @@ var PluginManager = {
     var modifiedValue;
     plugins.forEach(function (plugin) {
       // Plugin must exist on the Sortable
-      if (!sortable[plugin.pluginName]) return;
+      if (!sortable[plugin.pluginName]) return; // If static option listener exists for this option, call in the context of the Sortable's instance of this plugin
 
-      // If static option listener exists for this option, call in the context of the Sortable's instance of this plugin
       if (plugin.optionListeners && typeof plugin.optionListeners[name] === 'function') {
         modifiedValue = plugin.optionListeners[name].call(sortable[plugin.pluginName], value);
       }
@@ -15719,25 +16355,25 @@ var PluginManager = {
 
 function dispatchEvent(_ref) {
   var sortable = _ref.sortable,
-    rootEl = _ref.rootEl,
-    name = _ref.name,
-    targetEl = _ref.targetEl,
-    cloneEl = _ref.cloneEl,
-    toEl = _ref.toEl,
-    fromEl = _ref.fromEl,
-    oldIndex = _ref.oldIndex,
-    newIndex = _ref.newIndex,
-    oldDraggableIndex = _ref.oldDraggableIndex,
-    newDraggableIndex = _ref.newDraggableIndex,
-    originalEvent = _ref.originalEvent,
-    putSortable = _ref.putSortable,
-    extraEventProperties = _ref.extraEventProperties;
+      rootEl = _ref.rootEl,
+      name = _ref.name,
+      targetEl = _ref.targetEl,
+      cloneEl = _ref.cloneEl,
+      toEl = _ref.toEl,
+      fromEl = _ref.fromEl,
+      oldIndex = _ref.oldIndex,
+      newIndex = _ref.newIndex,
+      oldDraggableIndex = _ref.oldDraggableIndex,
+      newDraggableIndex = _ref.newDraggableIndex,
+      originalEvent = _ref.originalEvent,
+      putSortable = _ref.putSortable,
+      extraEventProperties = _ref.extraEventProperties;
   sortable = sortable || rootEl && rootEl[expando];
   if (!sortable) return;
   var evt,
-    options = sortable.options,
-    onName = 'on' + name.charAt(0).toUpperCase() + name.substr(1);
-  // Support for new CustomEvent feature
+      options = sortable.options,
+      onName = 'on' + name.charAt(0).toUpperCase() + name.substr(1); // Support for new CustomEvent feature
+
   if (window.CustomEvent && !IE11OrLess && !Edge) {
     evt = new CustomEvent(name, {
       bubbles: true,
@@ -15747,6 +16383,7 @@ function dispatchEvent(_ref) {
     evt = document.createEvent('Event');
     evt.initEvent(name, true, true);
   }
+
   evt.to = toEl || rootEl;
   evt.from = fromEl || rootEl;
   evt.item = targetEl || rootEl;
@@ -15757,23 +16394,29 @@ function dispatchEvent(_ref) {
   evt.newDraggableIndex = newDraggableIndex;
   evt.originalEvent = originalEvent;
   evt.pullMode = putSortable ? putSortable.lastPutMode : undefined;
+
   var allEventProperties = _objectSpread2(_objectSpread2({}, extraEventProperties), PluginManager.getEventProperties(name, sortable));
+
   for (var option in allEventProperties) {
     evt[option] = allEventProperties[option];
   }
+
   if (rootEl) {
     rootEl.dispatchEvent(evt);
   }
+
   if (options[onName]) {
     options[onName].call(sortable, evt);
   }
 }
 
 var _excluded = ["evt"];
+
 var pluginEvent = function pluginEvent(eventName, sortable) {
   var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-    originalEvent = _ref.evt,
-    data = _objectWithoutProperties(_ref, _excluded);
+      originalEvent = _ref.evt,
+      data = _objectWithoutProperties(_ref, _excluded);
+
   PluginManager.pluginEvent.bind(Sortable)(eventName, sortable, _objectSpread2({
     dragEl: dragEl,
     parentEl: parentEl,
@@ -15808,6 +16451,7 @@ var pluginEvent = function pluginEvent(eventName, sortable) {
     }
   }, data));
 };
+
 function _dispatchEvent(info) {
   dispatchEvent(_objectSpread2({
     putSortable: putSortable,
@@ -15820,61 +16464,62 @@ function _dispatchEvent(info) {
     newDraggableIndex: newDraggableIndex
   }, info));
 }
+
 var dragEl,
-  parentEl,
-  ghostEl,
-  rootEl,
-  nextEl,
-  lastDownEl,
-  cloneEl,
-  cloneHidden,
-  oldIndex,
-  newIndex,
-  oldDraggableIndex,
-  newDraggableIndex,
-  activeGroup,
-  putSortable,
-  awaitingDragStarted = false,
-  ignoreNextClick = false,
-  sortables = [],
-  tapEvt,
-  touchEvt,
-  lastDx,
-  lastDy,
-  tapDistanceLeft,
-  tapDistanceTop,
-  moved,
-  lastTarget,
-  lastDirection,
-  pastFirstInvertThresh = false,
-  isCircumstantialInvert = false,
-  targetMoveDistance,
-  // For positioning ghost absolutely
-  ghostRelativeParent,
-  ghostRelativeParentInitialScroll = [],
-  // (left, top)
-
-  _silent = false,
-  savedInputChecked = [];
-
+    parentEl,
+    ghostEl,
+    rootEl,
+    nextEl,
+    lastDownEl,
+    cloneEl,
+    cloneHidden,
+    oldIndex,
+    newIndex,
+    oldDraggableIndex,
+    newDraggableIndex,
+    activeGroup,
+    putSortable,
+    awaitingDragStarted = false,
+    ignoreNextClick = false,
+    sortables = [],
+    tapEvt,
+    touchEvt,
+    lastDx,
+    lastDy,
+    tapDistanceLeft,
+    tapDistanceTop,
+    moved,
+    lastTarget,
+    lastDirection,
+    pastFirstInvertThresh = false,
+    isCircumstantialInvert = false,
+    targetMoveDistance,
+    // For positioning ghost absolutely
+ghostRelativeParent,
+    ghostRelativeParentInitialScroll = [],
+    // (left, top)
+_silent = false,
+    savedInputChecked = [];
 /** @const */
+
 var documentExists = typeof document !== 'undefined',
-  PositionGhostAbsolutely = IOS,
-  CSSFloatProperty = Edge || IE11OrLess ? 'cssFloat' : 'float',
-  // This will not pass for IE9, because IE9 DnD only works on anchors
-  supportDraggable = documentExists && !ChromeForAndroid && !IOS && 'draggable' in document.createElement('div'),
-  supportCssPointerEvents = function () {
-    if (!documentExists) return;
-    // false when <= IE11
-    if (IE11OrLess) {
-      return false;
-    }
-    var el = document.createElement('x');
-    el.style.cssText = 'pointer-events:auto';
-    return el.style.pointerEvents === 'auto';
-  }(),
-  _detectDirection = function _detectDirection(el, options) {
-    var elCSS = css(el),
+    PositionGhostAbsolutely = IOS,
+    CSSFloatProperty = Edge || IE11OrLess ? 'cssFloat' : 'float',
+    // This will not pass for IE9, because IE9 DnD only works on anchors
+supportDraggable = documentExists && !ChromeForAndroid && !IOS && 'draggable' in document.createElement('div'),
+    supportCssPointerEvents = function () {
+  if (!documentExists) return; // false when <= IE11
+
+  if (IE11OrLess) {
+    return false;
+  }
+
+  var el = document.createElement('x');
+  el.style.cssText = 'pointer-events:auto';
+  return el.style.pointerEvents === 'auto';
+}(),
+    _detectDirection = function _detectDirection(el, options) {
+  var elCSS = css(el),
       elWidth = parseInt(elCSS.width) - parseInt(elCSS.paddingLeft) - parseInt(elCSS.paddingRight) - parseInt(elCSS.borderLeftWidth) - parseInt(elCSS.borderRightWidth),
       child1 = getChild(el, 0, options),
       child2 = getChild(el, 1, options),
@@ -15882,92 +16527,102 @@ var documentExists = typeof document !== 'undefined',
       secondChildCSS = child2 && css(child2),
       firstChildWidth = firstChildCSS && parseInt(firstChildCSS.marginLeft) + parseInt(firstChildCSS.marginRight) + getRect(child1).width,
       secondChildWidth = secondChildCSS && parseInt(secondChildCSS.marginLeft) + parseInt(secondChildCSS.marginRight) + getRect(child2).width;
-    if (elCSS.display === 'flex') {
-      return elCSS.flexDirection === 'column' || elCSS.flexDirection === 'column-reverse' ? 'vertical' : 'horizontal';
-    }
-    if (elCSS.display === 'grid') {
-      return elCSS.gridTemplateColumns.split(' ').length <= 1 ? 'vertical' : 'horizontal';
-    }
-    if (child1 && firstChildCSS["float"] && firstChildCSS["float"] !== 'none') {
-      var touchingSideChild2 = firstChildCSS["float"] === 'left' ? 'left' : 'right';
-      return child2 && (secondChildCSS.clear === 'both' || secondChildCSS.clear === touchingSideChild2) ? 'vertical' : 'horizontal';
-    }
-    return child1 && (firstChildCSS.display === 'block' || firstChildCSS.display === 'flex' || firstChildCSS.display === 'table' || firstChildCSS.display === 'grid' || firstChildWidth >= elWidth && elCSS[CSSFloatProperty] === 'none' || child2 && elCSS[CSSFloatProperty] === 'none' && firstChildWidth + secondChildWidth > elWidth) ? 'vertical' : 'horizontal';
-  },
-  _dragElInRowColumn = function _dragElInRowColumn(dragRect, targetRect, vertical) {
-    var dragElS1Opp = vertical ? dragRect.left : dragRect.top,
+
+  if (elCSS.display === 'flex') {
+    return elCSS.flexDirection === 'column' || elCSS.flexDirection === 'column-reverse' ? 'vertical' : 'horizontal';
+  }
+
+  if (elCSS.display === 'grid') {
+    return elCSS.gridTemplateColumns.split(' ').length <= 1 ? 'vertical' : 'horizontal';
+  }
+
+  if (child1 && firstChildCSS["float"] && firstChildCSS["float"] !== 'none') {
+    var touchingSideChild2 = firstChildCSS["float"] === 'left' ? 'left' : 'right';
+    return child2 && (secondChildCSS.clear === 'both' || secondChildCSS.clear === touchingSideChild2) ? 'vertical' : 'horizontal';
+  }
+
+  return child1 && (firstChildCSS.display === 'block' || firstChildCSS.display === 'flex' || firstChildCSS.display === 'table' || firstChildCSS.display === 'grid' || firstChildWidth >= elWidth && elCSS[CSSFloatProperty] === 'none' || child2 && elCSS[CSSFloatProperty] === 'none' && firstChildWidth + secondChildWidth > elWidth) ? 'vertical' : 'horizontal';
+},
+    _dragElInRowColumn = function _dragElInRowColumn(dragRect, targetRect, vertical) {
+  var dragElS1Opp = vertical ? dragRect.left : dragRect.top,
       dragElS2Opp = vertical ? dragRect.right : dragRect.bottom,
       dragElOppLength = vertical ? dragRect.width : dragRect.height,
       targetS1Opp = vertical ? targetRect.left : targetRect.top,
       targetS2Opp = vertical ? targetRect.right : targetRect.bottom,
       targetOppLength = vertical ? targetRect.width : targetRect.height;
-    return dragElS1Opp === targetS1Opp || dragElS2Opp === targetS2Opp || dragElS1Opp + dragElOppLength / 2 === targetS1Opp + targetOppLength / 2;
-  },
-  /**
-   * Detects first nearest empty sortable to X and Y position using emptyInsertThreshold.
-   * @param  {Number} x      X position
-   * @param  {Number} y      Y position
-   * @return {HTMLElement}   Element of the first found nearest Sortable
-   */
-  _detectNearestEmptySortable = function _detectNearestEmptySortable(x, y) {
-    var ret;
-    sortables.some(function (sortable) {
-      var threshold = sortable[expando].options.emptyInsertThreshold;
-      if (!threshold || lastChild(sortable)) return;
-      var rect = getRect(sortable),
+  return dragElS1Opp === targetS1Opp || dragElS2Opp === targetS2Opp || dragElS1Opp + dragElOppLength / 2 === targetS1Opp + targetOppLength / 2;
+},
+
+/**
+ * Detects first nearest empty sortable to X and Y position using emptyInsertThreshold.
+ * @param  {Number} x      X position
+ * @param  {Number} y      Y position
+ * @return {HTMLElement}   Element of the first found nearest Sortable
+ */
+_detectNearestEmptySortable = function _detectNearestEmptySortable(x, y) {
+  var ret;
+  sortables.some(function (sortable) {
+    var threshold = sortable[expando].options.emptyInsertThreshold;
+    if (!threshold || lastChild(sortable)) return;
+    var rect = getRect(sortable),
         insideHorizontally = x >= rect.left - threshold && x <= rect.right + threshold,
         insideVertically = y >= rect.top - threshold && y <= rect.bottom + threshold;
-      if (insideHorizontally && insideVertically) {
-        return ret = sortable;
-      }
-    });
-    return ret;
-  },
-  _prepareGroup = function _prepareGroup(options) {
-    function toFn(value, pull) {
-      return function (to, from, dragEl, evt) {
-        var sameGroup = to.options.group.name && from.options.group.name && to.options.group.name === from.options.group.name;
-        if (value == null && (pull || sameGroup)) {
-          // Default pull value
-          // Default pull and put value if same group
-          return true;
-        } else if (value == null || value === false) {
-          return false;
-        } else if (pull && value === 'clone') {
-          return value;
-        } else if (typeof value === 'function') {
-          return toFn(value(to, from, dragEl, evt), pull)(to, from, dragEl, evt);
-        } else {
-          var otherGroup = (pull ? to : from).options.group.name;
-          return value === true || typeof value === 'string' && value === otherGroup || value.join && value.indexOf(otherGroup) > -1;
-        }
-      };
-    }
-    var group = {};
-    var originalGroup = options.group;
-    if (!originalGroup || _typeof(originalGroup) != 'object') {
-      originalGroup = {
-        name: originalGroup
-      };
-    }
-    group.name = originalGroup.name;
-    group.checkPull = toFn(originalGroup.pull, true);
-    group.checkPut = toFn(originalGroup.put);
-    group.revertClone = originalGroup.revertClone;
-    options.group = group;
-  },
-  _hideGhostForTarget = function _hideGhostForTarget() {
-    if (!supportCssPointerEvents && ghostEl) {
-      css(ghostEl, 'display', 'none');
-    }
-  },
-  _unhideGhostForTarget = function _unhideGhostForTarget() {
-    if (!supportCssPointerEvents && ghostEl) {
-      css(ghostEl, 'display', '');
-    }
-  };
 
-// #1184 fix - Prevent click event on fallback if dragged but item not changed position
+    if (insideHorizontally && insideVertically) {
+      return ret = sortable;
+    }
+  });
+  return ret;
+},
+    _prepareGroup = function _prepareGroup(options) {
+  function toFn(value, pull) {
+    return function (to, from, dragEl, evt) {
+      var sameGroup = to.options.group.name && from.options.group.name && to.options.group.name === from.options.group.name;
+
+      if (value == null && (pull || sameGroup)) {
+        // Default pull value
+        // Default pull and put value if same group
+        return true;
+      } else if (value == null || value === false) {
+        return false;
+      } else if (pull && value === 'clone') {
+        return value;
+      } else if (typeof value === 'function') {
+        return toFn(value(to, from, dragEl, evt), pull)(to, from, dragEl, evt);
+      } else {
+        var otherGroup = (pull ? to : from).options.group.name;
+        return value === true || typeof value === 'string' && value === otherGroup || value.join && value.indexOf(otherGroup) > -1;
+      }
+    };
+  }
+
+  var group = {};
+  var originalGroup = options.group;
+
+  if (!originalGroup || _typeof(originalGroup) != 'object') {
+    originalGroup = {
+      name: originalGroup
+    };
+  }
+
+  group.name = originalGroup.name;
+  group.checkPull = toFn(originalGroup.pull, true);
+  group.checkPut = toFn(originalGroup.put);
+  group.revertClone = originalGroup.revertClone;
+  options.group = group;
+},
+    _hideGhostForTarget = function _hideGhostForTarget() {
+  if (!supportCssPointerEvents && ghostEl) {
+    css(ghostEl, 'display', 'none');
+  }
+},
+    _unhideGhostForTarget = function _unhideGhostForTarget() {
+  if (!supportCssPointerEvents && ghostEl) {
+    css(ghostEl, 'display', '');
+  }
+}; // #1184 fix - Prevent click event on fallback if dragged but item not changed position
+
+
 if (documentExists && !ChromeForAndroid) {
   document.addEventListener('click', function (evt) {
     if (ignoreNextClick) {
@@ -15979,44 +16634,53 @@ if (documentExists && !ChromeForAndroid) {
     }
   }, true);
 }
+
 var nearestEmptyInsertDetectEvent = function nearestEmptyInsertDetectEvent(evt) {
   if (dragEl) {
     evt = evt.touches ? evt.touches[0] : evt;
+
     var nearest = _detectNearestEmptySortable(evt.clientX, evt.clientY);
+
     if (nearest) {
       // Create imitation event
       var event = {};
+
       for (var i in evt) {
         if (evt.hasOwnProperty(i)) {
           event[i] = evt[i];
         }
       }
+
       event.target = event.rootEl = nearest;
       event.preventDefault = void 0;
       event.stopPropagation = void 0;
+
       nearest[expando]._onDragOver(event);
     }
   }
 };
+
 var _checkOutsideTargetEl = function _checkOutsideTargetEl(evt) {
   if (dragEl) {
     dragEl.parentNode[expando]._isOutsideThisEl(evt.target);
   }
 };
-
 /**
  * @class  Sortable
  * @param  {HTMLElement}  el
  * @param  {Object}       [options]
  */
+
+
 function Sortable(el, options) {
   if (!(el && el.nodeType && el.nodeType === 1)) {
     throw "Sortable: `el` must be an HTMLElement, not ".concat({}.toString.call(el));
   }
-  this.el = el; // root element
-  this.options = options = _extends({}, options);
 
-  // Export instance
+  this.el = el; // root element
+
+  this.options = options = _extends({}, options); // Export instance
+
   el[expando] = this;
   var defaults = {
     group: null,
@@ -16063,48 +16727,52 @@ function Sortable(el, options) {
     supportPointer: Sortable.supportPointer !== false && 'PointerEvent' in window && !Safari,
     emptyInsertThreshold: 5
   };
-  PluginManager.initializePlugins(this, el, defaults);
+  PluginManager.initializePlugins(this, el, defaults); // Set default options
 
-  // Set default options
   for (var name in defaults) {
     !(name in options) && (options[name] = defaults[name]);
   }
-  _prepareGroup(options);
 
-  // Bind all private methods
+  _prepareGroup(options); // Bind all private methods
+
+
   for (var fn in this) {
     if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
       this[fn] = this[fn].bind(this);
     }
-  }
+  } // Setup drag mode
 
-  // Setup drag mode
+
   this.nativeDraggable = options.forceFallback ? false : supportDraggable;
+
   if (this.nativeDraggable) {
     // Touch start threshold cannot be greater than the native dragstart threshold
     this.options.touchStartThreshold = 1;
-  }
+  } // Bind events
 
-  // Bind events
+
   if (options.supportPointer) {
     on(el, 'pointerdown', this._onTapStart);
   } else {
     on(el, 'mousedown', this._onTapStart);
     on(el, 'touchstart', this._onTapStart);
   }
+
   if (this.nativeDraggable) {
     on(el, 'dragover', this);
     on(el, 'dragenter', this);
   }
-  sortables.push(this.el);
 
-  // Restore sorting
-  options.store && options.store.get && this.sort(options.store.get(this) || []);
+  sortables.push(this.el); // Restore sorting
 
-  // Add animation state manager
+  options.store && options.store.get && this.sort(options.store.get(this) || []); // Add animation state manager
+
   _extends(this, AnimationStateManager());
 }
-Sortable.prototype = /** @lends Sortable.prototype */{
+
+Sortable.prototype =
+/** @lends Sortable.prototype */
+{
   constructor: Sortable,
   _isOutsideThisEl: function _isOutsideThisEl(target) {
     if (!this.el.contains(target) && target !== this.el) {
@@ -16114,50 +16782,57 @@ Sortable.prototype = /** @lends Sortable.prototype */{
   _getDirection: function _getDirection(evt, target) {
     return typeof this.options.direction === 'function' ? this.options.direction.call(this, evt, target, dragEl) : this.options.direction;
   },
-  _onTapStart: function _onTapStart( /** Event|TouchEvent */evt) {
+  _onTapStart: function _onTapStart(
+  /** Event|TouchEvent */
+  evt) {
     if (!evt.cancelable) return;
-    var _this = this,
-      el = this.el,
-      options = this.options,
-      preventOnFilter = options.preventOnFilter,
-      type = evt.type,
-      touch = evt.touches && evt.touches[0] || evt.pointerType && evt.pointerType === 'touch' && evt,
-      target = (touch || evt).target,
-      originalTarget = evt.target.shadowRoot && (evt.path && evt.path[0] || evt.composedPath && evt.composedPath()[0]) || target,
-      filter = options.filter;
-    _saveInputCheckedState(el);
 
-    // Don't trigger start event when an element is been dragged, otherwise the evt.oldindex always wrong when set option.group.
+    var _this = this,
+        el = this.el,
+        options = this.options,
+        preventOnFilter = options.preventOnFilter,
+        type = evt.type,
+        touch = evt.touches && evt.touches[0] || evt.pointerType && evt.pointerType === 'touch' && evt,
+        target = (touch || evt).target,
+        originalTarget = evt.target.shadowRoot && (evt.path && evt.path[0] || evt.composedPath && evt.composedPath()[0]) || target,
+        filter = options.filter;
+
+    _saveInputCheckedState(el); // Don't trigger start event when an element is been dragged, otherwise the evt.oldindex always wrong when set option.group.
+
+
     if (dragEl) {
       return;
     }
+
     if (/mousedown|pointerdown/.test(type) && evt.button !== 0 || options.disabled) {
       return; // only left button and enabled
-    }
+    } // cancel dnd if original target is content editable
 
-    // cancel dnd if original target is content editable
+
     if (originalTarget.isContentEditable) {
       return;
-    }
+    } // Safari ignores further event handling after mousedown
 
-    // Safari ignores further event handling after mousedown
+
     if (!this.nativeDraggable && Safari && target && target.tagName.toUpperCase() === 'SELECT') {
       return;
     }
+
     target = closest(target, options.draggable, el, false);
+
     if (target && target.animated) {
       return;
     }
+
     if (lastDownEl === target) {
       // Ignoring duplicate `down`
       return;
-    }
+    } // Get the index of the dragged element within its parent
 
-    // Get the index of the dragged element within its parent
+
     oldIndex = index(target);
-    oldDraggableIndex = index(target, options.draggable);
+    oldDraggableIndex = index(target, options.draggable); // Check filter
 
-    // Check filter
     if (typeof filter === 'function') {
       if (filter.call(this, evt, target, this)) {
         _dispatchEvent({
@@ -16168,6 +16843,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
           toEl: el,
           fromEl: el
         });
+
         pluginEvent('filter', _this, {
           evt: evt
         });
@@ -16177,6 +16853,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     } else if (filter) {
       filter = filter.split(',').some(function (criteria) {
         criteria = closest(originalTarget, criteria.trim(), el, false);
+
         if (criteria) {
           _dispatchEvent({
             sortable: _this,
@@ -16186,30 +16863,40 @@ Sortable.prototype = /** @lends Sortable.prototype */{
             fromEl: el,
             toEl: el
           });
+
           pluginEvent('filter', _this, {
             evt: evt
           });
           return true;
         }
       });
+
       if (filter) {
         preventOnFilter && evt.cancelable && evt.preventDefault();
         return; // cancel dnd
       }
     }
+
     if (options.handle && !closest(originalTarget, options.handle, el, false)) {
       return;
-    }
+    } // Prepare `dragstart`
 
-    // Prepare `dragstart`
+
     this._prepareDragStart(evt, touch, target);
   },
-  _prepareDragStart: function _prepareDragStart( /** Event */evt, /** Touch */touch, /** HTMLElement */target) {
+  _prepareDragStart: function _prepareDragStart(
+  /** Event */
+  evt,
+  /** Touch */
+  touch,
+  /** HTMLElement */
+  target) {
     var _this = this,
-      el = _this.el,
-      options = _this.options,
-      ownerDocument = el.ownerDocument,
-      dragStartFn;
+        el = _this.el,
+        options = _this.options,
+        ownerDocument = el.ownerDocument,
+        dragStartFn;
+
     if (target && !dragEl && target.parentNode === el) {
       var dragRect = getRect(target);
       rootEl = el;
@@ -16229,36 +16916,41 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       this._lastX = (touch || evt).clientX;
       this._lastY = (touch || evt).clientY;
       dragEl.style['will-change'] = 'all';
+
       dragStartFn = function dragStartFn() {
         pluginEvent('delayEnded', _this, {
           evt: evt
         });
+
         if (Sortable.eventCanceled) {
           _this._onDrop();
+
           return;
-        }
-        // Delayed drag has been triggered
+        } // Delayed drag has been triggered
         // we can re-enable the events: touchmove/mousemove
+
+
         _this._disableDelayedDragEvents();
+
         if (!FireFox && _this.nativeDraggable) {
           dragEl.draggable = true;
-        }
+        } // Bind the events: dragstart/dragend
 
-        // Bind the events: dragstart/dragend
-        _this._triggerDragStart(evt, touch);
 
-        // Drag start event
+        _this._triggerDragStart(evt, touch); // Drag start event
+
+
         _dispatchEvent({
           sortable: _this,
           name: 'choose',
           originalEvent: evt
-        });
+        }); // Chosen item
 
-        // Chosen item
+
         toggleClass(dragEl, options.chosenClass, true);
-      };
+      }; // Disable "draggable"
 
-      // Disable "draggable"
+
       options.ignore.split(',').forEach(function (criteria) {
         find(dragEl, criteria.trim(), _disableDraggable);
       });
@@ -16267,26 +16959,27 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       on(ownerDocument, 'touchmove', nearestEmptyInsertDetectEvent);
       on(ownerDocument, 'mouseup', _this._onDrop);
       on(ownerDocument, 'touchend', _this._onDrop);
-      on(ownerDocument, 'touchcancel', _this._onDrop);
+      on(ownerDocument, 'touchcancel', _this._onDrop); // Make dragEl draggable (must be before delay for FireFox)
 
-      // Make dragEl draggable (must be before delay for FireFox)
       if (FireFox && this.nativeDraggable) {
         this.options.touchStartThreshold = 4;
         dragEl.draggable = true;
       }
+
       pluginEvent('delayStart', this, {
         evt: evt
-      });
+      }); // Delay is impossible for native DnD in Edge or IE
 
-      // Delay is impossible for native DnD in Edge or IE
       if (options.delay && (!options.delayOnTouchOnly || touch) && (!this.nativeDraggable || !(Edge || IE11OrLess))) {
         if (Sortable.eventCanceled) {
           this._onDrop();
+
           return;
-        }
-        // If the user moves the pointer or let go the click or touch
+        } // If the user moves the pointer or let go the click or touch
         // before the delay has been reached:
         // disable the delayed drag
+
+
         on(ownerDocument, 'mouseup', _this._disableDelayedDrag);
         on(ownerDocument, 'touchend', _this._disableDelayedDrag);
         on(ownerDocument, 'touchcancel', _this._disableDelayedDrag);
@@ -16299,8 +16992,11 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       }
     }
   },
-  _delayedDragTouchMoveHandler: function _delayedDragTouchMoveHandler( /** TouchEvent|PointerEvent **/e) {
+  _delayedDragTouchMoveHandler: function _delayedDragTouchMoveHandler(
+  /** TouchEvent|PointerEvent **/
+  e) {
     var touch = e.touches ? e.touches[0] : e;
+
     if (Math.max(Math.abs(touch.clientX - this._lastX), Math.abs(touch.clientY - this._lastY)) >= Math.floor(this.options.touchStartThreshold / (this.nativeDraggable && window.devicePixelRatio || 1))) {
       this._disableDelayedDrag();
     }
@@ -16308,6 +17004,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
   _disableDelayedDrag: function _disableDelayedDrag() {
     dragEl && _disableDraggable(dragEl);
     clearTimeout(this._dragStartTimer);
+
     this._disableDelayedDragEvents();
   },
   _disableDelayedDragEvents: function _disableDelayedDragEvents() {
@@ -16319,8 +17016,13 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     off(ownerDocument, 'touchmove', this._delayedDragTouchMoveHandler);
     off(ownerDocument, 'pointermove', this._delayedDragTouchMoveHandler);
   },
-  _triggerDragStart: function _triggerDragStart( /** Event */evt, /** Touch */touch) {
+  _triggerDragStart: function _triggerDragStart(
+  /** Event */
+  evt,
+  /** Touch */
+  touch) {
     touch = touch || evt.pointerType == 'touch' && evt;
+
     if (!this.nativeDraggable || touch) {
       if (this.options.supportPointer) {
         on(document, 'pointermove', this._onTouchMove);
@@ -16333,6 +17035,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       on(dragEl, 'dragend', this);
       on(rootEl, 'dragstart', this._onDragStart);
     }
+
     try {
       if (document.selection) {
         // Timeout neccessary for IE9
@@ -16345,23 +17048,25 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     } catch (err) {}
   },
   _dragStarted: function _dragStarted(fallback, evt) {
+
     awaitingDragStarted = false;
+
     if (rootEl && dragEl) {
       pluginEvent('dragStarted', this, {
         evt: evt
       });
+
       if (this.nativeDraggable) {
         on(document, 'dragover', _checkOutsideTargetEl);
       }
-      var options = this.options;
 
-      // Apply effect
+      var options = this.options; // Apply effect
+
       !fallback && toggleClass(dragEl, options.dragClass, false);
       toggleClass(dragEl, options.ghostClass, true);
       Sortable.active = this;
-      fallback && this._appendGhost();
+      fallback && this._appendGhost(); // Drag start event
 
-      // Drag start event
       _dispatchEvent({
         sortable: this,
         name: 'start',
@@ -16375,15 +17080,20 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     if (touchEvt) {
       this._lastX = touchEvt.clientX;
       this._lastY = touchEvt.clientY;
+
       _hideGhostForTarget();
+
       var target = document.elementFromPoint(touchEvt.clientX, touchEvt.clientY);
       var parent = target;
+
       while (target && target.shadowRoot) {
         target = target.shadowRoot.elementFromPoint(touchEvt.clientX, touchEvt.clientY);
         if (target === parent) break;
         parent = target;
       }
+
       dragEl.parentNode[expando]._isOutsideThisEl(target);
+
       if (parent) {
         do {
           if (parent[expando]) {
@@ -16394,37 +17104,44 @@ Sortable.prototype = /** @lends Sortable.prototype */{
               target: target,
               rootEl: parent
             });
+
             if (inserted && !this.options.dragoverBubble) {
               break;
             }
           }
+
           target = parent; // store last element
         }
-        /* jshint boss:true */ while (parent = parent.parentNode);
+        /* jshint boss:true */
+        while (parent = parent.parentNode);
       }
+
       _unhideGhostForTarget();
     }
   },
-  _onTouchMove: function _onTouchMove( /**TouchEvent*/evt) {
+  _onTouchMove: function _onTouchMove(
+  /**TouchEvent*/
+  evt) {
     if (tapEvt) {
       var options = this.options,
-        fallbackTolerance = options.fallbackTolerance,
-        fallbackOffset = options.fallbackOffset,
-        touch = evt.touches ? evt.touches[0] : evt,
-        ghostMatrix = ghostEl && matrix(ghostEl, true),
-        scaleX = ghostEl && ghostMatrix && ghostMatrix.a,
-        scaleY = ghostEl && ghostMatrix && ghostMatrix.d,
-        relativeScrollOffset = PositionGhostAbsolutely && ghostRelativeParent && getRelativeScrollOffset(ghostRelativeParent),
-        dx = (touch.clientX - tapEvt.clientX + fallbackOffset.x) / (scaleX || 1) + (relativeScrollOffset ? relativeScrollOffset[0] - ghostRelativeParentInitialScroll[0] : 0) / (scaleX || 1),
-        dy = (touch.clientY - tapEvt.clientY + fallbackOffset.y) / (scaleY || 1) + (relativeScrollOffset ? relativeScrollOffset[1] - ghostRelativeParentInitialScroll[1] : 0) / (scaleY || 1);
+          fallbackTolerance = options.fallbackTolerance,
+          fallbackOffset = options.fallbackOffset,
+          touch = evt.touches ? evt.touches[0] : evt,
+          ghostMatrix = ghostEl && matrix(ghostEl, true),
+          scaleX = ghostEl && ghostMatrix && ghostMatrix.a,
+          scaleY = ghostEl && ghostMatrix && ghostMatrix.d,
+          relativeScrollOffset = PositionGhostAbsolutely && ghostRelativeParent && getRelativeScrollOffset(ghostRelativeParent),
+          dx = (touch.clientX - tapEvt.clientX + fallbackOffset.x) / (scaleX || 1) + (relativeScrollOffset ? relativeScrollOffset[0] - ghostRelativeParentInitialScroll[0] : 0) / (scaleX || 1),
+          dy = (touch.clientY - tapEvt.clientY + fallbackOffset.y) / (scaleY || 1) + (relativeScrollOffset ? relativeScrollOffset[1] - ghostRelativeParentInitialScroll[1] : 0) / (scaleY || 1); // only set the status to dragging, when we are actually dragging
 
-      // only set the status to dragging, when we are actually dragging
       if (!Sortable.active && !awaitingDragStarted) {
         if (fallbackTolerance && Math.max(Math.abs(touch.clientX - this._lastX), Math.abs(touch.clientY - this._lastY)) < fallbackTolerance) {
           return;
         }
+
         this._onDragStart(evt, true);
       }
+
       if (ghostEl) {
         if (ghostMatrix) {
           ghostMatrix.e += dx - (lastDx || 0);
@@ -16439,6 +17156,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
             f: dy
           };
         }
+
         var cssMatrix = "matrix(".concat(ghostMatrix.a, ",").concat(ghostMatrix.b, ",").concat(ghostMatrix.c, ",").concat(ghostMatrix.d, ",").concat(ghostMatrix.e, ",").concat(ghostMatrix.f, ")");
         css(ghostEl, 'webkitTransform', cssMatrix);
         css(ghostEl, 'mozTransform', cssMatrix);
@@ -16448,6 +17166,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
         lastDy = dy;
         touchEvt = touch;
       }
+
       evt.cancelable && evt.preventDefault();
     }
   },
@@ -16456,16 +17175,17 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     // Not being adjusted for
     if (!ghostEl) {
       var container = this.options.fallbackOnBody ? document.body : rootEl,
-        rect = getRect(dragEl, true, PositionGhostAbsolutely, true, container),
-        options = this.options;
+          rect = getRect(dragEl, true, PositionGhostAbsolutely, true, container),
+          options = this.options; // Position absolutely
 
-      // Position absolutely
       if (PositionGhostAbsolutely) {
         // Get relatively positioned parent
         ghostRelativeParent = container;
+
         while (css(ghostRelativeParent, 'position') === 'static' && css(ghostRelativeParent, 'transform') === 'none' && ghostRelativeParent !== document) {
           ghostRelativeParent = ghostRelativeParent.parentNode;
         }
+
         if (ghostRelativeParent !== document.body && ghostRelativeParent !== document.documentElement) {
           if (ghostRelativeParent === document) ghostRelativeParent = getWindowScrollingElement();
           rect.top += ghostRelativeParent.scrollTop;
@@ -16473,8 +17193,10 @@ Sortable.prototype = /** @lends Sortable.prototype */{
         } else {
           ghostRelativeParent = getWindowScrollingElement();
         }
+
         ghostRelativeParentInitialScroll = getRelativeScrollOffset(ghostRelativeParent);
       }
+
       ghostEl = dragEl.cloneNode(true);
       toggleClass(ghostEl, options.ghostClass, false);
       toggleClass(ghostEl, options.fallbackClass, true);
@@ -16492,50 +17214,62 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       css(ghostEl, 'zIndex', '100000');
       css(ghostEl, 'pointerEvents', 'none');
       Sortable.ghost = ghostEl;
-      container.appendChild(ghostEl);
+      container.appendChild(ghostEl); // Set transform-origin
 
-      // Set transform-origin
       css(ghostEl, 'transform-origin', tapDistanceLeft / parseInt(ghostEl.style.width) * 100 + '% ' + tapDistanceTop / parseInt(ghostEl.style.height) * 100 + '%');
     }
   },
-  _onDragStart: function _onDragStart( /**Event*/evt, /**boolean*/fallback) {
+  _onDragStart: function _onDragStart(
+  /**Event*/
+  evt,
+  /**boolean*/
+  fallback) {
     var _this = this;
+
     var dataTransfer = evt.dataTransfer;
     var options = _this.options;
     pluginEvent('dragStart', this, {
       evt: evt
     });
+
     if (Sortable.eventCanceled) {
       this._onDrop();
+
       return;
     }
+
     pluginEvent('setupClone', this);
+
     if (!Sortable.eventCanceled) {
       cloneEl = clone(dragEl);
       cloneEl.removeAttribute("id");
       cloneEl.draggable = false;
       cloneEl.style['will-change'] = '';
+
       this._hideClone();
+
       toggleClass(cloneEl, this.options.chosenClass, false);
       Sortable.clone = cloneEl;
-    }
+    } // #1143: IFrame support workaround
 
-    // #1143: IFrame support workaround
+
     _this.cloneId = _nextTick(function () {
       pluginEvent('clone', _this);
       if (Sortable.eventCanceled) return;
+
       if (!_this.options.removeCloneOnHide) {
         rootEl.insertBefore(cloneEl, dragEl);
       }
+
       _this._hideClone();
+
       _dispatchEvent({
         sortable: _this,
         name: 'clone'
       });
     });
-    !fallback && toggleClass(dragEl, options.dragClass, true);
+    !fallback && toggleClass(dragEl, options.dragClass, true); // Set proper drop events
 
-    // Set proper drop events
     if (fallback) {
       ignoreNextClick = true;
       _this._loopId = setInterval(_this._emulateDragOver, 50);
@@ -16544,40 +17278,47 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       off(document, 'mouseup', _this._onDrop);
       off(document, 'touchend', _this._onDrop);
       off(document, 'touchcancel', _this._onDrop);
+
       if (dataTransfer) {
         dataTransfer.effectAllowed = 'move';
         options.setData && options.setData.call(_this, dataTransfer, dragEl);
       }
-      on(document, 'drop', _this);
 
-      // #1276 fix:
+      on(document, 'drop', _this); // #1276 fix:
+
       css(dragEl, 'transform', 'translateZ(0)');
     }
+
     awaitingDragStarted = true;
     _this._dragStartId = _nextTick(_this._dragStarted.bind(_this, fallback, evt));
     on(document, 'selectstart', _this);
     moved = true;
+
     if (Safari) {
       css(document.body, 'user-select', 'none');
     }
   },
   // Returns true - if no further action is needed (either inserted or another condition)
-  _onDragOver: function _onDragOver( /**Event*/evt) {
+  _onDragOver: function _onDragOver(
+  /**Event*/
+  evt) {
     var el = this.el,
-      target = evt.target,
-      dragRect,
-      targetRect,
-      revert,
-      options = this.options,
-      group = options.group,
-      activeSortable = Sortable.active,
-      isOwner = activeGroup === group,
-      canSort = options.sort,
-      fromSortable = putSortable || activeSortable,
-      vertical,
-      _this = this,
-      completedFired = false;
+        target = evt.target,
+        dragRect,
+        targetRect,
+        revert,
+        options = this.options,
+        group = options.group,
+        activeSortable = Sortable.active,
+        isOwner = activeGroup === group,
+        canSort = options.sort,
+        fromSortable = putSortable || activeSortable,
+        vertical,
+        _this = this,
+        completedFired = false;
+
     if (_silent) return;
+
     function dragOverEvent(name, extra) {
       pluginEvent(name, _this, _objectSpread2({
         evt: evt,
@@ -16595,22 +17336,25 @@ Sortable.prototype = /** @lends Sortable.prototype */{
         },
         changed: changed
       }, extra));
-    }
+    } // Capture animation state
 
-    // Capture animation state
+
     function capture() {
       dragOverEvent('dragOverAnimationCapture');
+
       _this.captureAnimationState();
+
       if (_this !== fromSortable) {
         fromSortable.captureAnimationState();
       }
-    }
+    } // Return invocation when dragEl is inserted (or completed)
 
-    // Return invocation when dragEl is inserted (or completed)
+
     function completed(insertion) {
       dragOverEvent('dragOverCompleted', {
         insertion: insertion
       });
+
       if (insertion) {
         // Clones must be hidden before folding animation to capture dragRectAbsolute properly
         if (isOwner) {
@@ -16618,51 +17362,57 @@ Sortable.prototype = /** @lends Sortable.prototype */{
         } else {
           activeSortable._showClone(_this);
         }
+
         if (_this !== fromSortable) {
           // Set ghost class to new sortable's ghost class
           toggleClass(dragEl, putSortable ? putSortable.options.ghostClass : activeSortable.options.ghostClass, false);
           toggleClass(dragEl, options.ghostClass, true);
         }
+
         if (putSortable !== _this && _this !== Sortable.active) {
           putSortable = _this;
         } else if (_this === Sortable.active && putSortable) {
           putSortable = null;
-        }
+        } // Animation
 
-        // Animation
+
         if (fromSortable === _this) {
           _this._ignoreWhileAnimating = target;
         }
+
         _this.animateAll(function () {
           dragOverEvent('dragOverAnimationComplete');
           _this._ignoreWhileAnimating = null;
         });
+
         if (_this !== fromSortable) {
           fromSortable.animateAll();
           fromSortable._ignoreWhileAnimating = null;
         }
-      }
+      } // Null lastTarget if it is not inside a previously swapped element
 
-      // Null lastTarget if it is not inside a previously swapped element
+
       if (target === dragEl && !dragEl.animated || target === el && !target.animated) {
         lastTarget = null;
-      }
+      } // no bubbling and not fallback
 
-      // no bubbling and not fallback
+
       if (!options.dragoverBubble && !evt.rootEl && target !== document) {
-        dragEl.parentNode[expando]._isOutsideThisEl(evt.target);
+        dragEl.parentNode[expando]._isOutsideThisEl(evt.target); // Do not detect for empty insert if already inserted
 
-        // Do not detect for empty insert if already inserted
+
         !insertion && nearestEmptyInsertDetectEvent(evt);
       }
+
       !options.dragoverBubble && evt.stopPropagation && evt.stopPropagation();
       return completedFired = true;
-    }
+    } // Call when dragEl has been inserted
 
-    // Call when dragEl has been inserted
+
     function changed() {
       newIndex = index(dragEl);
       newDraggableIndex = index(dragEl, options.draggable);
+
       _dispatchEvent({
         sortable: _this,
         name: 'change',
@@ -16672,27 +17422,37 @@ Sortable.prototype = /** @lends Sortable.prototype */{
         originalEvent: evt
       });
     }
+
     if (evt.preventDefault !== void 0) {
       evt.cancelable && evt.preventDefault();
     }
+
     target = closest(target, options.draggable, el, true);
     dragOverEvent('dragOver');
     if (Sortable.eventCanceled) return completedFired;
+
     if (dragEl.contains(evt.target) || target.animated && target.animatingX && target.animatingY || _this._ignoreWhileAnimating === target) {
       return completed(false);
     }
+
     ignoreNextClick = false;
+
     if (activeSortable && !options.disabled && (isOwner ? canSort || (revert = parentEl !== rootEl) // Reverting item into the original list
     : putSortable === this || (this.lastPutMode = activeGroup.checkPull(this, activeSortable, dragEl, evt)) && group.checkPut(this, activeSortable, dragEl, evt))) {
       vertical = this._getDirection(evt, target) === 'vertical';
       dragRect = getRect(dragEl);
       dragOverEvent('dragOverValid');
       if (Sortable.eventCanceled) return completedFired;
+
       if (revert) {
         parentEl = rootEl; // actualization
+
         capture();
+
         this._hideClone();
+
         dragOverEvent('revert');
+
         if (!Sortable.eventCanceled) {
           if (nextEl) {
             rootEl.insertBefore(dragEl, nextEl);
@@ -16700,32 +17460,38 @@ Sortable.prototype = /** @lends Sortable.prototype */{
             rootEl.appendChild(dragEl);
           }
         }
+
         return completed(true);
       }
+
       var elLastChild = lastChild(el, options.draggable);
+
       if (!elLastChild || _ghostIsLast(evt, vertical, this) && !elLastChild.animated) {
         // Insert to end of list
-
         // If already at end of list: Do not insert
         if (elLastChild === dragEl) {
           return completed(false);
-        }
+        } // if there is a last element, it is the target
 
-        // if there is a last element, it is the target
+
         if (elLastChild && el === evt.target) {
           target = elLastChild;
         }
+
         if (target) {
           targetRect = getRect(target);
         }
+
         if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, !!target) !== false) {
           capture();
+
           if (elLastChild && elLastChild.nextSibling) {
             // the last draggable element is not the last node
             el.insertBefore(dragEl, elLastChild.nextSibling);
           } else {
             el.appendChild(dragEl);
           }
+
           parentEl = el; // actualization
 
           changed();
@@ -16734,11 +17500,14 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       } else if (elLastChild && _ghostIsFirst(evt, vertical, this)) {
         // Insert to start of list
         var firstChild = getChild(el, 0, options, true);
+
         if (firstChild === dragEl) {
           return completed(false);
         }
+
         target = firstChild;
         targetRect = getRect(target);
+
         if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, false) !== false) {
           capture();
           el.insertBefore(dragEl, firstChild);
@@ -16750,68 +17519,82 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       } else if (target.parentNode === el) {
         targetRect = getRect(target);
         var direction = 0,
-          targetBeforeFirstSwap,
-          differentLevel = dragEl.parentNode !== el,
-          differentRowCol = !_dragElInRowColumn(dragEl.animated && dragEl.toRect || dragRect, target.animated && target.toRect || targetRect, vertical),
-          side1 = vertical ? 'top' : 'left',
-          scrolledPastTop = isScrolledPast(target, 'top', 'top') || isScrolledPast(dragEl, 'top', 'top'),
-          scrollBefore = scrolledPastTop ? scrolledPastTop.scrollTop : void 0;
+            targetBeforeFirstSwap,
+            differentLevel = dragEl.parentNode !== el,
+            differentRowCol = !_dragElInRowColumn(dragEl.animated && dragEl.toRect || dragRect, target.animated && target.toRect || targetRect, vertical),
+            side1 = vertical ? 'top' : 'left',
+            scrolledPastTop = isScrolledPast(target, 'top', 'top') || isScrolledPast(dragEl, 'top', 'top'),
+            scrollBefore = scrolledPastTop ? scrolledPastTop.scrollTop : void 0;
+
         if (lastTarget !== target) {
           targetBeforeFirstSwap = targetRect[side1];
           pastFirstInvertThresh = false;
           isCircumstantialInvert = !differentRowCol && options.invertSwap || differentLevel;
         }
+
         direction = _getSwapDirection(evt, target, targetRect, vertical, differentRowCol ? 1 : options.swapThreshold, options.invertedSwapThreshold == null ? options.swapThreshold : options.invertedSwapThreshold, isCircumstantialInvert, lastTarget === target);
         var sibling;
+
         if (direction !== 0) {
           // Check if target is beside dragEl in respective direction (ignoring hidden elements)
           var dragIndex = index(dragEl);
+
           do {
             dragIndex -= direction;
             sibling = parentEl.children[dragIndex];
           } while (sibling && (css(sibling, 'display') === 'none' || sibling === ghostEl));
-        }
-        // If dragEl is already beside target: Do not insert
+        } // If dragEl is already beside target: Do not insert
+
+
         if (direction === 0 || sibling === target) {
           return completed(false);
         }
+
         lastTarget = target;
         lastDirection = direction;
         var nextSibling = target.nextElementSibling,
-          after = false;
+            after = false;
         after = direction === 1;
+
         var moveVector = _onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, after);
+
         if (moveVector !== false) {
           if (moveVector === 1 || moveVector === -1) {
             after = moveVector === 1;
           }
+
           _silent = true;
           setTimeout(_unsilent, 30);
           capture();
+
           if (after && !nextSibling) {
             el.appendChild(dragEl);
           } else {
             target.parentNode.insertBefore(dragEl, after ? nextSibling : target);
-          }
+          } // Undo chrome's scroll adjustment (has no effect on other browsers)
 
-          // Undo chrome's scroll adjustment (has no effect on other browsers)
+
           if (scrolledPastTop) {
             scrollBy(scrolledPastTop, 0, scrollBefore - scrolledPastTop.scrollTop);
           }
-          parentEl = dragEl.parentNode; // actualization
 
+          parentEl = dragEl.parentNode; // actualization
           // must be done before animation
+
           if (targetBeforeFirstSwap !== undefined && !isCircumstantialInvert) {
             targetMoveDistance = Math.abs(targetBeforeFirstSwap - getRect(target)[side1]);
           }
+
           changed();
           return completed(true);
         }
       }
+
       if (el.contains(dragEl)) {
         return completed(false);
       }
     }
+
     return false;
   },
   _ignoreWhileAnimating: null,
@@ -16831,69 +17614,83 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     off(ownerDocument, 'touchcancel', this._onDrop);
     off(document, 'selectstart', this);
   },
-  _onDrop: function _onDrop( /**Event*/evt) {
+  _onDrop: function _onDrop(
+  /**Event*/
+  evt) {
     var el = this.el,
-      options = this.options;
+        options = this.options; // Get the index of the dragged element within its parent
 
-    // Get the index of the dragged element within its parent
     newIndex = index(dragEl);
     newDraggableIndex = index(dragEl, options.draggable);
     pluginEvent('drop', this, {
       evt: evt
     });
-    parentEl = dragEl && dragEl.parentNode;
+    parentEl = dragEl && dragEl.parentNode; // Get again after plugin event
 
-    // Get again after plugin event
     newIndex = index(dragEl);
     newDraggableIndex = index(dragEl, options.draggable);
+
     if (Sortable.eventCanceled) {
       this._nulling();
+
       return;
     }
+
     awaitingDragStarted = false;
     isCircumstantialInvert = false;
     pastFirstInvertThresh = false;
     clearInterval(this._loopId);
     clearTimeout(this._dragStartTimer);
-    _cancelNextTick(this.cloneId);
-    _cancelNextTick(this._dragStartId);
 
-    // Unbind events
+    _cancelNextTick(this.cloneId);
+
+    _cancelNextTick(this._dragStartId); // Unbind events
+
+
     if (this.nativeDraggable) {
       off(document, 'drop', this);
       off(el, 'dragstart', this._onDragStart);
     }
+
     this._offMoveEvents();
+
     this._offUpEvents();
+
     if (Safari) {
       css(document.body, 'user-select', '');
     }
+
     css(dragEl, 'transform', '');
+
     if (evt) {
       if (moved) {
         evt.cancelable && evt.preventDefault();
         !options.dropBubble && evt.stopPropagation();
       }
+
       ghostEl && ghostEl.parentNode && ghostEl.parentNode.removeChild(ghostEl);
+
       if (rootEl === parentEl || putSortable && putSortable.lastPutMode !== 'clone') {
         // Remove clone(s)
         cloneEl && cloneEl.parentNode && cloneEl.parentNode.removeChild(cloneEl);
       }
+
       if (dragEl) {
         if (this.nativeDraggable) {
           off(dragEl, 'dragend', this);
         }
-        _disableDraggable(dragEl);
-        dragEl.style['will-change'] = '';
 
-        // Remove classes
+        _disableDraggable(dragEl);
+
+        dragEl.style['will-change'] = ''; // Remove classes
         // ghostClass is added in dragStarted
+
         if (moved && !awaitingDragStarted) {
           toggleClass(dragEl, putSortable ? putSortable.options.ghostClass : this.options.ghostClass, false);
         }
-        toggleClass(dragEl, this.options.chosenClass, false);
 
-        // Drag stop event
+        toggleClass(dragEl, this.options.chosenClass, false); // Drag stop event
+
         _dispatchEvent({
           sortable: this,
           name: 'unchoose',
@@ -16902,6 +17699,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
           newDraggableIndex: null,
           originalEvent: evt
         });
+
         if (rootEl !== parentEl) {
           if (newIndex >= 0) {
             // Add event
@@ -16911,17 +17709,17 @@ Sortable.prototype = /** @lends Sortable.prototype */{
               toEl: parentEl,
               fromEl: rootEl,
               originalEvent: evt
-            });
+            }); // Remove event
 
-            // Remove event
+
             _dispatchEvent({
               sortable: this,
               name: 'remove',
               toEl: parentEl,
               originalEvent: evt
-            });
+            }); // drag from one list and drop into another
 
-            // drag from one list and drop into another
+
             _dispatchEvent({
               rootEl: parentEl,
               name: 'sort',
@@ -16929,6 +17727,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
               fromEl: rootEl,
               originalEvent: evt
             });
+
             _dispatchEvent({
               sortable: this,
               name: 'sort',
@@ -16936,6 +17735,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
               originalEvent: evt
             });
           }
+
           putSortable && putSortable.save();
         } else {
           if (newIndex !== oldIndex) {
@@ -16947,6 +17747,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
                 toEl: parentEl,
                 originalEvent: evt
               });
+
               _dispatchEvent({
                 sortable: this,
                 name: 'sort',
@@ -16956,24 +17757,27 @@ Sortable.prototype = /** @lends Sortable.prototype */{
             }
           }
         }
+
         if (Sortable.active) {
           /* jshint eqnull:true */
           if (newIndex == null || newIndex === -1) {
             newIndex = oldIndex;
             newDraggableIndex = oldDraggableIndex;
           }
+
           _dispatchEvent({
             sortable: this,
             name: 'end',
             toEl: parentEl,
             originalEvent: evt
-          });
+          }); // Save sorting
 
-          // Save sorting
+
           this.save();
         }
       }
     }
+
     this._nulling();
   },
   _nulling: function _nulling() {
@@ -16984,52 +17788,65 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     });
     savedInputChecked.length = lastDx = lastDy = 0;
   },
-  handleEvent: function handleEvent( /**Event*/evt) {
+  handleEvent: function handleEvent(
+  /**Event*/
+  evt) {
     switch (evt.type) {
       case 'drop':
       case 'dragend':
         this._onDrop(evt);
+
         break;
+
       case 'dragenter':
       case 'dragover':
         if (dragEl) {
           this._onDragOver(evt);
+
           _globalDragOver(evt);
         }
+
         break;
+
       case 'selectstart':
         evt.preventDefault();
         break;
     }
   },
+
   /**
    * Serializes the item into an array of string.
    * @returns {String[]}
    */
   toArray: function toArray() {
     var order = [],
-      el,
-      children = this.el.children,
-      i = 0,
-      n = children.length,
-      options = this.options;
+        el,
+        children = this.el.children,
+        i = 0,
+        n = children.length,
+        options = this.options;
+
     for (; i < n; i++) {
       el = children[i];
+
       if (closest(el, options.draggable, this.el, false)) {
         order.push(el.getAttribute(options.dataIdAttr) || _generateId(el));
       }
     }
+
     return order;
   },
+
   /**
    * Sorts the elements according to the array.
    * @param  {String[]}  order  order of the items
    */
   sort: function sort(order, useAnimation) {
     var items = {},
-      rootEl = this.el;
+        rootEl = this.el;
     this.toArray().forEach(function (id, i) {
       var el = rootEl.children[i];
+
       if (closest(el, this.options.draggable, rootEl, false)) {
         items[id] = el;
       }
@@ -17043,6 +17860,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     });
     useAnimation && this.animateAll();
   },
+
   /**
    * Save the current sorting
    */
@@ -17050,6 +17868,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     var store = this.options.store;
     store && store.set && store.set(this);
   },
+
   /**
    * For each element in the set, get the first element that matches the selector by testing the element itself and traversing up through its ancestors in the DOM tree.
    * @param   {HTMLElement}  el
@@ -17059,6 +17878,7 @@ Sortable.prototype = /** @lends Sortable.prototype */{
   closest: function closest$1(el, selector) {
     return closest(el, selector || this.options.draggable, this.el, false);
   },
+
   /**
    * Set/get option
    * @param   {string} name
@@ -17067,20 +17887,24 @@ Sortable.prototype = /** @lends Sortable.prototype */{
    */
   option: function option(name, value) {
     var options = this.options;
+
     if (value === void 0) {
       return options[name];
     } else {
       var modifiedValue = PluginManager.modifyOption(this, name, value);
+
       if (typeof modifiedValue !== 'undefined') {
         options[name] = modifiedValue;
       } else {
         options[name] = value;
       }
+
       if (name === 'group') {
         _prepareGroup(options);
       }
     }
   },
+
   /**
    * Destroy
    */
@@ -17091,16 +17915,21 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     off(el, 'mousedown', this._onTapStart);
     off(el, 'touchstart', this._onTapStart);
     off(el, 'pointerdown', this._onTapStart);
+
     if (this.nativeDraggable) {
       off(el, 'dragover', this);
       off(el, 'dragenter', this);
-    }
-    // Remove draggable attributes
+    } // Remove draggable attributes
+
+
     Array.prototype.forEach.call(el.querySelectorAll('[draggable]'), function (el) {
       el.removeAttribute('draggable');
     });
+
     this._onDrop();
+
     this._disableDelayedDragEvents();
+
     sortables.splice(sortables.indexOf(this.el), 1);
     this.el = el = null;
   },
@@ -17109,22 +17938,25 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       pluginEvent('hideClone', this);
       if (Sortable.eventCanceled) return;
       css(cloneEl, 'display', 'none');
+
       if (this.options.removeCloneOnHide && cloneEl.parentNode) {
         cloneEl.parentNode.removeChild(cloneEl);
       }
+
       cloneHidden = true;
     }
   },
   _showClone: function _showClone(putSortable) {
     if (putSortable.lastPutMode !== 'clone') {
       this._hideClone();
+
       return;
     }
+
     if (cloneHidden) {
       pluginEvent('showClone', this);
-      if (Sortable.eventCanceled) return;
+      if (Sortable.eventCanceled) return; // show clone at dragEl or original position
 
-      // show clone at dragEl or original position
       if (dragEl.parentNode == rootEl && !this.options.group.revertClone) {
         rootEl.insertBefore(cloneEl, dragEl);
       } else if (nextEl) {
@@ -17132,26 +17964,33 @@ Sortable.prototype = /** @lends Sortable.prototype */{
       } else {
         rootEl.appendChild(cloneEl);
       }
+
       if (this.options.group.revertClone) {
         this.animate(dragEl, cloneEl);
       }
+
       css(cloneEl, 'display', '');
       cloneHidden = false;
     }
   }
 };
-function _globalDragOver( /**Event*/evt) {
+
+function _globalDragOver(
+/**Event*/
+evt) {
   if (evt.dataTransfer) {
     evt.dataTransfer.dropEffect = 'move';
   }
+
   evt.cancelable && evt.preventDefault();
 }
+
 function _onMove(fromEl, toEl, dragEl, dragRect, targetEl, targetRect, originalEvent, willInsertAfter) {
   var evt,
-    sortable = fromEl[expando],
-    onMoveFn = sortable.options.onMove,
-    retVal;
-  // Support for new CustomEvent feature
+      sortable = fromEl[expando],
+      onMoveFn = sortable.options.onMove,
+      retVal; // Support for new CustomEvent feature
+
   if (window.CustomEvent && !IE11OrLess && !Edge) {
     evt = new CustomEvent('move', {
       bubbles: true,
@@ -17161,6 +18000,7 @@ function _onMove(fromEl, toEl, dragEl, dragRect, targetEl, targetRect, originalE
     evt = document.createEvent('Event');
     evt.initEvent('move', true, true);
   }
+
   evt.to = toEl;
   evt.from = fromEl;
   evt.dragged = dragEl;
@@ -17170,35 +18010,41 @@ function _onMove(fromEl, toEl, dragEl, dragRect, targetEl, targetRect, originalE
   evt.willInsertAfter = willInsertAfter;
   evt.originalEvent = originalEvent;
   fromEl.dispatchEvent(evt);
+
   if (onMoveFn) {
     retVal = onMoveFn.call(sortable, evt, originalEvent);
   }
+
   return retVal;
 }
+
 function _disableDraggable(el) {
   el.draggable = false;
 }
+
 function _unsilent() {
   _silent = false;
 }
+
 function _ghostIsFirst(evt, vertical, sortable) {
-  var firstElRect = getRect(getChild(sortable.el, 0, sortable.options, true));
-  var sortableContentRect = getContentRect(sortable.el);
+  var rect = getRect(getChild(sortable.el, 0, sortable.options, true));
   var spacer = 10;
-  return vertical ? evt.clientX < sortableContentRect.left - spacer || evt.clientY < firstElRect.top && evt.clientX < firstElRect.right : evt.clientY < sortableContentRect.top - spacer || evt.clientY < firstElRect.bottom && evt.clientX < firstElRect.left;
+  return vertical ? evt.clientX < rect.left - spacer || evt.clientY < rect.top && evt.clientX < rect.right : evt.clientY < rect.top - spacer || evt.clientY < rect.bottom && evt.clientX < rect.left;
 }
+
 function _ghostIsLast(evt, vertical, sortable) {
-  var lastElRect = getRect(lastChild(sortable.el, sortable.options.draggable));
-  var sortableContentRect = getContentRect(sortable.el);
+  var rect = getRect(lastChild(sortable.el, sortable.options.draggable));
   var spacer = 10;
-  return vertical ? evt.clientX > sortableContentRect.right + spacer || evt.clientY > lastElRect.bottom && evt.clientX > lastElRect.left : evt.clientY > sortableContentRect.bottom + spacer || evt.clientX > lastElRect.right && evt.clientY > lastElRect.top;
+  return vertical ? evt.clientX > rect.right + spacer || evt.clientX <= rect.right && evt.clientY > rect.bottom && evt.clientX >= rect.left : evt.clientX > rect.right && evt.clientY > rect.top || evt.clientX <= rect.right && evt.clientY > rect.bottom + spacer;
 }
+
 function _getSwapDirection(evt, target, targetRect, vertical, swapThreshold, invertedSwapThreshold, invertSwap, isLastTarget) {
   var mouseOnAxis = vertical ? evt.clientY : evt.clientX,
-    targetLength = vertical ? targetRect.height : targetRect.width,
-    targetS1 = vertical ? targetRect.top : targetRect.left,
-    targetS2 = vertical ? targetRect.bottom : targetRect.right,
-    invert = false;
+      targetLength = vertical ? targetRect.height : targetRect.width,
+      targetS1 = vertical ? targetRect.top : targetRect.left,
+      targetS2 = vertical ? targetRect.bottom : targetRect.right,
+      invert = false;
+
   if (!invertSwap) {
     // Never invert or create dragEl shadow when target movemenet causes mouse to move past the end of regular swapThreshold
     if (isLastTarget && targetMoveDistance < targetLength * swapThreshold) {
@@ -17208,6 +18054,7 @@ function _getSwapDirection(evt, target, targetRect, vertical, swapThreshold, inv
         // past first invert threshold, do not restrict inverted threshold to dragEl shadow
         pastFirstInvertThresh = true;
       }
+
       if (!pastFirstInvertThresh) {
         // dragEl shadow (target move distance shadow)
         if (lastDirection === 1 ? mouseOnAxis < targetS1 + targetMoveDistance // over dragEl shadow
@@ -17224,22 +18071,26 @@ function _getSwapDirection(evt, target, targetRect, vertical, swapThreshold, inv
       }
     }
   }
+
   invert = invert || invertSwap;
+
   if (invert) {
     // Invert of regular
     if (mouseOnAxis < targetS1 + targetLength * invertedSwapThreshold / 2 || mouseOnAxis > targetS2 - targetLength * invertedSwapThreshold / 2) {
       return mouseOnAxis > targetS1 + targetLength / 2 ? 1 : -1;
     }
   }
+
   return 0;
 }
-
 /**
  * Gets the direction dragEl must be swapped relative to target in order to make it
  * seem that dragEl has been "inserted" into that element's position
  * @param  {HTMLElement} target       The target whose position dragEl is being inserted at
  * @return {Number}                   Direction dragEl must be swapped
  */
+
+
 function _getInsertDirection(target) {
   if (index(dragEl) < index(target)) {
     return 1;
@@ -17247,48 +18098,55 @@ function _getInsertDirection(target) {
     return -1;
   }
 }
-
 /**
  * Generate id
  * @param   {HTMLElement} el
  * @returns {String}
  * @private
  */
+
+
 function _generateId(el) {
   var str = el.tagName + el.className + el.src + el.href + el.textContent,
-    i = str.length,
-    sum = 0;
+      i = str.length,
+      sum = 0;
+
   while (i--) {
     sum += str.charCodeAt(i);
   }
+
   return sum.toString(36);
 }
+
 function _saveInputCheckedState(root) {
   savedInputChecked.length = 0;
   var inputs = root.getElementsByTagName('input');
   var idx = inputs.length;
+
   while (idx--) {
     var el = inputs[idx];
     el.checked && savedInputChecked.push(el);
   }
 }
+
 function _nextTick(fn) {
   return setTimeout(fn, 0);
 }
+
 function _cancelNextTick(id) {
   return clearTimeout(id);
-}
+} // Fixed #973:
 
-// Fixed #973:
+
 if (documentExists) {
   on(document, 'touchmove', function (evt) {
     if ((Sortable.active || awaitingDragStarted) && evt.cancelable) {
       evt.preventDefault();
     }
   });
-}
+} // Export utils
 
-// Export utils
+
 Sortable.utils = {
   on: on,
   off: off,
@@ -17308,54 +18166,59 @@ Sortable.utils = {
   detectDirection: _detectDirection,
   getChild: getChild
 };
-
 /**
  * Get the Sortable instance of an element
  * @param  {HTMLElement} element The element
  * @return {Sortable|undefined}         The instance of Sortable
  */
+
 Sortable.get = function (element) {
   return element[expando];
 };
-
 /**
  * Mount a plugin to Sortable
  * @param  {...SortablePlugin|SortablePlugin[]} plugins       Plugins being mounted
  */
+
+
 Sortable.mount = function () {
   for (var _len = arguments.length, plugins = new Array(_len), _key = 0; _key < _len; _key++) {
     plugins[_key] = arguments[_key];
   }
+
   if (plugins[0].constructor === Array) plugins = plugins[0];
   plugins.forEach(function (plugin) {
     if (!plugin.prototype || !plugin.prototype.constructor) {
       throw "Sortable: Mounted plugin must be a constructor function, not ".concat({}.toString.call(plugin));
     }
+
     if (plugin.utils) Sortable.utils = _objectSpread2(_objectSpread2({}, Sortable.utils), plugin.utils);
     PluginManager.mount(plugin);
   });
 };
-
 /**
  * Create sortable instance
  * @param {HTMLElement}  el
  * @param {Object}      [options]
  */
+
+
 Sortable.create = function (el, options) {
   return new Sortable(el, options);
-};
+}; // Export
 
-// Export
+
 Sortable.version = version;
 
 var autoScrolls = [],
-  scrollEl,
-  scrollRootEl,
-  scrolling = false,
-  lastAutoScrollX,
-  lastAutoScrollY,
-  touchEvt$1,
-  pointerElemChangedInterval;
+    scrollEl,
+    scrollRootEl,
+    scrolling = false,
+    lastAutoScrollX,
+    lastAutoScrollY,
+    touchEvt$1,
+    pointerElemChangedInterval;
+
 function AutoScrollPlugin() {
   function AutoScroll() {
     this.defaults = {
@@ -17364,18 +18227,19 @@ function AutoScrollPlugin() {
       scrollSensitivity: 30,
       scrollSpeed: 10,
       bubbleScroll: true
-    };
+    }; // Bind all private methods
 
-    // Bind all private methods
     for (var fn in this) {
       if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
         this[fn] = this[fn].bind(this);
       }
     }
   }
+
   AutoScroll.prototype = {
     dragStarted: function dragStarted(_ref) {
       var originalEvent = _ref.originalEvent;
+
       if (this.sortable.nativeDraggable) {
         on(document, 'dragover', this._handleAutoScroll);
       } else {
@@ -17390,6 +18254,7 @@ function AutoScrollPlugin() {
     },
     dragOverCompleted: function dragOverCompleted(_ref2) {
       var originalEvent = _ref2.originalEvent;
+
       // For when bubbling is canceled and using fallback (fallback 'touchmove' always reached)
       if (!this.options.dragOverBubble && !originalEvent.rootEl) {
         this._handleAutoScroll(originalEvent);
@@ -17403,6 +18268,7 @@ function AutoScrollPlugin() {
         off(document, 'touchmove', this._handleFallbackAutoScroll);
         off(document, 'mousemove', this._handleFallbackAutoScroll);
       }
+
       clearPointerElemChangedInterval();
       clearAutoScrolls();
       cancelThrottle();
@@ -17416,29 +18282,31 @@ function AutoScrollPlugin() {
     },
     _handleAutoScroll: function _handleAutoScroll(evt, fallback) {
       var _this = this;
-      var x = (evt.touches ? evt.touches[0] : evt).clientX,
-        y = (evt.touches ? evt.touches[0] : evt).clientY,
-        elem = document.elementFromPoint(x, y);
-      touchEvt$1 = evt;
 
-      // IE does not seem to have native autoscroll,
+      var x = (evt.touches ? evt.touches[0] : evt).clientX,
+          y = (evt.touches ? evt.touches[0] : evt).clientY,
+          elem = document.elementFromPoint(x, y);
+      touchEvt$1 = evt; // IE does not seem to have native autoscroll,
       // Edge's autoscroll seems too conditional,
       // MACOS Safari does not have autoscroll,
       // Firefox and Chrome are good
-      if (fallback || this.options.forceAutoScrollFallback || Edge || IE11OrLess || Safari) {
-        autoScroll(evt, this.options, elem, fallback);
 
-        // Listener for pointer element change
+      if (fallback || this.options.forceAutoScrollFallback || Edge || IE11OrLess || Safari) {
+        autoScroll(evt, this.options, elem, fallback); // Listener for pointer element change
+
         var ogElemScroller = getParentAutoScrollElement(elem, true);
+
         if (scrolling && (!pointerElemChangedInterval || x !== lastAutoScrollX || y !== lastAutoScrollY)) {
-          pointerElemChangedInterval && clearPointerElemChangedInterval();
-          // Detect for pointer elem change, emulating native DnD behaviour
+          pointerElemChangedInterval && clearPointerElemChangedInterval(); // Detect for pointer elem change, emulating native DnD behaviour
+
           pointerElemChangedInterval = setInterval(function () {
             var newElem = getParentAutoScrollElement(document.elementFromPoint(x, y), true);
+
             if (newElem !== ogElemScroller) {
               ogElemScroller = newElem;
               clearAutoScrolls();
             }
+
             autoScroll(evt, _this.options, newElem, fallback);
           }, 10);
           lastAutoScrollX = x;
@@ -17450,6 +18318,7 @@ function AutoScrollPlugin() {
           clearAutoScrolls();
           return;
         }
+
         autoScroll(evt, this.options, getParentAutoScrollElement(elem, false), false);
       }
     }
@@ -17459,54 +18328,60 @@ function AutoScrollPlugin() {
     initializeByDefault: true
   });
 }
+
 function clearAutoScrolls() {
   autoScrolls.forEach(function (autoScroll) {
     clearInterval(autoScroll.pid);
   });
   autoScrolls = [];
 }
+
 function clearPointerElemChangedInterval() {
   clearInterval(pointerElemChangedInterval);
 }
+
 var autoScroll = throttle(function (evt, options, rootEl, isFallback) {
   // Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=505521
   if (!options.scroll) return;
   var x = (evt.touches ? evt.touches[0] : evt).clientX,
-    y = (evt.touches ? evt.touches[0] : evt).clientY,
-    sens = options.scrollSensitivity,
-    speed = options.scrollSpeed,
-    winScroller = getWindowScrollingElement();
+      y = (evt.touches ? evt.touches[0] : evt).clientY,
+      sens = options.scrollSensitivity,
+      speed = options.scrollSpeed,
+      winScroller = getWindowScrollingElement();
   var scrollThisInstance = false,
-    scrollCustomFn;
+      scrollCustomFn; // New scroll root, set scrollEl
 
-  // New scroll root, set scrollEl
   if (scrollRootEl !== rootEl) {
     scrollRootEl = rootEl;
     clearAutoScrolls();
     scrollEl = options.scroll;
     scrollCustomFn = options.scrollFn;
+
     if (scrollEl === true) {
       scrollEl = getParentAutoScrollElement(rootEl, true);
     }
   }
+
   var layersOut = 0;
   var currentParent = scrollEl;
+
   do {
     var el = currentParent,
-      rect = getRect(el),
-      top = rect.top,
-      bottom = rect.bottom,
-      left = rect.left,
-      right = rect.right,
-      width = rect.width,
-      height = rect.height,
-      canScrollX = void 0,
-      canScrollY = void 0,
-      scrollWidth = el.scrollWidth,
-      scrollHeight = el.scrollHeight,
-      elCSS = css(el),
-      scrollPosX = el.scrollLeft,
-      scrollPosY = el.scrollTop;
+        rect = getRect(el),
+        top = rect.top,
+        bottom = rect.bottom,
+        left = rect.left,
+        right = rect.right,
+        width = rect.width,
+        height = rect.height,
+        canScrollX = void 0,
+        canScrollY = void 0,
+        scrollWidth = el.scrollWidth,
+        scrollHeight = el.scrollHeight,
+        elCSS = css(el),
+        scrollPosX = el.scrollLeft,
+        scrollPosY = el.scrollTop;
+
     if (el === winScroller) {
       canScrollX = width < scrollWidth && (elCSS.overflowX === 'auto' || elCSS.overflowX === 'scroll' || elCSS.overflowX === 'visible');
       canScrollY = height < scrollHeight && (elCSS.overflowY === 'auto' || elCSS.overflowY === 'scroll' || elCSS.overflowY === 'visible');
@@ -17514,8 +18389,10 @@ var autoScroll = throttle(function (evt, options, rootEl, isFallback) {
       canScrollX = width < scrollWidth && (elCSS.overflowX === 'auto' || elCSS.overflowX === 'scroll');
       canScrollY = height < scrollHeight && (elCSS.overflowY === 'auto' || elCSS.overflowY === 'scroll');
     }
+
     var vx = canScrollX && (Math.abs(right - x) <= sens && scrollPosX + width < scrollWidth) - (Math.abs(left - x) <= sens && !!scrollPosX);
     var vy = canScrollY && (Math.abs(bottom - y) <= sens && scrollPosY + height < scrollHeight) - (Math.abs(top - y) <= sens && !!scrollPosY);
+
     if (!autoScrolls[layersOut]) {
       for (var i = 0; i <= layersOut; i++) {
         if (!autoScrolls[i]) {
@@ -17523,51 +18400,61 @@ var autoScroll = throttle(function (evt, options, rootEl, isFallback) {
         }
       }
     }
+
     if (autoScrolls[layersOut].vx != vx || autoScrolls[layersOut].vy != vy || autoScrolls[layersOut].el !== el) {
       autoScrolls[layersOut].el = el;
       autoScrolls[layersOut].vx = vx;
       autoScrolls[layersOut].vy = vy;
       clearInterval(autoScrolls[layersOut].pid);
+
       if (vx != 0 || vy != 0) {
         scrollThisInstance = true;
         /* jshint loopfunc:true */
+
         autoScrolls[layersOut].pid = setInterval(function () {
           // emulate drag over during autoscroll (fallback), emulating native DnD behaviour
           if (isFallback && this.layer === 0) {
             Sortable.active._onTouchMove(touchEvt$1); // To move ghost if it is positioned absolutely
+
           }
+
           var scrollOffsetY = autoScrolls[this.layer].vy ? autoScrolls[this.layer].vy * speed : 0;
           var scrollOffsetX = autoScrolls[this.layer].vx ? autoScrolls[this.layer].vx * speed : 0;
+
           if (typeof scrollCustomFn === 'function') {
             if (scrollCustomFn.call(Sortable.dragged.parentNode[expando], scrollOffsetX, scrollOffsetY, evt, touchEvt$1, autoScrolls[this.layer].el) !== 'continue') {
               return;
             }
           }
+
           scrollBy(autoScrolls[this.layer].el, scrollOffsetX, scrollOffsetY);
         }.bind({
           layer: layersOut
         }), 24);
       }
     }
+
     layersOut++;
   } while (options.bubbleScroll && currentParent !== winScroller && (currentParent = getParentAutoScrollElement(currentParent, false)));
+
   scrolling = scrollThisInstance; // in case another function catches scrolling as false in between when it is not
 }, 30);
 
 var drop = function drop(_ref) {
   var originalEvent = _ref.originalEvent,
-    putSortable = _ref.putSortable,
-    dragEl = _ref.dragEl,
-    activeSortable = _ref.activeSortable,
-    dispatchSortableEvent = _ref.dispatchSortableEvent,
-    hideGhostForTarget = _ref.hideGhostForTarget,
-    unhideGhostForTarget = _ref.unhideGhostForTarget;
+      putSortable = _ref.putSortable,
+      dragEl = _ref.dragEl,
+      activeSortable = _ref.activeSortable,
+      dispatchSortableEvent = _ref.dispatchSortableEvent,
+      hideGhostForTarget = _ref.hideGhostForTarget,
+      unhideGhostForTarget = _ref.unhideGhostForTarget;
   if (!originalEvent) return;
   var toSortable = putSortable || activeSortable;
   hideGhostForTarget();
   var touch = originalEvent.changedTouches && originalEvent.changedTouches.length ? originalEvent.changedTouches[0] : originalEvent;
   var target = document.elementFromPoint(touch.clientX, touch.clientY);
   unhideGhostForTarget();
+
   if (toSortable && !toSortable.el.contains(target)) {
     dispatchSortableEvent('spill');
     this.onSpill({
@@ -17576,7 +18463,9 @@ var drop = function drop(_ref) {
     });
   }
 };
+
 function Revert() {}
+
 Revert.prototype = {
   startIndex: null,
   dragStart: function dragStart(_ref2) {
@@ -17585,32 +18474,40 @@ Revert.prototype = {
   },
   onSpill: function onSpill(_ref3) {
     var dragEl = _ref3.dragEl,
-      putSortable = _ref3.putSortable;
+        putSortable = _ref3.putSortable;
     this.sortable.captureAnimationState();
+
     if (putSortable) {
       putSortable.captureAnimationState();
     }
+
     var nextSibling = getChild(this.sortable.el, this.startIndex, this.options);
+
     if (nextSibling) {
       this.sortable.el.insertBefore(dragEl, nextSibling);
     } else {
       this.sortable.el.appendChild(dragEl);
     }
+
     this.sortable.animateAll();
+
     if (putSortable) {
       putSortable.animateAll();
     }
   },
   drop: drop
 };
+
 _extends(Revert, {
   pluginName: 'revertOnSpill'
 });
+
 function Remove() {}
+
 Remove.prototype = {
   onSpill: function onSpill(_ref4) {
     var dragEl = _ref4.dragEl,
-      putSortable = _ref4.putSortable;
+        putSortable = _ref4.putSortable;
     var parentSortable = putSortable || this.sortable;
     parentSortable.captureAnimationState();
     dragEl.parentNode && dragEl.parentNode.removeChild(dragEl);
@@ -17618,18 +18515,22 @@ Remove.prototype = {
   },
   drop: drop
 };
+
 _extends(Remove, {
   pluginName: 'removeOnSpill'
 });
+
 var OnSpill = [Remove, Revert];
 
 var lastSwapEl;
+
 function SwapPlugin() {
   function Swap() {
     this.defaults = {
       swapClass: 'sortable-swap-highlight'
     };
   }
+
   Swap.prototype = {
     dragStart: function dragStart(_ref) {
       var dragEl = _ref.dragEl;
@@ -17637,37 +18538,42 @@ function SwapPlugin() {
     },
     dragOverValid: function dragOverValid(_ref2) {
       var completed = _ref2.completed,
-        target = _ref2.target,
-        onMove = _ref2.onMove,
-        activeSortable = _ref2.activeSortable,
-        changed = _ref2.changed,
-        cancel = _ref2.cancel;
+          target = _ref2.target,
+          onMove = _ref2.onMove,
+          activeSortable = _ref2.activeSortable,
+          changed = _ref2.changed,
+          cancel = _ref2.cancel;
       if (!activeSortable.options.swap) return;
       var el = this.sortable.el,
-        options = this.options;
+          options = this.options;
+
       if (target && target !== el) {
         var prevSwapEl = lastSwapEl;
+
         if (onMove(target) !== false) {
           toggleClass(target, options.swapClass, true);
           lastSwapEl = target;
         } else {
           lastSwapEl = null;
         }
+
         if (prevSwapEl && prevSwapEl !== lastSwapEl) {
           toggleClass(prevSwapEl, options.swapClass, false);
         }
       }
+
       changed();
       completed(true);
       cancel();
     },
     drop: function drop(_ref3) {
       var activeSortable = _ref3.activeSortable,
-        putSortable = _ref3.putSortable,
-        dragEl = _ref3.dragEl;
+          putSortable = _ref3.putSortable,
+          dragEl = _ref3.dragEl;
       var toSortable = putSortable || this.sortable;
       var options = this.options;
       lastSwapEl && toggleClass(lastSwapEl, options.swapClass, false);
+
       if (lastSwapEl && (options.swap || putSortable && putSortable.options.swap)) {
         if (dragEl !== lastSwapEl) {
           toSortable.captureAnimationState();
@@ -17691,34 +18597,38 @@ function SwapPlugin() {
     }
   });
 }
+
 function swapNodes(n1, n2) {
   var p1 = n1.parentNode,
-    p2 = n2.parentNode,
-    i1,
-    i2;
+      p2 = n2.parentNode,
+      i1,
+      i2;
   if (!p1 || !p2 || p1.isEqualNode(n2) || p2.isEqualNode(n1)) return;
   i1 = index(n1);
   i2 = index(n2);
+
   if (p1.isEqualNode(p2) && i1 < i2) {
     i2++;
   }
+
   p1.insertBefore(n2, p1.children[i1]);
   p2.insertBefore(n1, p2.children[i2]);
 }
 
 var multiDragElements = (/* unused pure expression or super */ null && ([])),
-  multiDragClones = (/* unused pure expression or super */ null && ([])),
-  lastMultiDragSelect,
-  // for selection with modifier key down (SHIFT)
-  multiDragSortable,
-  initialFolding = false,
-  // Initial multi-drag fold when drag started
-  folding = false,
-  // Folding any other time
-  dragStarted = false,
-  dragEl$1,
-  clonesFromRect,
-  clonesHidden;
+    multiDragClones = (/* unused pure expression or super */ null && ([])),
+    lastMultiDragSelect,
+    // for selection with modifier key down (SHIFT)
+multiDragSortable,
+    initialFolding = false,
+    // Initial multi-drag fold when drag started
+folding = false,
+    // Folding any other time
+dragStarted = false,
+    dragEl$1,
+    clonesFromRect,
+    clonesHidden;
+
 function MultiDragPlugin() {
   function MultiDrag(sortable) {
     // Bind all private methods
@@ -17727,6 +18637,7 @@ function MultiDragPlugin() {
         this[fn] = this[fn].bind(this);
       }
     }
+
     if (!sortable.options.avoidImplicitDeselect) {
       if (sortable.options.supportPointer) {
         on(document, 'pointerup', this._deselectMultiDrag);
@@ -17735,6 +18646,7 @@ function MultiDragPlugin() {
         on(document, 'touchend', this._deselectMultiDrag);
       }
     }
+
     on(document, 'keydown', this._checkKeyDown);
     on(document, 'keyup', this._checkKeyUp);
     this.defaults = {
@@ -17743,6 +18655,7 @@ function MultiDragPlugin() {
       avoidImplicitDeselect: false,
       setData: function setData(dataTransfer, dragEl) {
         var data = '';
+
         if (multiDragElements.length && multiDragSortable === sortable) {
           multiDragElements.forEach(function (multiDragElement, i) {
             data += (!i ? '' : ', ') + multiDragElement.textContent;
@@ -17750,10 +18663,12 @@ function MultiDragPlugin() {
         } else {
           data = dragEl.textContent;
         }
+
         dataTransfer.setData('Text', data);
       }
     };
   }
+
   MultiDrag.prototype = {
     multiDragKeyDown: false,
     isMultiDrag: false,
@@ -17766,8 +18681,9 @@ function MultiDragPlugin() {
     },
     setupClone: function setupClone(_ref2) {
       var sortable = _ref2.sortable,
-        cancel = _ref2.cancel;
+          cancel = _ref2.cancel;
       if (!this.isMultiDrag) return;
+
       for (var i = 0; i < multiDragElements.length; i++) {
         multiDragClones.push(clone(multiDragElements[i]));
         multiDragClones[i].sortableIndex = multiDragElements[i].sortableIndex;
@@ -17776,15 +18692,18 @@ function MultiDragPlugin() {
         toggleClass(multiDragClones[i], this.options.selectedClass, false);
         multiDragElements[i] === dragEl$1 && toggleClass(multiDragClones[i], this.options.chosenClass, false);
       }
+
       sortable._hideClone();
+
       cancel();
     },
     clone: function clone(_ref3) {
       var sortable = _ref3.sortable,
-        rootEl = _ref3.rootEl,
-        dispatchSortableEvent = _ref3.dispatchSortableEvent,
-        cancel = _ref3.cancel;
+          rootEl = _ref3.rootEl,
+          dispatchSortableEvent = _ref3.dispatchSortableEvent,
+          cancel = _ref3.cancel;
       if (!this.isMultiDrag) return;
+
       if (!this.options.removeCloneOnHide) {
         if (multiDragElements.length && multiDragSortable === sortable) {
           insertMultiDragClones(true, rootEl);
@@ -17795,8 +18714,8 @@ function MultiDragPlugin() {
     },
     showClone: function showClone(_ref4) {
       var cloneNowShown = _ref4.cloneNowShown,
-        rootEl = _ref4.rootEl,
-        cancel = _ref4.cancel;
+          rootEl = _ref4.rootEl,
+          cancel = _ref4.cancel;
       if (!this.isMultiDrag) return;
       insertMultiDragClones(false, rootEl);
       multiDragClones.forEach(function (clone) {
@@ -17808,12 +18727,14 @@ function MultiDragPlugin() {
     },
     hideClone: function hideClone(_ref5) {
       var _this = this;
+
       var sortable = _ref5.sortable,
-        cloneNowHidden = _ref5.cloneNowHidden,
-        cancel = _ref5.cancel;
+          cloneNowHidden = _ref5.cloneNowHidden,
+          cancel = _ref5.cancel;
       if (!this.isMultiDrag) return;
       multiDragClones.forEach(function (clone) {
         css(clone, 'display', 'none');
+
         if (_this.options.removeCloneOnHide && clone.parentNode) {
           clone.parentNode.removeChild(clone);
         }
@@ -17824,14 +18745,15 @@ function MultiDragPlugin() {
     },
     dragStartGlobal: function dragStartGlobal(_ref6) {
       var sortable = _ref6.sortable;
+
       if (!this.isMultiDrag && multiDragSortable) {
         multiDragSortable.multiDrag._deselectMultiDrag();
       }
+
       multiDragElements.forEach(function (multiDragElement) {
         multiDragElement.sortableIndex = index(multiDragElement);
-      });
+      }); // Sort multi-drag elements
 
-      // Sort multi-drag elements
       multiDragElements = multiDragElements.sort(function (a, b) {
         return a.sortableIndex - b.sortableIndex;
       });
@@ -17839,8 +18761,10 @@ function MultiDragPlugin() {
     },
     dragStarted: function dragStarted(_ref7) {
       var _this2 = this;
+
       var sortable = _ref7.sortable;
       if (!this.isMultiDrag) return;
+
       if (this.options.sort) {
         // Capture rects,
         // hide multi drag elements (by positioning them absolute),
@@ -17848,8 +18772,8 @@ function MultiDragPlugin() {
         // show multi drag elements,
         // animate to rects,
         // unset rects & remove from DOM
-
         sortable.captureAnimationState();
+
         if (this.options.animation) {
           multiDragElements.forEach(function (multiDragElement) {
             if (multiDragElement === dragEl$1) return;
@@ -17864,16 +18788,18 @@ function MultiDragPlugin() {
           initialFolding = true;
         }
       }
+
       sortable.animateAll(function () {
         folding = false;
         initialFolding = false;
+
         if (_this2.options.animation) {
           multiDragElements.forEach(function (multiDragElement) {
             unsetRect(multiDragElement);
           });
-        }
+        } // Remove all auxiliary multidrag items from el, if sorting enabled
 
-        // Remove all auxiliary multidrag items from el, if sorting enabled
+
         if (_this2.options.sort) {
           removeMultiDragElements();
         }
@@ -17881,8 +18807,9 @@ function MultiDragPlugin() {
     },
     dragOver: function dragOver(_ref8) {
       var target = _ref8.target,
-        completed = _ref8.completed,
-        cancel = _ref8.cancel;
+          completed = _ref8.completed,
+          cancel = _ref8.cancel;
+
       if (folding && ~multiDragElements.indexOf(target)) {
         completed(false);
         cancel();
@@ -17890,9 +18817,10 @@ function MultiDragPlugin() {
     },
     revert: function revert(_ref9) {
       var fromSortable = _ref9.fromSortable,
-        rootEl = _ref9.rootEl,
-        sortable = _ref9.sortable,
-        dragRect = _ref9.dragRect;
+          rootEl = _ref9.rootEl,
+          sortable = _ref9.sortable,
+          dragRect = _ref9.dragRect;
+
       if (multiDragElements.length > 1) {
         // Setup unfold animation
         multiDragElements.forEach(function (multiDragElement) {
@@ -17910,44 +18838,47 @@ function MultiDragPlugin() {
     },
     dragOverCompleted: function dragOverCompleted(_ref10) {
       var sortable = _ref10.sortable,
-        isOwner = _ref10.isOwner,
-        insertion = _ref10.insertion,
-        activeSortable = _ref10.activeSortable,
-        parentEl = _ref10.parentEl,
-        putSortable = _ref10.putSortable;
+          isOwner = _ref10.isOwner,
+          insertion = _ref10.insertion,
+          activeSortable = _ref10.activeSortable,
+          parentEl = _ref10.parentEl,
+          putSortable = _ref10.putSortable;
       var options = this.options;
+
       if (insertion) {
         // Clones must be hidden before folding animation to capture dragRectAbsolute properly
         if (isOwner) {
           activeSortable._hideClone();
         }
-        initialFolding = false;
-        // If leaving sort:false root, or already folding - Fold to new location
+
+        initialFolding = false; // If leaving sort:false root, or already folding - Fold to new location
+
         if (options.animation && multiDragElements.length > 1 && (folding || !isOwner && !activeSortable.options.sort && !putSortable)) {
           // Fold: Set all multi drag elements's rects to dragEl's rect when multi-drag elements are invisible
           var dragRectAbsolute = getRect(dragEl$1, false, true, true);
           multiDragElements.forEach(function (multiDragElement) {
             if (multiDragElement === dragEl$1) return;
-            setRect(multiDragElement, dragRectAbsolute);
-
-            // Move element(s) to end of parentEl so that it does not interfere with multi-drag clones insertion if they are inserted
+            setRect(multiDragElement, dragRectAbsolute); // Move element(s) to end of parentEl so that it does not interfere with multi-drag clones insertion if they are inserted
             // while folding, and so that we can capture them again because old sortable will no longer be fromSortable
+
             parentEl.appendChild(multiDragElement);
           });
           folding = true;
-        }
+        } // Clones must be shown (and check to remove multi drags) after folding when interfering multiDragElements are moved out
 
-        // Clones must be shown (and check to remove multi drags) after folding when interfering multiDragElements are moved out
+
         if (!isOwner) {
           // Only remove if not folding (folding will remove them anyways)
           if (!folding) {
             removeMultiDragElements();
           }
+
           if (multiDragElements.length > 1) {
             var clonesHiddenBefore = clonesHidden;
-            activeSortable._showClone(sortable);
 
-            // Unfold animation for clones if showing from hidden
+            activeSortable._showClone(sortable); // Unfold animation for clones if showing from hidden
+
+
             if (activeSortable.options.animation && !clonesHidden && clonesHiddenBefore) {
               multiDragClones.forEach(function (clone) {
                 activeSortable.addAnimationState({
@@ -17966,11 +18897,12 @@ function MultiDragPlugin() {
     },
     dragOverAnimationCapture: function dragOverAnimationCapture(_ref11) {
       var dragRect = _ref11.dragRect,
-        isOwner = _ref11.isOwner,
-        activeSortable = _ref11.activeSortable;
+          isOwner = _ref11.isOwner,
+          activeSortable = _ref11.activeSortable;
       multiDragElements.forEach(function (multiDragElement) {
         multiDragElement.thisAnimationDuration = null;
       });
+
       if (activeSortable.options.animation && !isOwner && activeSortable.multiDrag.isMultiDrag) {
         clonesFromRect = _extends({}, dragRect);
         var dragMatrix = matrix(dragEl$1, true);
@@ -17986,23 +18918,24 @@ function MultiDragPlugin() {
     },
     drop: function drop(_ref12) {
       var evt = _ref12.originalEvent,
-        rootEl = _ref12.rootEl,
-        parentEl = _ref12.parentEl,
-        sortable = _ref12.sortable,
-        dispatchSortableEvent = _ref12.dispatchSortableEvent,
-        oldIndex = _ref12.oldIndex,
-        putSortable = _ref12.putSortable;
+          rootEl = _ref12.rootEl,
+          parentEl = _ref12.parentEl,
+          sortable = _ref12.sortable,
+          dispatchSortableEvent = _ref12.dispatchSortableEvent,
+          oldIndex = _ref12.oldIndex,
+          putSortable = _ref12.putSortable;
       var toSortable = putSortable || this.sortable;
       if (!evt) return;
       var options = this.options,
-        children = parentEl.children;
+          children = parentEl.children; // Multi-drag selection
 
-      // Multi-drag selection
       if (!dragStarted) {
         if (options.multiDragKey && !this.multiDragKeyDown) {
           this._deselectMultiDrag();
         }
+
         toggleClass(dragEl$1, options.selectedClass, !~multiDragElements.indexOf(dragEl$1));
+
         if (!~multiDragElements.indexOf(dragEl$1)) {
           multiDragElements.push(dragEl$1);
           dispatchEvent({
@@ -18011,16 +18944,17 @@ function MultiDragPlugin() {
             name: 'select',
             targetEl: dragEl$1,
             originalEvent: evt
-          });
+          }); // Modifier activated, select from last to dragEl
 
-          // Modifier activated, select from last to dragEl
           if (evt.shiftKey && lastMultiDragSelect && sortable.el.contains(lastMultiDragSelect)) {
             var lastIndex = index(lastMultiDragSelect),
-              currentIndex = index(dragEl$1);
+                currentIndex = index(dragEl$1);
+
             if (~lastIndex && ~currentIndex && lastIndex !== currentIndex) {
               // Must include lastMultiDragSelect (select it), in case modified selection from no selection
               // (but previous selection existed)
               var n, i;
+
               if (currentIndex > lastIndex) {
                 i = lastIndex;
                 n = currentIndex;
@@ -18028,6 +18962,7 @@ function MultiDragPlugin() {
                 i = currentIndex;
                 n = lastIndex + 1;
               }
+
               for (; i < n; i++) {
                 if (~multiDragElements.indexOf(children[i])) continue;
                 toggleClass(children[i], options.selectedClass, true);
@@ -18044,6 +18979,7 @@ function MultiDragPlugin() {
           } else {
             lastMultiDragSelect = dragEl$1;
           }
+
           multiDragSortable = toSortable;
         } else {
           multiDragElements.splice(multiDragElements.indexOf(dragEl$1), 1);
@@ -18056,37 +18992,38 @@ function MultiDragPlugin() {
             originalEvent: evt
           });
         }
-      }
+      } // Multi-drag drop
 
-      // Multi-drag drop
+
       if (dragStarted && this.isMultiDrag) {
-        folding = false;
-        // Do not "unfold" after around dragEl if reverted
+        folding = false; // Do not "unfold" after around dragEl if reverted
+
         if ((parentEl[expando].options.sort || parentEl !== rootEl) && multiDragElements.length > 1) {
           var dragRect = getRect(dragEl$1),
-            multiDragIndex = index(dragEl$1, ':not(.' + this.options.selectedClass + ')');
+              multiDragIndex = index(dragEl$1, ':not(.' + this.options.selectedClass + ')');
           if (!initialFolding && options.animation) dragEl$1.thisAnimationDuration = null;
           toSortable.captureAnimationState();
+
           if (!initialFolding) {
             if (options.animation) {
               dragEl$1.fromRect = dragRect;
               multiDragElements.forEach(function (multiDragElement) {
                 multiDragElement.thisAnimationDuration = null;
+
                 if (multiDragElement !== dragEl$1) {
                   var rect = folding ? getRect(multiDragElement) : dragRect;
-                  multiDragElement.fromRect = rect;
+                  multiDragElement.fromRect = rect; // Prepare unfold animation
 
-                  // Prepare unfold animation
                   toSortable.addAnimationState({
                     target: multiDragElement,
                     rect: rect
                   });
                 }
               });
-            }
-
-            // Multi drag elements are not necessarily removed from the DOM on drop, so to reinsert
+            } // Multi drag elements are not necessarily removed from the DOM on drop, so to reinsert
             // properly they must all be removed
+
+
             removeMultiDragElements();
             multiDragElements.forEach(function (multiDragElement) {
               if (children[multiDragIndex]) {
@@ -18094,12 +19031,12 @@ function MultiDragPlugin() {
               } else {
                 parentEl.appendChild(multiDragElement);
               }
-              multiDragIndex++;
-            });
 
-            // If initial folding is done, the elements may have changed position because they are now
+              multiDragIndex++;
+            }); // If initial folding is done, the elements may have changed position because they are now
             // unfolding around dragEl, even though dragEl may not have his index changed, so update event
             // must be fired here as Sortable will not.
+
             if (oldIndex === index(dragEl$1)) {
               var update = false;
               multiDragElements.forEach(function (multiDragElement) {
@@ -18108,23 +19045,24 @@ function MultiDragPlugin() {
                   return;
                 }
               });
+
               if (update) {
                 dispatchSortableEvent('update');
-                dispatchSortableEvent('sort');
               }
             }
-          }
+          } // Must be done after capturing individual rects (scroll bar)
 
-          // Must be done after capturing individual rects (scroll bar)
+
           multiDragElements.forEach(function (multiDragElement) {
             unsetRect(multiDragElement);
           });
           toSortable.animateAll();
         }
-        multiDragSortable = toSortable;
-      }
 
-      // Remove clones if necessary
+        multiDragSortable = toSortable;
+      } // Remove clones if necessary
+
+
       if (rootEl === parentEl || putSortable && putSortable.lastPutMode !== 'clone') {
         multiDragClones.forEach(function (clone) {
           clone.parentNode && clone.parentNode.removeChild(clone);
@@ -18137,6 +19075,7 @@ function MultiDragPlugin() {
     },
     destroyGlobal: function destroyGlobal() {
       this._deselectMultiDrag();
+
       off(document, 'pointerup', this._deselectMultiDrag);
       off(document, 'mouseup', this._deselectMultiDrag);
       off(document, 'touchend', this._deselectMultiDrag);
@@ -18144,16 +19083,14 @@ function MultiDragPlugin() {
       off(document, 'keyup', this._checkKeyUp);
     },
     _deselectMultiDrag: function _deselectMultiDrag(evt) {
-      if (typeof dragStarted !== "undefined" && dragStarted) return;
+      if (typeof dragStarted !== "undefined" && dragStarted) return; // Only deselect if selection is in this sortable
 
-      // Only deselect if selection is in this sortable
-      if (multiDragSortable !== this.sortable) return;
+      if (multiDragSortable !== this.sortable) return; // Only deselect if target is not item in this sortable
 
-      // Only deselect if target is not item in this sortable
-      if (evt && closest(evt.target, this.options.draggable, this.sortable.el, false)) return;
+      if (evt && closest(evt.target, this.options.draggable, this.sortable.el, false)) return; // Only deselect if left click
 
-      // Only deselect if left click
       if (evt && evt.button !== 0) return;
+
       while (multiDragElements.length) {
         var el = multiDragElements[0];
         toggleClass(el, this.options.selectedClass, false);
@@ -18189,20 +19126,24 @@ function MultiDragPlugin() {
       select: function select(el) {
         var sortable = el.parentNode[expando];
         if (!sortable || !sortable.options.multiDrag || ~multiDragElements.indexOf(el)) return;
+
         if (multiDragSortable && multiDragSortable !== sortable) {
           multiDragSortable.multiDrag._deselectMultiDrag();
+
           multiDragSortable = sortable;
         }
+
         toggleClass(el, sortable.options.selectedClass, true);
         multiDragElements.push(el);
       },
+
       /**
        * Deselects the provided multi-drag item
        * @param  {HTMLElement} el    The element to be deselected
        */
       deselect: function deselect(el) {
         var sortable = el.parentNode[expando],
-          index = multiDragElements.indexOf(el);
+            index = multiDragElements.indexOf(el);
         if (!sortable || !sortable.options.multiDrag || !~index) return;
         toggleClass(el, sortable.options.selectedClass, false);
         multiDragElements.splice(index, 1);
@@ -18210,16 +19151,17 @@ function MultiDragPlugin() {
     },
     eventProperties: function eventProperties() {
       var _this3 = this;
+
       var oldIndicies = [],
-        newIndicies = [];
+          newIndicies = [];
       multiDragElements.forEach(function (multiDragElement) {
         oldIndicies.push({
           multiDragElement: multiDragElement,
           index: multiDragElement.sortableIndex
-        });
+        }); // multiDragElements will already be sorted if folding
 
-        // multiDragElements will already be sorted if folding
         var newIndex;
+
         if (folding && multiDragElement !== dragEl$1) {
           newIndex = -1;
         } else if (folding) {
@@ -18227,6 +19169,7 @@ function MultiDragPlugin() {
         } else {
           newIndex = index(multiDragElement);
         }
+
         newIndicies.push({
           multiDragElement: multiDragElement,
           index: newIndex
@@ -18242,19 +19185,23 @@ function MultiDragPlugin() {
     optionListeners: {
       multiDragKey: function multiDragKey(key) {
         key = key.toLowerCase();
+
         if (key === 'ctrl') {
           key = 'Control';
         } else if (key.length > 1) {
           key = key.charAt(0).toUpperCase() + key.substr(1);
         }
+
         return key;
       }
     }
   });
 }
+
 function insertMultiDragElements(clonesInserted, rootEl) {
   multiDragElements.forEach(function (multiDragElement, i) {
     var target = rootEl.children[multiDragElement.sortableIndex + (clonesInserted ? Number(i) : 0)];
+
     if (target) {
       rootEl.insertBefore(multiDragElement, target);
     } else {
@@ -18262,15 +19209,17 @@ function insertMultiDragElements(clonesInserted, rootEl) {
     }
   });
 }
-
 /**
  * Insert multi-drag clones
  * @param  {[Boolean]} elementsInserted  Whether the multi-drag elements are inserted
  * @param  {HTMLElement} rootEl
  */
+
+
 function insertMultiDragClones(elementsInserted, rootEl) {
   multiDragClones.forEach(function (clone, i) {
     var target = rootEl.children[clone.sortableIndex + (elementsInserted ? Number(i) : 0)];
+
     if (target) {
       rootEl.insertBefore(clone, target);
     } else {
@@ -18278,6 +19227,7 @@ function insertMultiDragClones(elementsInserted, rootEl) {
     }
   });
 }
+
 function removeMultiDragElements() {
   multiDragElements.forEach(function (multiDragElement) {
     if (multiDragElement === dragEl$1) return;
@@ -18285,41 +19235,41 @@ function removeMultiDragElements() {
   });
 }
 
-/* harmony default export */ __webpack_exports__.ZP = ((/* runtime-dependent pure expression or super */ /^(176|294)$/.test(__webpack_require__.j) ? (Sortable) : null));
+/* harmony default export */ __webpack_exports__["ZP"] = ((/* runtime-dependent pure expression or super */ 294 == __webpack_require__.j ? (Sortable) : null));
 
 
 
 /***/ }),
 
-/***/ 9934:
+/***/ 1590:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  ZP: function() { return /* binding */ tippy_esm; }
+  "ZP": function() { return /* binding */ tippy_esm; }
 });
 
 // UNUSED EXPORTS: animateFill, createSingleton, delegate, followCursor, hideAll, inlinePositioning, roundArrow, sticky
 
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/getCompositeRect.js
-var getCompositeRect = __webpack_require__(2843);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js
-var getLayoutRect = __webpack_require__(6389);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/listScrollParents.js
-var listScrollParents = __webpack_require__(3259);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js
-var getOffsetParent = __webpack_require__(1617);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/orderModifiers.js
-var orderModifiers = __webpack_require__(1871);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/debounce.js
-var debounce = __webpack_require__(8296);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/mergeByName.js
-var mergeByName = __webpack_require__(4605);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/instanceOf.js
-var instanceOf = __webpack_require__(2903);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/createPopper.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/getCompositeRect.js
+var getCompositeRect = __webpack_require__(2687);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js
+var getLayoutRect = __webpack_require__(4283);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/listScrollParents.js
+var listScrollParents = __webpack_require__(6422);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js
+var getOffsetParent = __webpack_require__(9017);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/orderModifiers.js
+var orderModifiers = __webpack_require__(1215);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/debounce.js
+var debounce = __webpack_require__(8763);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/mergeByName.js
+var mergeByName = __webpack_require__(3946);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/instanceOf.js
+var instanceOf = __webpack_require__(2201);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/createPopper.js
 
 
 
@@ -18537,9 +19487,9 @@ function popperGenerator(generatorOptions) {
 var createPopper = /*#__PURE__*/(/* unused pure expression or super */ null && (popperGenerator())); // eslint-disable-next-line import/no-unused-modules
 
 
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/getWindow.js
-var getWindow = __webpack_require__(2507);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/eventListeners.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/getWindow.js
+var getWindow = __webpack_require__(7509);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/eventListeners.js
  // eslint-disable-next-line import/no-unused-modules
 
 var passive = {
@@ -18589,9 +19539,9 @@ function effect(_ref) {
   effect: effect,
   data: {}
 });
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/computeOffsets.js
-var computeOffsets = __webpack_require__(9011);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/popperOffsets.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/computeOffsets.js
+var computeOffsets = __webpack_require__(6454);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/popperOffsets.js
 
 
 function popperOffsets(_ref) {
@@ -18617,19 +19567,19 @@ function popperOffsets(_ref) {
   fn: popperOffsets,
   data: {}
 });
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/enums.js
-var enums = __webpack_require__(3256);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js
-var getDocumentElement = __webpack_require__(5082);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js
-var getComputedStyle = __webpack_require__(6255);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/getBasePlacement.js
-var getBasePlacement = __webpack_require__(7565);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/getVariation.js
-var getVariation = __webpack_require__(6374);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/math.js
-var math = __webpack_require__(5486);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/computeStyles.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/enums.js
+var enums = __webpack_require__(5986);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js
+var getDocumentElement = __webpack_require__(3871);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js
+var getComputedStyle = __webpack_require__(8868);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/getBasePlacement.js
+var getBasePlacement = __webpack_require__(8785);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/getVariation.js
+var getVariation = __webpack_require__(3616);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/math.js
+var math = __webpack_require__(318);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/computeStyles.js
 
 
 
@@ -18803,9 +19753,9 @@ function computeStyles(_ref5) {
   fn: computeStyles,
   data: {}
 });
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/getNodeName.js
-var getNodeName = __webpack_require__(4298);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/applyStyles.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/getNodeName.js
+var getNodeName = __webpack_require__(558);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/applyStyles.js
 
  // This modifier takes the styles prepared by the `computeStyles` modifier
 // and applies them to the HTMLElements such as popper and arrow
@@ -18890,7 +19840,7 @@ function applyStyles_effect(_ref2) {
   effect: applyStyles_effect,
   requires: ['computeStyles']
 });
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/offset.js
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/offset.js
 
  // eslint-disable-next-line import/no-unused-modules
 
@@ -18921,7 +19871,7 @@ function offset(_ref2) {
       name = _ref2.name;
   var _options$offset = options.offset,
       offset = _options$offset === void 0 ? [0, 0] : _options$offset;
-  var data = enums/* placements */.Ct.reduce(function (acc, placement) {
+  var data = enums/* placements.reduce */.Ct.reduce(function (acc, placement) {
     acc[placement] = distanceAndSkiddingToXY(placement, state.rects, offset);
     return acc;
   }, {});
@@ -18945,7 +19895,7 @@ function offset(_ref2) {
   requires: ['popperOffsets'],
   fn: offset
 });
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/getOppositePlacement.js
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/getOppositePlacement.js
 var hash = {
   left: 'right',
   right: 'left',
@@ -18957,7 +19907,7 @@ function getOppositePlacement(placement) {
     return hash[matched];
   });
 }
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/getOppositeVariationPlacement.js
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/getOppositeVariationPlacement.js
 var getOppositeVariationPlacement_hash = {
   start: 'end',
   end: 'start'
@@ -18967,9 +19917,9 @@ function getOppositeVariationPlacement(placement) {
     return getOppositeVariationPlacement_hash[matched];
   });
 }
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/detectOverflow.js
-var detectOverflow = __webpack_require__(7591);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/computeAutoPlacement.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/detectOverflow.js
+var detectOverflow = __webpack_require__(5448);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/computeAutoPlacement.js
 
 
 
@@ -18988,7 +19938,7 @@ function computeAutoPlacement(state, options) {
       _options$allowedAutoP = _options.allowedAutoPlacements,
       allowedAutoPlacements = _options$allowedAutoP === void 0 ? enums/* placements */.Ct : _options$allowedAutoP;
   var variation = (0,getVariation/* default */.Z)(placement);
-  var placements = variation ? flipVariations ? enums/* variationPlacements */.bw : enums/* variationPlacements */.bw.filter(function (placement) {
+  var placements = variation ? flipVariations ? enums/* variationPlacements */.bw : enums/* variationPlacements.filter */.bw.filter(function (placement) {
     return (0,getVariation/* default */.Z)(placement) === variation;
   }) : enums/* basePlacements */.mv;
   var allowedPlacements = placements.filter(function (placement) {
@@ -19015,7 +19965,7 @@ function computeAutoPlacement(state, options) {
     return overflows[a] - overflows[b];
   });
 }
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/flip.js
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/flip.js
 
 
 
@@ -19163,13 +20113,13 @@ function flip(_ref) {
     _skip: false
   }
 });
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js
-var getMainAxisFromPlacement = __webpack_require__(6640);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/getAltAxis.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js
+var getMainAxisFromPlacement = __webpack_require__(3798);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/getAltAxis.js
 function getAltAxis(axis) {
   return axis === 'x' ? 'y' : 'x';
 }
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/within.js
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/within.js
 
 function within(min, value, max) {
   return (0,math/* max */.Fp)(min, (0,math/* min */.VV)(value, max));
@@ -19178,9 +20128,9 @@ function withinMaxClamp(min, value, max) {
   var v = within(min, value, max);
   return v > max ? max : v;
 }
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/getFreshSideObject.js
-var getFreshSideObject = __webpack_require__(4623);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/preventOverflow.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/getFreshSideObject.js
+var getFreshSideObject = __webpack_require__(3038);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/preventOverflow.js
 
 
 
@@ -19323,13 +20273,13 @@ function preventOverflow(_ref) {
   fn: preventOverflow,
   requiresIfExists: ['offset']
 });
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/dom-utils/contains.js
-var contains = __webpack_require__(2643);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/mergePaddingObject.js
-var mergePaddingObject = __webpack_require__(8270);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/utils/expandToHashMap.js
-var expandToHashMap = __webpack_require__(1056);
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/arrow.js
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/dom-utils/contains.js
+var contains = __webpack_require__(8558);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/mergePaddingObject.js
+var mergePaddingObject = __webpack_require__(1440);
+// EXTERNAL MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/utils/expandToHashMap.js
+var expandToHashMap = __webpack_require__(7525);
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/arrow.js
 
 
 
@@ -19425,7 +20375,7 @@ function arrow_effect(_ref2) {
   requires: ['popperOffsets'],
   requiresIfExists: ['preventOverflow']
 });
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/modifiers/hide.js
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/modifiers/hide.js
 
 
 
@@ -19487,7 +20437,7 @@ function hide(_ref) {
   requiresIfExists: ['preventOverflow'],
   fn: hide
 });
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-10c0.zip/node_modules/@popperjs/core/lib/popper.js
+;// CONCATENATED MODULE: ./.yarn/cache/@popperjs-core-npm-2.11.6-5bcdc104bd-47fb328cec.zip/node_modules/@popperjs/core/lib/popper.js
 
 
 
@@ -19508,7 +20458,7 @@ var popper_createPopper = /*#__PURE__*/popperGenerator({
  // eslint-disable-next-line import/no-unused-modules
 
 
-;// CONCATENATED MODULE: ../../../../../.yarn/berry/cache/tippy.js-npm-6.3.7-424f946d38-10c0.zip/node_modules/tippy.js/dist/tippy.esm.js
+;// CONCATENATED MODULE: ./.yarn/cache/tippy.js-npm-6.3.7-424f946d38-cac955318a.zip/node_modules/tippy.js/dist/tippy.esm.js
 /**!
 * tippy.js v6.3.7
 * (c) 2017-2021 atomiks
@@ -21965,7 +22915,7 @@ tippy.setDefaultProps({
 
 /***/ }),
 
-/***/ 6569:
+/***/ 30:
 /***/ (function(__unused_webpack_module, exports) {
 
 var theWindow;
@@ -22058,261 +23008,6 @@ exports.setDefaultTimeout = function(millis) {
 exports.reset = function() {
     callbacks = [];
 };
-
-/***/ }),
-
-/***/ 4768:
-/***/ (function(module) {
-
-"use strict";
-
-
-var stylesInDOM = [];
-function getIndexByIdentifier(identifier) {
-  var result = -1;
-  for (var i = 0; i < stylesInDOM.length; i++) {
-    if (stylesInDOM[i].identifier === identifier) {
-      result = i;
-      break;
-    }
-  }
-  return result;
-}
-function modulesToDom(list, options) {
-  var idCountMap = {};
-  var identifiers = [];
-  for (var i = 0; i < list.length; i++) {
-    var item = list[i];
-    var id = options.base ? item[0] + options.base : item[0];
-    var count = idCountMap[id] || 0;
-    var identifier = "".concat(id, " ").concat(count);
-    idCountMap[id] = count + 1;
-    var indexByIdentifier = getIndexByIdentifier(identifier);
-    var obj = {
-      css: item[1],
-      media: item[2],
-      sourceMap: item[3],
-      supports: item[4],
-      layer: item[5]
-    };
-    if (indexByIdentifier !== -1) {
-      stylesInDOM[indexByIdentifier].references++;
-      stylesInDOM[indexByIdentifier].updater(obj);
-    } else {
-      var updater = addElementStyle(obj, options);
-      options.byIndex = i;
-      stylesInDOM.splice(i, 0, {
-        identifier: identifier,
-        updater: updater,
-        references: 1
-      });
-    }
-    identifiers.push(identifier);
-  }
-  return identifiers;
-}
-function addElementStyle(obj, options) {
-  var api = options.domAPI(options);
-  api.update(obj);
-  var updater = function updater(newObj) {
-    if (newObj) {
-      if (newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap && newObj.supports === obj.supports && newObj.layer === obj.layer) {
-        return;
-      }
-      api.update(obj = newObj);
-    } else {
-      api.remove();
-    }
-  };
-  return updater;
-}
-module.exports = function (list, options) {
-  options = options || {};
-  list = list || [];
-  var lastIdentifiers = modulesToDom(list, options);
-  return function update(newList) {
-    newList = newList || [];
-    for (var i = 0; i < lastIdentifiers.length; i++) {
-      var identifier = lastIdentifiers[i];
-      var index = getIndexByIdentifier(identifier);
-      stylesInDOM[index].references--;
-    }
-    var newLastIdentifiers = modulesToDom(newList, options);
-    for (var _i = 0; _i < lastIdentifiers.length; _i++) {
-      var _identifier = lastIdentifiers[_i];
-      var _index = getIndexByIdentifier(_identifier);
-      if (stylesInDOM[_index].references === 0) {
-        stylesInDOM[_index].updater();
-        stylesInDOM.splice(_index, 1);
-      }
-    }
-    lastIdentifiers = newLastIdentifiers;
-  };
-};
-
-/***/ }),
-
-/***/ 8476:
-/***/ (function(module) {
-
-"use strict";
-
-
-var memo = {};
-
-/* istanbul ignore next  */
-function getTarget(target) {
-  if (typeof memo[target] === "undefined") {
-    var styleTarget = document.querySelector(target);
-
-    // Special case to return head of iframe instead of iframe itself
-    if (window.HTMLIFrameElement && styleTarget instanceof window.HTMLIFrameElement) {
-      try {
-        // This will throw an exception if access to iframe is blocked
-        // due to cross-origin restrictions
-        styleTarget = styleTarget.contentDocument.head;
-      } catch (e) {
-        // istanbul ignore next
-        styleTarget = null;
-      }
-    }
-    memo[target] = styleTarget;
-  }
-  return memo[target];
-}
-
-/* istanbul ignore next  */
-function insertBySelector(insert, style) {
-  var target = getTarget(insert);
-  if (!target) {
-    throw new Error("Couldn't find a style target. This probably means that the value for the 'insert' parameter is invalid.");
-  }
-  target.appendChild(style);
-}
-module.exports = insertBySelector;
-
-/***/ }),
-
-/***/ 4737:
-/***/ (function(module) {
-
-"use strict";
-
-
-/* istanbul ignore next  */
-function insertStyleElement(options) {
-  var element = document.createElement("style");
-  options.setAttributes(element, options.attributes);
-  options.insert(element, options.options);
-  return element;
-}
-module.exports = insertStyleElement;
-
-/***/ }),
-
-/***/ 1325:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-/* istanbul ignore next  */
-function setAttributesWithoutAttributes(styleElement) {
-  var nonce =  true ? __webpack_require__.nc : 0;
-  if (nonce) {
-    styleElement.setAttribute("nonce", nonce);
-  }
-}
-module.exports = setAttributesWithoutAttributes;
-
-/***/ }),
-
-/***/ 5013:
-/***/ (function(module) {
-
-"use strict";
-
-
-/* istanbul ignore next  */
-function apply(styleElement, options, obj) {
-  var css = "";
-  if (obj.supports) {
-    css += "@supports (".concat(obj.supports, ") {");
-  }
-  if (obj.media) {
-    css += "@media ".concat(obj.media, " {");
-  }
-  var needLayer = typeof obj.layer !== "undefined";
-  if (needLayer) {
-    css += "@layer".concat(obj.layer.length > 0 ? " ".concat(obj.layer) : "", " {");
-  }
-  css += obj.css;
-  if (needLayer) {
-    css += "}";
-  }
-  if (obj.media) {
-    css += "}";
-  }
-  if (obj.supports) {
-    css += "}";
-  }
-  var sourceMap = obj.sourceMap;
-  if (sourceMap && typeof btoa !== "undefined") {
-    css += "\n/*# sourceMappingURL=data:application/json;base64,".concat(btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))), " */");
-  }
-
-  // For old IE
-  /* istanbul ignore if  */
-  options.styleTagTransform(css, styleElement, options.options);
-}
-function removeStyleElement(styleElement) {
-  // istanbul ignore if
-  if (styleElement.parentNode === null) {
-    return false;
-  }
-  styleElement.parentNode.removeChild(styleElement);
-}
-
-/* istanbul ignore next  */
-function domAPI(options) {
-  if (typeof document === "undefined") {
-    return {
-      update: function update() {},
-      remove: function remove() {}
-    };
-  }
-  var styleElement = options.insertStyleElement(options);
-  return {
-    update: function update(obj) {
-      apply(styleElement, options, obj);
-    },
-    remove: function remove() {
-      removeStyleElement(styleElement);
-    }
-  };
-}
-module.exports = domAPI;
-
-/***/ }),
-
-/***/ 3957:
-/***/ (function(module) {
-
-"use strict";
-
-
-/* istanbul ignore next  */
-function styleTagTransform(css, styleElement) {
-  if (styleElement.styleSheet) {
-    styleElement.styleSheet.cssText = css;
-  } else {
-    while (styleElement.firstChild) {
-      styleElement.removeChild(styleElement.firstChild);
-    }
-    styleElement.appendChild(document.createTextNode(css));
-  }
-}
-module.exports = styleTagTransform;
 
 /***/ })
 

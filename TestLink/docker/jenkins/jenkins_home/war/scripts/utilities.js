@@ -63,16 +63,12 @@ Utilities.getOffsets = function (object, offsets) {
     offsets = new Object();
     offsets.x = offsets.y = 0;
   }
-  if (typeof object == "string") {
-    object = document.getElementById(object);
-  }
+  if (typeof object == "string") object = document.getElementById(object);
   offsets.x += object.offsetLeft;
   offsets.y += object.offsetTop;
   do {
     object = object.offsetParent;
-    if (!object) {
-      break;
-    }
+    if (!object) break;
     offsets.x += object.offsetLeft;
     offsets.y += object.offsetTop;
   } while (object.tagName.toUpperCase() != "BODY");
@@ -83,12 +79,7 @@ Utilities.getOffsets = function (object, offsets) {
  *
  */
 Utilities.listAppend = function (list, value, delimiter) {
-  if (typeof delimiter == "undefined") {
-    delimiter = ",";
-  }
-  if (list == "") {
-    return value;
-  } else {
-    return list + delimiter + value;
-  }
+  if (typeof delimiter == "undefined") delimiter = ",";
+  if (list == "") return value;
+  else return list + delimiter + value;
 };

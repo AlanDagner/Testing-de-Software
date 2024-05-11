@@ -1,25 +1,25 @@
 /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 2161:
+/***/ 7988:
 /***/ (function(__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
 
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/lodash-npm-4.17.21-6382451519-10c0.zip/node_modules/lodash/debounce.js
-var debounce = __webpack_require__(8285);
+// EXTERNAL MODULE: ./.yarn/cache/lodash-npm-4.17.21-6382451519-eb835a2e51.zip/node_modules/lodash/debounce.js
+var debounce = __webpack_require__(875);
 var debounce_default = /*#__PURE__*/__webpack_require__.n(debounce);
 // EXTERNAL MODULE: ./src/main/js/templates/plugin-manager/available.hbs
-var available = __webpack_require__(2358);
+var available = __webpack_require__(4746);
 var available_default = /*#__PURE__*/__webpack_require__.n(available);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/jquery-npm-3.7.1-eeeac0f21e-10c0.zip/node_modules/jquery/dist/jquery.js
-var jquery = __webpack_require__(6284);
+// EXTERNAL MODULE: ./.yarn/cache/jquery-npm-3.6.4-c665e9b5ea-8354f7bd0a.zip/node_modules/jquery/dist/jquery.js
+var jquery = __webpack_require__(6311);
 var jquery_default = /*#__PURE__*/__webpack_require__.n(jquery);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/window-handle-npm-1.0.1-369b8e9cbe-10c0.zip/node_modules/window-handle/index.js
-var window_handle = __webpack_require__(6569);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/handlebars-npm-4.7.8-25244c2c82-10c0.zip/node_modules/handlebars/runtime.js
-var runtime = __webpack_require__(7218);
-var runtime_default = /*#__PURE__*/__webpack_require__.n(runtime);
+// EXTERNAL MODULE: ./.yarn/cache/window-handle-npm-1.0.1-369b8e9cbe-8f2c183a0d.zip/node_modules/window-handle/index.js
+var window_handle = __webpack_require__(30);
+// EXTERNAL MODULE: ./.yarn/cache/handlebars-npm-4.7.7-a9ccfabf80-1e79a43f5e.zip/node_modules/handlebars/dist/cjs/handlebars.runtime.js
+var handlebars_runtime = __webpack_require__(9856);
+var handlebars_runtime_default = /*#__PURE__*/__webpack_require__.n(handlebars_runtime);
 ;// CONCATENATED MODULE: ./src/main/js/util/jenkins.js
 /**
  * Jenkins JS Modules common utility functions
@@ -37,6 +37,41 @@ jenkins.baseUrl = function () {
     u = "";
   }
   return u;
+};
+
+// awful hack to get around JSONifying things with Prototype taking over wrong. ugh. Prototype is the worst.
+jenkins.stringify = function (o) {
+  if (Array.prototype.toJSON) {
+    // Prototype f's this up something bad
+    var protoJSON = {
+      a: Array.prototype.toJSON,
+      o: Object.prototype.toJSON,
+      h: Hash.prototype.toJSON,
+      s: String.prototype.toJSON
+    };
+    try {
+      delete Array.prototype.toJSON;
+      delete Object.prototype.toJSON;
+      delete Hash.prototype.toJSON;
+      delete String.prototype.toJSON;
+      return JSON.stringify(o);
+    } finally {
+      if (protoJSON.a) {
+        Array.prototype.toJSON = protoJSON.a;
+      }
+      if (protoJSON.o) {
+        Object.prototype.toJSON = protoJSON.o;
+      }
+      if (protoJSON.h) {
+        Hash.prototype.toJSON = protoJSON.h;
+      }
+      if (protoJSON.s) {
+        String.prototype.toJSON = protoJSON.s;
+      }
+    }
+  } else {
+    return JSON.stringify(o);
+  }
 };
 
 /**
@@ -68,7 +103,7 @@ jenkins.get = function (url, success, options) {
 };
 
 /**
- * Jenkins AJAX POST callback, formats data as a JSON object post
+ * Jenkins AJAX POST callback, formats data as a JSON object post (note: works around prototype.js ugliness using stringify() above)
  * If last parameter is an object, will be extended to jQuery options (e.g. pass { error: function() ... } to handle errors)
  */
 jenkins.post = function (url, data, success, options) {
@@ -94,7 +129,7 @@ jenkins.post = function (url, data, success, options) {
       formBody = jquery_default().extend({}, formBody);
       formBody[crumb.fieldName] = crumb.value;
     }
-    formBody = JSON.stringify(formBody);
+    formBody = jenkins.stringify(formBody);
   }
   var args = {
     url: jenkins.baseUrl() + url,
@@ -116,7 +151,7 @@ jenkins.post = function (url, data, success, options) {
  *  handlebars setup, done for backwards compatibility because some plugins depend on it
  */
 jenkins.initHandlebars = function () {
-  return (runtime_default());
+  return (handlebars_runtime_default());
 };
 
 /**
@@ -602,7 +637,6 @@ function applyFilter(searchQuery) {
       admin
     });
     tbody.insertAdjacentHTML("beforeend", rows);
-    updateInstallButtonState();
   });
 }
 var handleFilter = function (e) {
@@ -619,41 +653,14 @@ document.addEventListener("DOMContentLoaded", function () {
   setTimeout(function () {
     layoutUpdateCallback.call();
   }, 350);
-
-  // Show update center error if element exists
-  const updateCenterError = document.querySelector("#update-center-error");
-  if (updateCenterError) {
-    notificationBar.show(updateCenterError.content.textContent, notificationBar.ERROR);
-  }
 });
-function updateInstallButtonState() {
-  // Enable/disable the 'Install' button depending on if any plugins are checked
-  const anyCheckboxesSelected = () => {
-    return document.querySelectorAll("input[type='checkbox']:checked").length > 0;
-  };
-  const installButton = document.querySelector("#button-install");
-  const installAfterRestartButton = document.querySelector("#button-install-after-restart");
-  if (!anyCheckboxesSelected()) {
-    installButton.disabled = true;
-    installAfterRestartButton.disabled = true;
-  }
-  const checkboxes = document.querySelectorAll("input[type='checkbox']");
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener("click", () => {
-      setTimeout(() => {
-        installButton.disabled = !anyCheckboxesSelected();
-        installAfterRestartButton.disabled = !anyCheckboxesSelected();
-      });
-    });
-  });
-}
 
 /***/ }),
 
-/***/ 2358:
+/***/ 4746:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=container.lambda, alias2=container.escapeExpression, alias3=depth0 != null ? depth0 : (container.nullContext || {}), lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -1000,7 +1007,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [216], function() { return __webpack_require__(2161); })
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [216], function() { return __webpack_require__(7988); })
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

@@ -1,6 +1,6 @@
 #acceder
-sonar/admin
-sonar
+admin
+123456
 
 Token:
-squ_190b1bf50380e87c2ec68caaa9bf70530408b66a
+squ_a6c1a5135236ba03d4f05892de77e4c548a30d00

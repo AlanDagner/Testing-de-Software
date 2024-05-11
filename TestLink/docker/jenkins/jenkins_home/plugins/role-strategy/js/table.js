@@ -59,7 +59,7 @@ class TableHighlighter {
 
   highlightRowOnly = e => {
     let enable = e.type === 'mouseenter';
-    let tr = e.target.closest("TR");
+    let tr = findAncestor(e.target, "TR")
     if (enable) {
       tr.classList.add('highlighted');
     } else {

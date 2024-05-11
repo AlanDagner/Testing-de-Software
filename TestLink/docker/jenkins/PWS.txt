@@ -1,6 +1,14 @@
 Clave jemkins Instalacion
-323232591d2144cab50600a4302c69c0
+146bafda55cf4486b6125a34342b16c9
 acceso
 admin
-admin
+123456
+
+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
+
+
+
+ngrok
+K6RXZ7453CKBLBEHB5XOYDKV7D4RLE3S
+
 

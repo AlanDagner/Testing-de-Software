@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>build-timeout</artifactId>
-  <version>1.32</version>
+  <version>1.31</version>
   <packaging>hpi</packaging>
   <name>Build Timeout</name>
   <description>To terminate a build if it is taking too long</description>
@@ -20,7 +20,7 @@
   <scm>
     <connection>scm:git:https://github.com/jenkinsci/build-timeout-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/build-timeout-plugin.git</developerConnection>
-    <tag>build-timeout-1.32</tag>
+    <tag>build-timeout-1.31</tag>
     <url>https://github.com/jenkinsci/build-timeout-plugin</url>
   </scm>
   <distributionManagement>
@@ -37,7 +37,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
-      <version>384.vf35b_f26814ec</version>
+      <version>321.vd7cc1f2a_52c8</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -48,12 +48,18 @@
       <optional>true</optional>
     </dependency>
   </dependencies>
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
   <build>
     <plugins>
       <plugin>
         <groupId>org.jenkins-ci.tools</groupId>
         <artifactId>maven-hpi-plugin</artifactId>
-        <version>3.50</version>
+        <version>3.41</version>
         <extensions>true</extensions>
       </plugin>
     </plugins>

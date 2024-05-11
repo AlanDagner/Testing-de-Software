@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.coravy.hudson.plugins.github</groupId>
   <artifactId>github</artifactId>
-  <version>1.38.0</version>
+  <version>1.37.3.1</version>
   <packaging>hpi</packaging>
   <name>GitHub plugin</name>
   <description>The Jenkins Plugins Parent POM Project</description>
@@ -30,7 +30,7 @@
   <scm>
     <connection>scm:git:https://github.com/jenkinsci/github-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/github-plugin.git</developerConnection>
-    <tag>v1.38.0</tag>
+    <tag>v1.37.3.1</tag>
     <url>https://github.com/jenkinsci/github-plugin</url>
   </scm>
   <issueManagement>
@@ -63,13 +63,13 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>github-api</artifactId>
-      <version>1.318-461.v7a_c09c9fa_d63</version>
+      <version>1.314-431.v78d72a_3fe4c3</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
-      <version>5.2.1</version>
+      <version>5.2.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -81,7 +81,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>1311.vcf0a_900b_37c2</version>
+      <version>1271.v54b_1c2c6388a_</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -93,19 +93,19 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
-      <version>400.v35420b_922dcb_</version>
+      <version>383.v36161104b_002</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>display-url-api</artifactId>
-      <version>2.200.vb_9327d658781</version>
+      <version>2.3.8</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.modules</groupId>
       <artifactId>instance-identity</artifactId>
-      <version>185.v303dc7c645f9</version>
+      <version>173.va_37c494ec4e5</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
@@ -114,7 +114,7 @@
       <plugin>
         <groupId>org.jenkins-ci.tools</groupId>
         <artifactId>maven-hpi-plugin</artifactId>
-        <version>3.51</version>
+        <version>3.48</version>
         <extensions>true</extensions>
       </plugin>
     </plugins>

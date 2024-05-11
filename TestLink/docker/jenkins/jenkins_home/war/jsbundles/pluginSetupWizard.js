@@ -1,7 +1,7 @@
 /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 974:
+/***/ 5393:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -15,19 +15,19 @@ function id(str) {
 
 /***/ }),
 
-/***/ 1574:
+/***/ 6288:
 /***/ (function(__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
 
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/jquery-npm-3.7.1-eeeac0f21e-10c0.zip/node_modules/jquery/dist/jquery.js
-var jquery = __webpack_require__(6284);
+// EXTERNAL MODULE: ./.yarn/cache/jquery-npm-3.6.4-c665e9b5ea-8354f7bd0a.zip/node_modules/jquery/dist/jquery.js
+var jquery = __webpack_require__(6311);
 var jquery_default = /*#__PURE__*/__webpack_require__.n(jquery);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/handlebars-npm-4.7.8-25244c2c82-10c0.zip/node_modules/handlebars/runtime.js
-var runtime = __webpack_require__(7218);
-var runtime_default = /*#__PURE__*/__webpack_require__.n(runtime);
-// EXTERNAL MODULE: ../../../../../.yarn/berry/cache/window-handle-npm-1.0.1-369b8e9cbe-10c0.zip/node_modules/window-handle/index.js
-var window_handle = __webpack_require__(6569);
+// EXTERNAL MODULE: ./.yarn/cache/handlebars-npm-4.7.7-a9ccfabf80-1e79a43f5e.zip/node_modules/handlebars/dist/cjs/handlebars.runtime.js
+var handlebars_runtime = __webpack_require__(9856);
+var handlebars_runtime_default = /*#__PURE__*/__webpack_require__.n(handlebars_runtime);
+// EXTERNAL MODULE: ./.yarn/cache/window-handle-npm-1.0.1-369b8e9cbe-8f2c183a0d.zip/node_modules/window-handle/index.js
+var window_handle = __webpack_require__(30);
 ;// CONCATENATED MODULE: ./src/main/js/util/jenkins.js
 /**
  * Jenkins JS Modules common utility functions
@@ -45,6 +45,41 @@ jenkins.baseUrl = function () {
     u = "";
   }
   return u;
+};
+
+// awful hack to get around JSONifying things with Prototype taking over wrong. ugh. Prototype is the worst.
+jenkins.stringify = function (o) {
+  if (Array.prototype.toJSON) {
+    // Prototype f's this up something bad
+    var protoJSON = {
+      a: Array.prototype.toJSON,
+      o: Object.prototype.toJSON,
+      h: Hash.prototype.toJSON,
+      s: String.prototype.toJSON
+    };
+    try {
+      delete Array.prototype.toJSON;
+      delete Object.prototype.toJSON;
+      delete Hash.prototype.toJSON;
+      delete String.prototype.toJSON;
+      return JSON.stringify(o);
+    } finally {
+      if (protoJSON.a) {
+        Array.prototype.toJSON = protoJSON.a;
+      }
+      if (protoJSON.o) {
+        Object.prototype.toJSON = protoJSON.o;
+      }
+      if (protoJSON.h) {
+        Hash.prototype.toJSON = protoJSON.h;
+      }
+      if (protoJSON.s) {
+        String.prototype.toJSON = protoJSON.s;
+      }
+    }
+  } else {
+    return JSON.stringify(o);
+  }
 };
 
 /**
@@ -76,7 +111,7 @@ jenkins.get = function (url, success, options) {
 };
 
 /**
- * Jenkins AJAX POST callback, formats data as a JSON object post
+ * Jenkins AJAX POST callback, formats data as a JSON object post (note: works around prototype.js ugliness using stringify() above)
  * If last parameter is an object, will be extended to jQuery options (e.g. pass { error: function() ... } to handle errors)
  */
 jenkins.post = function (url, data, success, options) {
@@ -102,7 +137,7 @@ jenkins.post = function (url, data, success, options) {
       formBody = jquery_default().extend({}, formBody);
       formBody[crumb.fieldName] = crumb.value;
     }
-    formBody = JSON.stringify(formBody);
+    formBody = jenkins.stringify(formBody);
   }
   var args = {
     url: jenkins.baseUrl() + url,
@@ -124,7 +159,7 @@ jenkins.post = function (url, data, success, options) {
  *  handlebars setup, done for backwards compatibility because some plugins depend on it
  */
 jenkins.initHandlebars = function () {
-  return (runtime_default());
+  return (handlebars_runtime_default());
 };
 
 /**
@@ -621,7 +656,7 @@ function saveProxy($form, success, error) {
   saveProxy: saveProxy
 });
 // EXTERNAL MODULE: ./src/main/js/handlebars-helpers/id.js
-var id = __webpack_require__(974);
+var id = __webpack_require__(5393);
 ;// CONCATENATED MODULE: ./src/main/js/plugin-setup-wizard/bootstrap-detached.js
 
 
@@ -1593,46 +1628,46 @@ function enhanceJQueryWithBootstrap($) {
   }
 }
 // EXTERNAL MODULE: ./src/main/js/templates/errorPanel.hbs
-var errorPanel = __webpack_require__(8596);
+var errorPanel = __webpack_require__(4938);
 var errorPanel_default = /*#__PURE__*/__webpack_require__.n(errorPanel);
 // EXTERNAL MODULE: ./src/main/js/templates/loadingPanel.hbs
-var loadingPanel = __webpack_require__(5995);
+var loadingPanel = __webpack_require__(4313);
 var loadingPanel_default = /*#__PURE__*/__webpack_require__.n(loadingPanel);
 // EXTERNAL MODULE: ./src/main/js/templates/welcomePanel.hbs
-var welcomePanel = __webpack_require__(3583);
+var welcomePanel = __webpack_require__(5786);
 var welcomePanel_default = /*#__PURE__*/__webpack_require__.n(welcomePanel);
 // EXTERNAL MODULE: ./src/main/js/templates/progressPanel.hbs
-var progressPanel = __webpack_require__(7682);
+var progressPanel = __webpack_require__(2417);
 var progressPanel_default = /*#__PURE__*/__webpack_require__.n(progressPanel);
 // EXTERNAL MODULE: ./src/main/js/templates/successPanel.hbs
-var successPanel = __webpack_require__(7863);
+var successPanel = __webpack_require__(1669);
 var successPanel_default = /*#__PURE__*/__webpack_require__.n(successPanel);
 // EXTERNAL MODULE: ./src/main/js/templates/pluginSelectionPanel.hbs
-var pluginSelectionPanel = __webpack_require__(1084);
+var pluginSelectionPanel = __webpack_require__(5733);
 var pluginSelectionPanel_default = /*#__PURE__*/__webpack_require__.n(pluginSelectionPanel);
 // EXTERNAL MODULE: ./src/main/js/templates/setupCompletePanel.hbs
-var setupCompletePanel = __webpack_require__(7807);
+var setupCompletePanel = __webpack_require__(4305);
 var setupCompletePanel_default = /*#__PURE__*/__webpack_require__.n(setupCompletePanel);
 // EXTERNAL MODULE: ./src/main/js/templates/proxyConfigPanel.hbs
-var proxyConfigPanel = __webpack_require__(7141);
+var proxyConfigPanel = __webpack_require__(262);
 var proxyConfigPanel_default = /*#__PURE__*/__webpack_require__.n(proxyConfigPanel);
 // EXTERNAL MODULE: ./src/main/js/templates/firstUserPanel.hbs
-var firstUserPanel = __webpack_require__(2289);
+var firstUserPanel = __webpack_require__(9331);
 var firstUserPanel_default = /*#__PURE__*/__webpack_require__.n(firstUserPanel);
 // EXTERNAL MODULE: ./src/main/js/templates/configureInstance.hbs
-var configureInstance = __webpack_require__(2680);
+var configureInstance = __webpack_require__(4630);
 var configureInstance_default = /*#__PURE__*/__webpack_require__.n(configureInstance);
 // EXTERNAL MODULE: ./src/main/js/templates/offlinePanel.hbs
-var offlinePanel = __webpack_require__(848);
+var offlinePanel = __webpack_require__(8538);
 var offlinePanel_default = /*#__PURE__*/__webpack_require__.n(offlinePanel);
 // EXTERNAL MODULE: ./src/main/js/templates/pluginSetupWizard.hbs
-var pluginSetupWizard = __webpack_require__(1552);
+var pluginSetupWizard = __webpack_require__(8527);
 var pluginSetupWizard_default = /*#__PURE__*/__webpack_require__.n(pluginSetupWizard);
 // EXTERNAL MODULE: ./src/main/js/templates/incompleteInstallationPanel.hbs
-var incompleteInstallationPanel = __webpack_require__(975);
+var incompleteInstallationPanel = __webpack_require__(113);
 var incompleteInstallationPanel_default = /*#__PURE__*/__webpack_require__.n(incompleteInstallationPanel);
 // EXTERNAL MODULE: ./src/main/js/templates/pluginSelectList.hbs
-var pluginSelectList = __webpack_require__(110);
+var pluginSelectList = __webpack_require__(9228);
 var pluginSelectList_default = /*#__PURE__*/__webpack_require__.n(pluginSelectList);
 ;// CONCATENATED MODULE: ./src/main/js/pluginSetupWizardGui.js
 
@@ -1661,7 +1696,7 @@ var pluginSelectList_default = /*#__PURE__*/__webpack_require__.n(pluginSelectLi
  * Jenkins first-run install wizard
  */
 
-runtime_default().registerPartial("pluginSelectList", (pluginSelectList_default()));
+handlebars_runtime_default().registerPartial("pluginSelectList", (pluginSelectList_default()));
 
 // TODO: see whether this is actually being used or if it can be removed
 window.zq = (jquery_default());
@@ -1672,7 +1707,7 @@ var createPluginSetupWizard = function (appendTarget) {
 
   // Necessary handlebars helpers:
   // returns the plugin count string per category selected vs. available e.g. (5/44)
-  runtime_default().registerHelper("pluginCountForCategory", function (cat) {
+  handlebars_runtime_default().registerHelper("pluginCountForCategory", function (cat) {
     var plugs = categorizedPlugins[cat];
     var tot = 0;
     var cnt = 0;
@@ -1689,7 +1724,7 @@ var createPluginSetupWizard = function (appendTarget) {
   });
 
   // returns the total plugin count string selected vs. total e.g. (5/44)
-  runtime_default().registerHelper("totalPluginCount", function () {
+  handlebars_runtime_default().registerHelper("totalPluginCount", function () {
     var tot = 0;
     var cnt = 0;
     for (var i = 0; i < pluginList.length; i++) {
@@ -1706,14 +1741,14 @@ var createPluginSetupWizard = function (appendTarget) {
   });
 
   // determines if the provided plugin is in the list currently selected
-  runtime_default().registerHelper("inSelectedPlugins", function (val, options) {
+  handlebars_runtime_default().registerHelper("inSelectedPlugins", function (val, options) {
     if (selectedPluginNames.indexOf(val) >= 0) {
       return options.fn();
     }
   });
 
   // executes a block if there are dependencies
-  runtime_default().registerHelper("hasDependencies", function (plugName, options) {
+  handlebars_runtime_default().registerHelper("hasDependencies", function (plugName, options) {
     var plug = availablePlugins[plugName];
     if (plug && plug.allDependencies && plug.allDependencies.length > 1) {
       // includes self
@@ -1722,7 +1757,7 @@ var createPluginSetupWizard = function (appendTarget) {
   });
 
   // get total number of dependencies
-  runtime_default().registerHelper("dependencyCount", function (plugName) {
+  handlebars_runtime_default().registerHelper("dependencyCount", function (plugName) {
     var plug = availablePlugins[plugName];
     if (plug && plug.allDependencies && plug.allDependencies.length > 1) {
       // includes self
@@ -1731,7 +1766,7 @@ var createPluginSetupWizard = function (appendTarget) {
   });
 
   // gets user friendly dependency text
-  runtime_default().registerHelper("eachDependency", function (plugName, options) {
+  handlebars_runtime_default().registerHelper("eachDependency", function (plugName, options) {
     var plug = availablePlugins[plugName];
     if (!plug) {
       return "";
@@ -1752,7 +1787,7 @@ var createPluginSetupWizard = function (appendTarget) {
   });
 
   // executes a block if there are dependencies
-  runtime_default().registerHelper("ifVisibleDependency", function (plugName, options) {
+  handlebars_runtime_default().registerHelper("ifVisibleDependency", function (plugName, options) {
     if (visibleDependencies[plugName]) {
       return options.fn();
     }
@@ -2226,6 +2261,7 @@ var createPluginSetupWizard = function (appendTarget) {
                 installing.installStatus = "installing"; // show this is installing
               }
             }
+
             var isSelected = selectedPluginNames.indexOf(j.name) < 0 ? false : true;
             var $div = jquery_default()("<div>" + txt + "</div>");
             if (isSelected) {
@@ -2487,6 +2523,7 @@ var createPluginSetupWizard = function (appendTarget) {
         return;
       // ignore
     }
+
     var $plugin = jquery_default()(e.target).closest(".plugin");
     if ($plugin && $plugin.length > 0) {
       var $allPlugins = jquery_default()(".plugin-list .plugin:visible");
@@ -2837,9 +2874,14 @@ var createPluginSetupWizard = function (appendTarget) {
     util_jenkins.testConnectivity(defaultUpdateSiteId, handleGenericError(function (isConnected, isFatal, errorMessage) {
       if (!isConnected) {
         if (isFatal) {
-          console.log("Default update site connectivity check failed with fatal error: " + errorMessage);
+          // We cannot continue, show error
+          setPanel((errorPanel_default()), {
+            errorMessage: "Default update site connectivity check failed with fatal error: " + errorMessage + ". If you see this issue for the custom Jenkins WAR bundle, consider setting the correct value of the hudson.model.UpdateCenter.defaultUpdateSiteId system property (requires Jenkins restart). Otherwise please create a bug in Jenkins JIRA."
+          });
+        } else {
+          // The update center is offline, no problem
+          setPanel((offlinePanel_default()));
         }
-        setPanel((offlinePanel_default()));
         return;
       }
 
@@ -2955,10 +2997,10 @@ jquery_default()(function () {
 
 /***/ }),
 
-/***/ 2680:
+/***/ 4630:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=container.lambda, alias2=container.escapeExpression, alias3=depth0 != null ? depth0 : (container.nullContext || {}), alias4=container.hooks.helperMissing, alias5="function", lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -2983,10 +3025,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
 /***/ }),
 
-/***/ 8596:
+/***/ 4938:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3009,10 +3051,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
 /***/ }),
 
-/***/ 2289:
+/***/ 9331:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3035,10 +3077,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
 /***/ }),
 
-/***/ 975:
+/***/ 113:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
     var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3051,7 +3093,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
   return "		<div class=\"selected-plugin "
     + alias4(((helper = (helper = lookupProperty(helpers,"installStatus") || (depth0 != null ? lookupProperty(depth0,"installStatus") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"installStatus","hash":{},"data":data,"loc":{"start":{"line":12,"column":30},"end":{"line":12,"column":47}}}) : helper)))
     + "\" data-name=\""
-    + alias4(__default(__webpack_require__(974)).call(alias1,(depth0 != null ? lookupProperty(depth0,"name") : depth0),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":12,"column":60},"end":{"line":12,"column":71}}}))
+    + alias4(__default(__webpack_require__(5393)).call(alias1,(depth0 != null ? lookupProperty(depth0,"name") : depth0),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":12,"column":60},"end":{"line":12,"column":71}}}))
     + "\">"
     + alias4(((helper = (helper = lookupProperty(helpers,"title") || (depth0 != null ? lookupProperty(depth0,"title") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data,"loc":{"start":{"line":12,"column":73},"end":{"line":12,"column":82}}}) : helper)))
     + "</div>\n";
@@ -3080,10 +3122,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 
 /***/ }),
 
-/***/ 5995:
+/***/ 4313:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     return "<div class=\"loader\"></div>\n";
@@ -3091,10 +3133,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
 /***/ }),
 
-/***/ 848:
+/***/ 8538:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3119,10 +3161,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
 /***/ }),
 
-/***/ 110:
+/***/ 9228:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data,blockParams,depths) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3133,7 +3175,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
     };
 
   return "<h2 id=\""
-    + alias2(__default(__webpack_require__(974)).call(alias1,(data && lookupProperty(data,"key")),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":2,"column":8},"end":{"line":2,"column":19}}}))
+    + alias2(__default(__webpack_require__(5393)).call(alias1,(data && lookupProperty(data,"key")),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":2,"column":8},"end":{"line":2,"column":19}}}))
     + "\" class=\"expanded\">"
     + alias2(((helper = (helper = lookupProperty(helpers,"key") || (data && lookupProperty(data,"key"))) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(alias1,{"name":"key","hash":{},"data":data,"loc":{"start":{"line":2,"column":38},"end":{"line":2,"column":46}}}) : helper)))
     + " "
@@ -3150,7 +3192,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
     };
 
   return "  <div class=\"plugin "
-    + alias2(__default(__webpack_require__(974)).call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"plugin") : depth0)) != null ? lookupProperty(stack1,"name") : stack1),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":5,"column":21},"end":{"line":5,"column":39}}}))
+    + alias2(__default(__webpack_require__(5393)).call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"plugin") : depth0)) != null ? lookupProperty(stack1,"name") : stack1),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":5,"column":21},"end":{"line":5,"column":39}}}))
     + " "
     + ((stack1 = lookupProperty(helpers,"inSelectedPlugins").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"plugin") : depth0)) != null ? lookupProperty(stack1,"name") : stack1),{"name":"inSelectedPlugins","hash":{},"fn":container.program(3, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":5,"column":40},"end":{"line":5,"column":104}}})) != null ? stack1 : "")
     + " "
@@ -3242,16 +3284,16 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 
 /***/ }),
 
-/***/ 1084:
+/***/ 5733:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
     var alias1=container.escapeExpression;
 
   return "    <li><a href=\"#"
-    + alias1(__default(__webpack_require__(974)).call(depth0 != null ? depth0 : (container.nullContext || {}),depth0,{"name":"id","hash":{},"data":data,"loc":{"start":{"line":8,"column":18},"end":{"line":8,"column":29}}}))
+    + alias1(__default(__webpack_require__(5393)).call(depth0 != null ? depth0 : (container.nullContext || {}),depth0,{"name":"id","hash":{},"data":data,"loc":{"start":{"line":8,"column":18},"end":{"line":8,"column":29}}}))
     + "\" class=\"select-category\">"
     + alias1(container.lambda(depth0, depth0))
     + "</a></li>\n";
@@ -3285,7 +3327,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
     + "\n      </span>\n    </div>\n        <div class=\"plugin-list\">\n            <div class=\"plugin-list-description\">"
     + ((stack1 = alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_installCustom_pluginListDesc") : stack1), depth0)) != null ? stack1 : "")
     + "</div>\n"
-    + ((stack1 = container.invokePartial(__webpack_require__(110),depth0,{"name":"pluginSelectList","data":data,"indent":"        ","helpers":helpers,"partials":partials,"decorators":container.decorators})) != null ? stack1 : "")
+    + ((stack1 = container.invokePartial(__webpack_require__(9228),depth0,{"name":"pluginSelectList","data":data,"indent":"        ","helpers":helpers,"partials":partials,"decorators":container.decorators})) != null ? stack1 : "")
     + "    </div>\n  </div>\n</div>\n<div class=\"modal-footer\">\n  <button type=\"button\" class=\"btn btn-link install-home\">\n    "
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_goBack") : stack1), depth0))
     + "\n  </button>\n  <button type=\"button\" class=\"btn btn-primary install-selected\">\n    "
@@ -3295,10 +3337,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 
 /***/ }),
 
-/***/ 1552:
+/***/ 8527:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     return "<div class=\"plugin-setup-wizard bootstrap-3\">\n	<div class=\"modal fade in\" style=\"display: block;\">\n		<div class=\"modal-dialog\">\n			<div class=\"modal-content\"></div>\n		</div>\n	</div>\n</div>";
@@ -3306,10 +3348,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
 /***/ }),
 
-/***/ 7682:
+/***/ 2417:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
     var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3322,7 +3364,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
   return "		<div class=\"selected-plugin "
     + alias4(((helper = (helper = lookupProperty(helpers,"installStatus") || (depth0 != null ? lookupProperty(depth0,"installStatus") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"installStatus","hash":{},"data":data,"loc":{"start":{"line":16,"column":30},"end":{"line":16,"column":47}}}) : helper)))
     + "\" id=\"installing-"
-    + alias4(__default(__webpack_require__(974)).call(alias1,(depth0 != null ? lookupProperty(depth0,"name") : depth0),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":16,"column":64},"end":{"line":16,"column":75}}}))
+    + alias4(__default(__webpack_require__(5393)).call(alias1,(depth0 != null ? lookupProperty(depth0,"name") : depth0),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":16,"column":64},"end":{"line":16,"column":75}}}))
     + "\" data-tooltip=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"errorMessage") || (depth0 != null ? lookupProperty(depth0,"errorMessage") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"errorMessage","hash":{},"data":data,"loc":{"start":{"line":16,"column":91},"end":{"line":16,"column":107}}}) : helper)))
     + "\">"
@@ -3351,10 +3393,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 
 /***/ }),
 
-/***/ 7141:
+/***/ 262:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3377,10 +3419,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
 /***/ }),
 
-/***/ 7807:
+/***/ 4305:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
     var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3471,10 +3513,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 
 /***/ }),
 
-/***/ 7863:
+/***/ 1669:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3500,7 +3542,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
   return "        <div class=\"selected-plugin "
     + alias4(((helper = (helper = lookupProperty(helpers,"installStatus") || (depth0 != null ? lookupProperty(depth0,"installStatus") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"installStatus","hash":{},"data":data,"loc":{"start":{"line":18,"column":36},"end":{"line":18,"column":53}}}) : helper)))
     + "\" data-name=\""
-    + alias4(__default(__webpack_require__(974)).call(alias1,(depth0 != null ? lookupProperty(depth0,"name") : depth0),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":18,"column":66},"end":{"line":18,"column":77}}}))
+    + alias4(__default(__webpack_require__(5393)).call(alias1,(depth0 != null ? lookupProperty(depth0,"name") : depth0),{"name":"id","hash":{},"data":data,"loc":{"start":{"line":18,"column":66},"end":{"line":18,"column":77}}}))
     + "\">"
     + alias4(((helper = (helper = lookupProperty(helpers,"title") || (depth0 != null ? lookupProperty(depth0,"title") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data,"loc":{"start":{"line":18,"column":79},"end":{"line":18,"column":88}}}) : helper)))
     + "</div>\n";
@@ -3551,10 +3593,10 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 
 /***/ }),
 
-/***/ 3583:
+/***/ 5786:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-var Handlebars = __webpack_require__(7218);
+var Handlebars = __webpack_require__(2280);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -3566,7 +3608,7 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
   return "<div class=\"modal-header closeable\">\n	<h4 class=\"modal-title\">"
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_welcomePanel_title") : stack1), depth0))
-    + "</h4>\n</div>\n<div class=\"modal-body setup-wizard-heading\">\n  <div class=\"jumbotron welcome-panel\">\n		 <h1>"
+    + "</h4>\n</div>\n<div class=\"modal-body setup-wizard-heading\">\n  <i class=\"water-mark icon-service\"></i>\n  <div class=\"jumbotron welcome-panel\">\n		 <h1>"
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_welcomePanel_banner") : stack1), depth0))
     + "</h1>\n	<p>\n			"
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_welcomePanel_message") : stack1), depth0))
@@ -3574,40 +3616,40 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_welcomePanel_recommendedActionTitle") : stack1), depth0))
     + "</b>\n				<sub>\n					"
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_welcomePanel_recommendedActionDetails") : stack1), depth0))
-    + "\n				</sub>\n			</a>\n\n			<a class=\"btn btn-default btn-lg btn-huge install-custom\" href=\"#\" role=\"button\">\n				<b>"
+    + "\n				</sub>\n				<i class=\"icon icon-signup\"></i>\n			</a>\n\n			<a class=\"btn btn-default btn-lg btn-huge install-custom\" href=\"#\" role=\"button\">\n				<b>"
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_welcomePanel_customizeActionTitle") : stack1), depth0))
     + "</b>\n				<sub>\n					"
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"translations") : depth0)) != null ? lookupProperty(stack1,"installWizard_welcomePanel_customizeActionDetails") : stack1), depth0))
-    + "\n				</sub>\n			</a>\n		</p>\n	</div>\n\n</div>\n";
+    + "\n				</sub>\n				<i class=\"icon icon-plug\"></i>\n			</a>\n		</p>\n	</div>\n\n</div>\n";
 },"useData":true});
 
 /***/ }),
 
-/***/ 4286:
+/***/ 2361:
 /***/ (function() {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
 
-/***/ 8704:
+/***/ 5876:
 /***/ (function(__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4768);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5013);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8476);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1325);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(4737);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3957);
-/* harmony import */ var _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var _yarn_virtual_mini_css_extract_plugin_virtual_0a924445fa_6_yarn_berry_cache_mini_css_extract_plugin_npm_2_7_6_0014d24fe7_10c0_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_279395bb47_6_yarn_berry_cache_css_loader_npm_6_8_1_30d84b4cf1_10c0_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_bb0c047a67_6_yarn_berry_cache_postcss_loader_npm_7_3_4_c196834792_10c0_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_sass_loader_virtual_982e6dff86_6_yarn_berry_cache_sass_loader_npm_13_3_3_f5ea4bd230_10c0_zip_node_modules_sass_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_scss__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(4286);
-/* harmony import */ var _yarn_virtual_mini_css_extract_plugin_virtual_0a924445fa_6_yarn_berry_cache_mini_css_extract_plugin_npm_2_7_6_0014d24fe7_10c0_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_279395bb47_6_yarn_berry_cache_css_loader_npm_6_8_1_30d84b4cf1_10c0_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_bb0c047a67_6_yarn_berry_cache_postcss_loader_npm_7_3_4_c196834792_10c0_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_sass_loader_virtual_982e6dff86_6_yarn_berry_cache_sass_loader_npm_13_3_3_f5ea4bd230_10c0_zip_node_modules_sass_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_scss__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_mini_css_extract_plugin_virtual_0a924445fa_6_yarn_berry_cache_mini_css_extract_plugin_npm_2_7_6_0014d24fe7_10c0_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_279395bb47_6_yarn_berry_cache_css_loader_npm_6_8_1_30d84b4cf1_10c0_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_bb0c047a67_6_yarn_berry_cache_postcss_loader_npm_7_3_4_c196834792_10c0_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_sass_loader_virtual_982e6dff86_6_yarn_berry_cache_sass_loader_npm_13_3_3_f5ea4bd230_10c0_zip_node_modules_sass_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_scss__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3581);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3817);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7049);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5069);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2157);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3027);
+/* harmony import */ var _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _yarn_virtual_mini_css_extract_plugin_virtual_fa65e882ae_0_cache_mini_css_extract_plugin_npm_2_7_5_7e01d66430_afc37cdfb7_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_7fa6412972_0_cache_css_loader_npm_6_7_3_63aa933400_473cc32b6c_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_2e9f609b6a_0_cache_postcss_loader_npm_7_2_4_3523bfa295_d75de64f66_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_less_loader_virtual_a46b98874a_0_cache_less_loader_npm_11_1_0_b8c881320a_041216e0a6_zip_node_modules_less_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_less__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(2361);
+/* harmony import */ var _yarn_virtual_mini_css_extract_plugin_virtual_fa65e882ae_0_cache_mini_css_extract_plugin_npm_2_7_5_7e01d66430_afc37cdfb7_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_7fa6412972_0_cache_css_loader_npm_6_7_3_63aa933400_473cc32b6c_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_2e9f609b6a_0_cache_postcss_loader_npm_7_2_4_3523bfa295_d75de64f66_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_less_loader_virtual_a46b98874a_0_cache_less_loader_npm_11_1_0_b8c881320a_041216e0a6_zip_node_modules_less_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_less__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_yarn_virtual_mini_css_extract_plugin_virtual_fa65e882ae_0_cache_mini_css_extract_plugin_npm_2_7_5_7e01d66430_afc37cdfb7_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_7fa6412972_0_cache_css_loader_npm_6_7_3_63aa933400_473cc32b6c_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_2e9f609b6a_0_cache_postcss_loader_npm_7_2_4_3523bfa295_d75de64f66_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_less_loader_virtual_a46b98874a_0_cache_less_loader_npm_11_1_0_b8c881320a_041216e0a6_zip_node_modules_less_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_less__WEBPACK_IMPORTED_MODULE_6__);
 
       
       
@@ -3621,20 +3663,20 @@ module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,"
 
 var options = {};
 
-options.styleTagTransform = (_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default());
-options.setAttributes = (_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default());
+options.styleTagTransform = (_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_styleTagTransform_js__WEBPACK_IMPORTED_MODULE_5___default());
+options.setAttributes = (_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_setAttributesWithoutAttributes_js__WEBPACK_IMPORTED_MODULE_3___default());
 
-      options.insert = _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default().bind(null, "head");
+      options.insert = _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_insertBySelector_js__WEBPACK_IMPORTED_MODULE_2___default().bind(null, "head");
     
-options.domAPI = (_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default());
-options.insertStyleElement = (_yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default());
+options.domAPI = (_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_styleDomAPI_js__WEBPACK_IMPORTED_MODULE_1___default());
+options.insertStyleElement = (_yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_insertStyleElement_js__WEBPACK_IMPORTED_MODULE_4___default());
 
-var update = _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_style_loader_npm_3_3_3_2e8bbeeac4_10c0_zip_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()((_yarn_virtual_mini_css_extract_plugin_virtual_0a924445fa_6_yarn_berry_cache_mini_css_extract_plugin_npm_2_7_6_0014d24fe7_10c0_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_279395bb47_6_yarn_berry_cache_css_loader_npm_6_8_1_30d84b4cf1_10c0_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_bb0c047a67_6_yarn_berry_cache_postcss_loader_npm_7_3_4_c196834792_10c0_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_sass_loader_virtual_982e6dff86_6_yarn_berry_cache_sass_loader_npm_13_3_3_f5ea4bd230_10c0_zip_node_modules_sass_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_scss__WEBPACK_IMPORTED_MODULE_6___default()), options);
-
-
+var update = _yarn_virtual_style_loader_virtual_111eda8c03_0_cache_style_loader_npm_3_3_2_3df75edfc7_5ee5ce2dc8_zip_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()((_yarn_virtual_mini_css_extract_plugin_virtual_fa65e882ae_0_cache_mini_css_extract_plugin_npm_2_7_5_7e01d66430_afc37cdfb7_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_7fa6412972_0_cache_css_loader_npm_6_7_3_63aa933400_473cc32b6c_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_2e9f609b6a_0_cache_postcss_loader_npm_7_2_4_3523bfa295_d75de64f66_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_less_loader_virtual_a46b98874a_0_cache_less_loader_npm_11_1_0_b8c881320a_041216e0a6_zip_node_modules_less_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_less__WEBPACK_IMPORTED_MODULE_6___default()), options);
 
 
-       /* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((_yarn_virtual_mini_css_extract_plugin_virtual_0a924445fa_6_yarn_berry_cache_mini_css_extract_plugin_npm_2_7_6_0014d24fe7_10c0_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_279395bb47_6_yarn_berry_cache_css_loader_npm_6_8_1_30d84b4cf1_10c0_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_bb0c047a67_6_yarn_berry_cache_postcss_loader_npm_7_3_4_c196834792_10c0_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_sass_loader_virtual_982e6dff86_6_yarn_berry_cache_sass_loader_npm_13_3_3_f5ea4bd230_10c0_zip_node_modules_sass_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_scss__WEBPACK_IMPORTED_MODULE_6___default()) && (_yarn_virtual_mini_css_extract_plugin_virtual_0a924445fa_6_yarn_berry_cache_mini_css_extract_plugin_npm_2_7_6_0014d24fe7_10c0_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_279395bb47_6_yarn_berry_cache_css_loader_npm_6_8_1_30d84b4cf1_10c0_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_bb0c047a67_6_yarn_berry_cache_postcss_loader_npm_7_3_4_c196834792_10c0_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_sass_loader_virtual_982e6dff86_6_yarn_berry_cache_sass_loader_npm_13_3_3_f5ea4bd230_10c0_zip_node_modules_sass_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_scss__WEBPACK_IMPORTED_MODULE_6___default().locals) ? (_yarn_virtual_mini_css_extract_plugin_virtual_0a924445fa_6_yarn_berry_cache_mini_css_extract_plugin_npm_2_7_6_0014d24fe7_10c0_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_279395bb47_6_yarn_berry_cache_css_loader_npm_6_8_1_30d84b4cf1_10c0_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_bb0c047a67_6_yarn_berry_cache_postcss_loader_npm_7_3_4_c196834792_10c0_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_sass_loader_virtual_982e6dff86_6_yarn_berry_cache_sass_loader_npm_13_3_3_f5ea4bd230_10c0_zip_node_modules_sass_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_scss__WEBPACK_IMPORTED_MODULE_6___default().locals) : undefined);
+
+
+       /* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((_yarn_virtual_mini_css_extract_plugin_virtual_fa65e882ae_0_cache_mini_css_extract_plugin_npm_2_7_5_7e01d66430_afc37cdfb7_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_7fa6412972_0_cache_css_loader_npm_6_7_3_63aa933400_473cc32b6c_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_2e9f609b6a_0_cache_postcss_loader_npm_7_2_4_3523bfa295_d75de64f66_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_less_loader_virtual_a46b98874a_0_cache_less_loader_npm_11_1_0_b8c881320a_041216e0a6_zip_node_modules_less_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_less__WEBPACK_IMPORTED_MODULE_6___default()) && (_yarn_virtual_mini_css_extract_plugin_virtual_fa65e882ae_0_cache_mini_css_extract_plugin_npm_2_7_5_7e01d66430_afc37cdfb7_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_7fa6412972_0_cache_css_loader_npm_6_7_3_63aa933400_473cc32b6c_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_2e9f609b6a_0_cache_postcss_loader_npm_7_2_4_3523bfa295_d75de64f66_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_less_loader_virtual_a46b98874a_0_cache_less_loader_npm_11_1_0_b8c881320a_041216e0a6_zip_node_modules_less_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_less__WEBPACK_IMPORTED_MODULE_6___default().locals) ? (_yarn_virtual_mini_css_extract_plugin_virtual_fa65e882ae_0_cache_mini_css_extract_plugin_npm_2_7_5_7e01d66430_afc37cdfb7_zip_node_modules_mini_css_extract_plugin_dist_loader_js_ruleSet_1_rules_0_use_1_yarn_virtual_css_loader_virtual_7fa6412972_0_cache_css_loader_npm_6_7_3_63aa933400_473cc32b6c_zip_node_modules_css_loader_dist_cjs_js_ruleSet_1_rules_0_use_2_yarn_virtual_postcss_loader_virtual_2e9f609b6a_0_cache_postcss_loader_npm_7_2_4_3523bfa295_d75de64f66_zip_node_modules_postcss_loader_dist_cjs_js_ruleSet_1_rules_0_use_3_yarn_virtual_less_loader_virtual_a46b98874a_0_cache_less_loader_npm_11_1_0_b8c881320a_041216e0a6_zip_node_modules_less_loader_dist_cjs_js_ruleSet_1_rules_0_use_4_pluginSetupWizard_less__WEBPACK_IMPORTED_MODULE_6___default().locals) : undefined);
 
 
 /***/ })
@@ -3825,8 +3867,8 @@ var update = _yarn_virtual_style_loader_virtual_4e01a8a9a7_6_yarn_berry_cache_st
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	__webpack_require__.O(undefined, [216], function() { return __webpack_require__(1574); })
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [216], function() { return __webpack_require__(8704); })
+/******/ 	__webpack_require__.O(undefined, [216], function() { return __webpack_require__(6288); })
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [216], function() { return __webpack_require__(5876); })
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

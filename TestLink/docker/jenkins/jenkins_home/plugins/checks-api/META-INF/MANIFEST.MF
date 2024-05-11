@@ -1,29 +1,29 @@
 Manifest-Version: 1.0
 Created-By: Maven Archiver 3.6.0
-Build-Jdk-Spec: 11
+Build-Jdk-Spec: 17
 Specification-Title: Checks API plugin
-Specification-Version: 2.2
+Specification-Version: 2.0
 Implementation-Title: Checks API plugin
-Implementation-Version: 2.2.0
+Implementation-Version: 2.0.2
 Group-Id: io.jenkins.plugins
 Artifact-Id: checks-api
 Short-Name: checks-api
 Long-Name: Checks API plugin
 Url: https://github.com/jenkinsci/checks-api-plugin
-Plugin-Version: 2.2.0
-Hudson-Version: 2.426.3
-Jenkins-Version: 2.426.3
+Plugin-Version: 2.0.2
+Hudson-Version: 2.387.3
+Jenkins-Version: 2.387.3
 Plugin-Dependencies: commons-lang3-api:3.13.0-62.v7d18e55f51e2,commons-t
- ext-api:1.11.0-95.v22a_d30ee5d36,plugin-util-api:4.1.0,workflow-step-ap
- i:657.v03b_e8115821b_,workflow-support:865.v43e78cc44e0d,display-url-ap
- i:2.200.vb_9327d658781
+ ext-api:1.10.0-68.v0d0b_c439292b_,plugin-util-api:3.3.0,workflow-step-a
+ pi:639.v6eca_cd8c04a_a_,workflow-support:848.v5a_383b_d14921,display-ur
+ l-api:2.3.9
 Plugin-Developers: Kezhi Xiong:xiongkezhi:august.xkz@gmail.com
 Plugin-License-Name: MIT License
 Plugin-License-Url: https://opensource.org/licenses/MIT
 Plugin-ScmConnection: scm:git:https://github.com/jenkinsci/checks-api-pl
  ugin.git
-Plugin-ScmTag: v2.2.0
+Plugin-ScmTag: v2.0.2
 Plugin-ScmUrl: https://github.com/jenkinsci/checks-api-plugin
-Plugin-GitHash: 50f48e8410fced94a79e6a57c6bbb6f302c84370
-Implementation-Build: 50f48e8410fced94a79e6a57c6bbb6f302c84370
+Plugin-GitHash: 2da1bfbf010f440a72bd4c8ba2154c83fe1caa00
+Implementation-Build: 2da1bfbf010f440a72bd4c8ba2154c83fe1caa00
 
