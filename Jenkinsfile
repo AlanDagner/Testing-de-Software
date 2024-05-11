@@ -11,7 +11,7 @@ pipeline {
         stage('Clone') {
             steps {
                 timeout(time: 2, unit: 'MINUTES'){
-		            git branch: 'main', credentialsId: '', url: 'https://github.com/AlanDagner/Testing-de-Software.git'
+		            git branch: 'main', credentialsId: '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', url: 'https://github.com/AlanDagner/Testing-de-Software.git'
                 }
             }
         }
