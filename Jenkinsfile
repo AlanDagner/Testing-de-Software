@@ -11,6 +11,7 @@ pipeline {
             steps {
                 timeout(time: 2, unit: 'MINUTES'){
 		            git branch: 'main', credentialsId: '', url: 'https://github.com/AlanDagner/Testing-de-Software.git'
+                    // el token esta en PWD jenkins
                 }
             }
         }

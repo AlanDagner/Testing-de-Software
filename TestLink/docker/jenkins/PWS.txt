@@ -4,6 +4,7 @@ acceso
 admin
 123456
 
+token de github:
 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
 
 
